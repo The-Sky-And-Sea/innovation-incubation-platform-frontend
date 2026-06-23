@@ -1,7 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { request, get, post } from "../utils/request";
-
-const API_BASE = "http://localhost:8080/api/v1";
+import { get } from "../utils/request";
 
 describe("request 工具层", () => {
   beforeEach(() => {

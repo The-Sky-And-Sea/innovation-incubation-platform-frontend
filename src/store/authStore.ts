@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import type { UserInfo, UserRole, AuthData } from "../types";
-import { post, get } from "../utils/request";
+import type { UserInfo, UserRole } from "../types";
+import { loginAuth, registerAuth, getMe } from "../api/auth";
 
 interface AuthState {
   /** JWT Token */
@@ -41,19 +41,14 @@ export const useAuthStore = create<AuthState>((set) => ({
   loading: true,
 
   login: async (credential, password, role) => {
-    const res = await post<AuthData>("/auth/login", {
-      credential,
-      password,
-      role,
-    });
-
+    const res = await loginAuth(credential, password, role);
     const { token, user } = res.data;
     localStorage.setItem("token", token);
     set({ token, user });
   },
 
   register: async (params) => {
-    const res = await post<AuthData>("/auth/register", params);
+    const res = await registerAuth(params);
     const { token, user } = res.data;
     localStorage.setItem("token", token);
     set({ token, user });
@@ -67,7 +62,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
     set({ token, loading: true });
     try {
-      const res = await get<UserInfo>("/auth/me");
+      const res = await getMe();
       set({ user: res.data, loading: false });
     } catch {
       // token 无效，清除
@@ -82,7 +77,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   fetchUserInfo: async () => {
-    const res = await get<UserInfo>("/auth/me");
+    const res = await getMe();
     set({ user: res.data });
   },
 }));
