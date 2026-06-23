@@ -1,13 +1,17 @@
 /**
- * 政务端 Mock API
+ * 政务端 API 层
  *
- * 后续对接真实后端时，将 USE_MOCK 改为 false
+ * 对应后端接口：
+ * - GET /gov/enterprises?keyword=  企业检索（按名称/信用代码/行业）
+ * - GET /gov/enterprises/:id       企业详情
+ * - GET /gov/carriers?keyword=     载体检索（按名称/地址）
+ *
+ * 后续扩展：政策管理、申报审核、绩效考核、账号注销管理
  */
 
 import { mockApi } from "./mock";
 import type { ApiResponse, EnterpriseInfo, CarrierInfo } from "../types";
 
-/** 当前是否使用 Mock 模式 */
 const USE_MOCK = true;
 
 // ============ Mock 数据 ============
@@ -71,10 +75,13 @@ const mockCarriers: CarrierInfo[] = [
   },
 ];
 
-// ============ 企业查询 ============
+// ============ 企业检索 ============
 
 /**
- * 企业搜索
+ * 企业检索（按关键词搜索名称/信用代码/行业）
+ * @param keyword 搜索关键词（传空字符串返回全部）
+ * @param page 页码
+ * @param page_size 每页条数
  */
 export async function searchEnterprises(
   keyword: string,
@@ -99,7 +106,8 @@ export async function searchEnterprises(
 }
 
 /**
- * 企业详情
+ * 企业详情（政务端查看任意企业）
+ * @param id 企业 ID
  */
 export async function getEnterpriseDetail(
   id: number,
@@ -118,10 +126,13 @@ export async function getEnterpriseDetail(
   return get(`/gov/enterprises/${id}`);
 }
 
-// ============ 载体查询 ============
+// ============ 载体检索 ============
 
 /**
- * 载体搜索
+ * 载体检索（按关键词搜索名称/地址）
+ * @param keyword 搜索关键词
+ * @param page 页码
+ * @param page_size 每页条数
  */
 export async function searchCarriers(
   keyword: string,

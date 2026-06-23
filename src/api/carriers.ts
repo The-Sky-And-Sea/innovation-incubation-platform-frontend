@@ -1,13 +1,14 @@
 /**
- * 载体 API Mock
+ * 载体 API 层
  *
- * 后续对接真实后端时，将 USE_MOCK 改为 false
+ * 对应后端接口（企业端视角）：
+ * - GET /enterprise/carriers     载体列表（分页）
+ * - GET /enterprise/carriers/:id  载体详情
  */
 
 import { mockApi } from "./mock";
 import type { ApiResponse, CarrierInfo } from "../types";
 
-/** 当前是否使用 Mock 模式 */
 const USE_MOCK = true;
 
 // ============ Mock 数据 ============
@@ -47,6 +48,8 @@ const mockCarriers: CarrierInfo[] = [
 
 /**
  * 载体列表（分页）
+ * @param page 页码
+ * @param page_size 每页条数
  */
 export async function getCarrierList(
   page = 1,
@@ -63,6 +66,7 @@ export async function getCarrierList(
 
 /**
  * 载体详情
+ * @param id 载体 ID
  */
 export async function getCarrierDetail(
   id: number,

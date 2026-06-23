@@ -1,35 +1,35 @@
 /**
- * 文件管理 Mock API
+ * 文件管理 API 层
  *
- * 后续对接真实后端时，将 USE_MOCK 改为 false
+ * 对应后端接口：
+ * - GET    /files/limit       获取上传限制
+ * - POST   /files/upload      上传文件（multipart/form-data）
+ * - GET    /files/list        文件列表（分页 + user_id 过滤）
+ * - GET    /files/:id/download 下载文件（支持 Range 断点续传）
+ * - DELETE /files/:id          删除文件（仅政务端）
+ *
+ * Mock 模式下使用内存 Map 存储上传的文件，重启丢失。
  */
 
 import { mockApi, mockApiFail } from "./mock";
 import type { ApiResponse, FileInfo, FileLimit } from "../types";
 
-/** 当前是否使用 Mock 模式 */
 const USE_MOCK = true;
 
-// ============ Mock 文件数据 ============
+// ============ Mock 数据存储 ============
 
 let mockFileIdCounter = 100;
 const mockFiles: Map<number, FileInfo> = new Map();
 
 /**
- * 获取文件上传限制
+ * 获取文件上传限制（允许的扩展名和最大大小）
  */
 export async function getFileLimit(): Promise<ApiResponse<FileLimit>> {
   if (USE_MOCK) {
     return mockApi<FileLimit>({
       max_size_mb: 20,
       allowed_extensions: [
-        ".pdf",
-        ".doc",
-        ".docx",
-        ".xls",
-        ".xlsx",
-        ".jpg",
-        ".png",
+        ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".jpg", ".png",
       ],
     });
   }
@@ -40,30 +40,21 @@ export async function getFileLimit(): Promise<ApiResponse<FileLimit>> {
 
 /**
  * 上传文件
- * @param file 要上传的 File 对象
+ * @param file 浏览器 File 对象
+ * @returns 上传成功后的 FileInfo（包含 file_id）
  */
 export async function uploadFileAction(
   file: File,
 ): Promise<ApiResponse<FileInfo>> {
   if (USE_MOCK) {
-    // 模拟文件大小校验
-    const maxSize = 20 * 1024 * 1024; // 20MB
+    const maxSize = 20 * 1024 * 1024;
     if (file.size > maxSize) {
-      await mockApiFail(10001, `文件大小超过限制（最大 20MB）`);
+      await mockApiFail(10001, "文件大小超过限制（最大 20MB）");
       throw new Error("unreachable");
     }
 
-    // 模拟扩展名校验
     const ext = "." + file.name.split(".").pop()?.toLowerCase();
-    const allowed = [
-      ".pdf",
-      ".doc",
-      ".docx",
-      ".xls",
-      ".xlsx",
-      ".jpg",
-      ".png",
-    ];
+    const allowed = [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".jpg", ".png"];
     if (!allowed.includes(ext)) {
       await mockApiFail(10001, `不支持的文件类型: ${ext}`);
       throw new Error("unreachable");
@@ -86,10 +77,10 @@ export async function uploadFileAction(
 }
 
 /**
- * 文件列表
+ * 文件列表（分页）
  * @param page 页码
  * @param page_size 每页条数
- * @param userId 可选：按上传者ID过滤（政务端用）
+ * @param userId 可选：按上传者 ID 过滤（政务端查看指定用户文件）
  */
 export async function getFileList(
   page = 1,
@@ -112,7 +103,9 @@ export async function getFileList(
 }
 
 /**
- * 下载文件（返回 Blob URL 用于浏览器下载）
+ * 下载文件
+ * @param fileId 文件 ID
+ * @returns Blob URL（浏览器可直接下载或预览）
  */
 export async function downloadFile(fileId: number): Promise<string> {
   if (USE_MOCK) {
@@ -122,28 +115,29 @@ export async function downloadFile(fileId: number): Promise<string> {
       throw new Error("unreachable");
     }
 
-    // 生成一个假的文件内容 blob 用于下载
+    // 生成模拟内容
     const content = `[Mock file content] File: ${info.filename}\nSize: ${info.size}\nMime: ${info.mime_type}`;
     const blob = new Blob([content], { type: info.mime_type });
     const url = URL.createObjectURL(blob);
 
-    // 模拟延时
     await new Promise((r) => setTimeout(r, 300));
     return url;
   }
 
-  // 真实后端：fetch 二进制并创建 Blob URL
+  // 真实后端：fetch 二进制文件并创建 Blob URL
   const token = localStorage.getItem("token");
-  const res = await fetch(`http://localhost:8080/api/v1/files/${fileId}/download`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await fetch(
+    `http://localhost:8080/api/v1/files/${fileId}/download`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
   if (!res.ok) throw new Error("下载失败");
   const blob = await res.blob();
   return URL.createObjectURL(blob);
 }
 
 /**
- * 删除文件
+ * 删除文件（仅政务端有权调用，被引用的文件无法删除）
+ * @param fileId 文件 ID
  */
 export async function deleteFileAction(fileId: number): Promise<ApiResponse<null>> {
   if (USE_MOCK) {

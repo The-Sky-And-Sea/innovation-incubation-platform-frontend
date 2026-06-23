@@ -1,13 +1,15 @@
 /**
- * 企业端 Mock API
+ * 企业端 API 层
  *
- * 后续对接真实后端时，将 USE_MOCK 改为 false
+ * 对应后端接口：
+ * - GET /enterprise/my-info  获取当前企业信息
+ *
+ * 后续扩展：企业入驻、重大事项变更、政策申报等
  */
 
 import { mockApi } from "./mock";
 import type { ApiResponse, EnterpriseInfo } from "../types";
 
-/** 当前是否使用 Mock 模式 */
 const USE_MOCK = true;
 
 // ============ Mock 数据 ============
@@ -25,7 +27,7 @@ const mockEnterprise: EnterpriseInfo = {
 };
 
 /**
- * 获取当前企业信息
+ * 获取当前登录企业的详细信息
  */
 export async function getMyEnterpriseInfo(): Promise<
   ApiResponse<EnterpriseInfo>

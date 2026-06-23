@@ -26,35 +26,32 @@ import {
   downloadFile,
   deleteFileAction,
 } from "../../api/files";
+import { formatFileSize } from "../../utils/format";
+import { triggerBrowserDownload } from "../../utils/download";
 import type { FileInfo } from "../../types";
 
 const { Title, Text, Paragraph } = Typography;
 
-/** 格式化文件大小 */
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return bytes + " B";
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-  return (bytes / 1024 / 1024).toFixed(1) + " MB";
-}
-
-/** 触发浏览器下载 */
-function triggerDownload(url: string, filename: string) {
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  // 延迟释放 Blob URL，确保浏览器已开始下载
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
+/**
+ * 企业端文件管理页面
+ *
+ * 功能：
+ * - 拖拽上传文件（Ant Design Dragger）
+ * - 文件列表表格（文件名、大小、类型、上传时间）
+ * - 下载文件到本地
+ * - 删除文件（带 Popconfirm 二次确认）
+ * - 分页（每页 5/10/20/50 条可选）
+ */
 export default function EnterpriseFileManagement() {
   const [fileList, setFileList] = useState<FileInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
 
-  /** 加载文件列表 */
+  /**
+   * 加载文件列表
+   * @param page 页码（默认 1）
+   * @param pageSize 每页条数（默认 10）
+   */
   const fetchList = useCallback(async (page = 1, pageSize = 10) => {
     setLoading(true);
     try {
@@ -73,6 +70,7 @@ export default function EnterpriseFileManagement() {
     }
   }, []);
 
+  // 首次加载
   useEffect(() => {
     fetchList(1, 10);
   }, [fetchList]);
@@ -82,18 +80,18 @@ export default function EnterpriseFileManagement() {
     fetchList(1, pagination.pageSize);
   };
 
-  /** 下载 */
+  /** 下载文件到本地 */
   const handleDownload = async (file: FileInfo) => {
     try {
       const url = await downloadFile(file.file_id);
-      triggerDownload(url, file.filename);
+      triggerBrowserDownload(url, file.filename);
       message.success(`开始下载 "${file.filename}"`);
     } catch (err) {
       message.error((err as Error).message || "下载失败");
     }
   };
 
-  /** 删除 */
+  /** 删除文件（二次确认后执行） */
   const handleDelete = async (fileId: number) => {
     try {
       await deleteFileAction(fileId);
@@ -104,6 +102,7 @@ export default function EnterpriseFileManagement() {
     }
   };
 
+  /** 表格列定义 */
   const columns: ColumnsType<FileInfo> = [
     {
       title: "文件名",
@@ -122,7 +121,7 @@ export default function EnterpriseFileManagement() {
       dataIndex: "size",
       key: "size",
       width: 100,
-      render: (size: number) => formatSize(size),
+      render: (size: number) => formatFileSize(size),
     },
     {
       title: "类型",

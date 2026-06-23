@@ -10,6 +10,7 @@ import {
   Space,
   Typography,
 } from "antd";
+import { message } from "antd";
 import {
   DashboardOutlined,
   IdcardOutlined,
@@ -45,6 +46,18 @@ interface MenuItem {
   label: string;
   path?: string;
 }
+
+/** 已实现的路由集合 */
+const IMPLEMENTED_ROUTES = new Set([
+  "/enterprise/dashboard",
+  "/enterprise/info",
+  "/enterprise/files",
+  "/enterprise/carriers",
+  "/carrier/dashboard",
+  "/gov/dashboard",
+  "/gov/enterprises",
+  "/gov/carriers",
+]);
 
 /** 各角色菜单配置 */
 const roleMenuMap: Record<UserRole, MenuItem[]> = {
@@ -147,7 +160,13 @@ export default function MainLayout() {
         <Menu
           mode="inline"
           selectedKeys={[selectedKey]}
-          onClick={({ key }) => navigate(key)}
+          onClick={({ key }) => {
+            if (IMPLEMENTED_ROUTES.has(key)) {
+              navigate(key);
+            } else {
+              message.info("功能开发中，敬请期待");
+            }
+          }}
           items={menus.map((item) => ({
             key: item.key,
             icon: item.icon,

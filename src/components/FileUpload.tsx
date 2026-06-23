@@ -16,27 +16,35 @@ import {
 } from "@ant-design/icons";
 import type { UploadProps, UploadFile } from "antd";
 import { getFileLimit, uploadFileAction } from "../api/files";
+import { formatFileSize } from "../utils/format";
 import type { FileInfo, FileLimit } from "../types";
 
 const { Text } = Typography;
 const { Dragger } = Upload;
 
+/**
+ * 文件上传组件
+ *
+ * 特性：
+ * - 拖拽/点击上传文件（单文件）
+ * - 上传前自动校验文件大小和扩展名
+ * - 上传后回显已上传文件信息
+ * - 支持移除已上传文件并重新上传
+ * - 自动获取服务端的上传限制配置（max_size_mb、allowed_extensions）
+ *
+ * 使用场景：
+ * - 企业入驻申请中的入孵协议上传
+ * - 政策发布时的原文附件上传
+ */
 interface FileUploadProps {
-  /** 上传成功的回调，返回 file_id */
+  /** 上传成功的回调，返回包含 file_id 的完整文件信息 */
   onUploaded?: (fileInfo: FileInfo) => void;
-  /** 是否禁用 */
+  /** 是否禁用上传（如已提交后不可修改） */
   disabled?: boolean;
-  /** 已上传的文件（用于回显） */
+  /** 已上传的文件信息（用于回显已上传状态） */
   currentFile?: FileInfo | null;
   /** 移除文件的回调 */
   onRemove?: () => void;
-}
-
-/** 格式化文件大小 */
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return bytes + " B";
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-  return (bytes / 1024 / 1024).toFixed(1) + " MB";
 }
 
 export default function FileUpload({
@@ -141,7 +149,7 @@ export default function FileUpload({
           <Space>
             <FileOutlined />
             <Text>{currentFile.filename}</Text>
-            <Tag color="blue">{formatSize(currentFile.size)}</Tag>
+            <Tag color="blue">{formatFileSize(currentFile.size)}</Tag>
           </Space>
           {!disabled && (
             <Button
