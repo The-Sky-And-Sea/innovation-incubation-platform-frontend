@@ -49,7 +49,8 @@ export async function loginAuth(
       await mockApiFail(10001, "参数错误：密码至少 6 位");
       throw new Error("unreachable");
     }
-    // 模拟成功登录
+    // 模拟成功登录，并将角色持久化到 localStorage，避免 AuthGuard::initAuth() 覆盖
+    localStorage.setItem("mock_role", role);
     return mockApi<AuthData>({
       token: "mock-jwt-token-" + Date.now(),
       user: { ...mockUser, role: role as UserInfo["role"] },
@@ -82,6 +83,8 @@ export async function registerAuth(params: {
       await mockApiFail(10001, "参数错误：密码至少 6 位");
       throw new Error("unreachable");
     }
+    // 持久化角色
+    localStorage.setItem("mock_role", params.role);
     return mockApi<AuthData>({
       token: "mock-jwt-token-" + Date.now(),
       user: {
@@ -101,10 +104,14 @@ export async function registerAuth(params: {
 
 /**
  * 获取当前登录用户信息（用于 token 有效性校验和页面恢复登录态）
+ *
+ * Mock 模式下从 localStorage 读取登录时存储的角色，
+ * 避免 AuthGuard::initAuth() 调用时把角色覆盖为默认 enterprise。
  */
 export async function getMe(): Promise<ApiResponse<UserInfo>> {
   if (USE_MOCK) {
-    return mockApi<UserInfo>(mockUser);
+    const storedRole = localStorage.getItem("mock_role") || "enterprise";
+    return mockApi<UserInfo>({ ...mockUser, role: storedRole as UserInfo["role"] });
   }
 
   const { get } = await import("../utils/request");
