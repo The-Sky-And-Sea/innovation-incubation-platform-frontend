@@ -52,13 +52,20 @@ function triggerDownload(url: string, filename: string) {
 export default function EnterpriseFileManagement() {
   const [fileList, setFileList] = useState<FileInfo[]>([]);
   const [loading, setLoading] = useState(false);
+  const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
 
   /** 加载文件列表 */
-  const fetchList = useCallback(async () => {
+  const fetchList = useCallback(async (page = 1, pageSize = 10) => {
     setLoading(true);
     try {
-      const res = await getFileList(1, 50);
+      const res = await getFileList(page, pageSize);
       setFileList(res.data.list);
+      setPagination(prev => ({
+        ...prev,
+        current: res.data.page,
+        pageSize: res.data.page_size,
+        total: res.data.total,
+      }));
     } catch {
       message.error("加载文件列表失败");
     } finally {
@@ -67,12 +74,12 @@ export default function EnterpriseFileManagement() {
   }, []);
 
   useEffect(() => {
-    fetchList();
+    fetchList(1, 10);
   }, [fetchList]);
 
-  /** 上传成功后刷新列表 */
+  /** 上传成功后刷新列表（回到第一页） */
   const handleUploaded = (_fileInfo: FileInfo) => {
-    fetchList();
+    fetchList(1, pagination.pageSize);
   };
 
   /** 下载 */
@@ -91,7 +98,7 @@ export default function EnterpriseFileManagement() {
     try {
       await deleteFileAction(fileId);
       message.success("文件已删除");
-      fetchList();
+      fetchList(pagination.current, pagination.pageSize);
     } catch (err) {
       message.error((err as Error).message || "删除失败");
     }
@@ -200,25 +207,30 @@ export default function EnterpriseFileManagement() {
           <Button
             size="small"
             icon={<ReloadOutlined />}
-            onClick={fetchList}
+            onClick={() => fetchList(pagination.current, pagination.pageSize)}
             loading={loading}
           >
             刷新
           </Button>
         }
       >
-        {fileList.length === 0 && !loading ? (
-          <Empty description="暂无上传文件" />
-        ) : (
-          <Table
-            columns={columns}
-            dataSource={fileList}
-            rowKey="file_id"
-            loading={loading}
-            pagination={false}
-            size="middle"
-          />
-        )}
+        <Table
+          columns={columns}
+          dataSource={fileList}
+          rowKey="file_id"
+          loading={loading}
+          pagination={{
+            current: pagination.current,
+            pageSize: pagination.pageSize,
+            total: pagination.total,
+            showSizeChanger: true,
+            pageSizeOptions: ["5", "10", "20", "50"],
+            showTotal: (total, range) => `${range[0]}-${range[1]} / 共 ${total} 条`,
+            onChange: (page, pageSize) => fetchList(page, pageSize),
+          }}
+          size="middle"
+          locale={{ emptyText: <Empty description="暂无上传文件" /> }}
+        />
       </Card>
     </div>
   );

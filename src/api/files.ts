@@ -87,19 +87,28 @@ export async function uploadFileAction(
 
 /**
  * 文件列表
+ * @param page 页码
+ * @param page_size 每页条数
+ * @param userId 可选：按上传者ID过滤（政务端用）
  */
 export async function getFileList(
   page = 1,
   page_size = 20,
+  userId?: number,
 ): Promise<ApiResponse<{ list: FileInfo[]; total: number; page: number; page_size: number }>> {
   if (USE_MOCK) {
     const all = Array.from(mockFiles.values());
     const list = all.slice((page - 1) * page_size, page * page_size);
-    return mockApi({ list, total: all.length, page, page_size });
+    return mockApi({ list, total: all.length, page, page_size }, 300);
   }
 
   const { get } = await import("../utils/request");
-  return get("/files/list", { page: String(page), page_size: String(page_size) });
+  const params: Record<string, string> = {
+    page: String(page),
+    page_size: String(page_size),
+  };
+  if (userId) params.user_id = String(userId);
+  return get("/files/list", params);
 }
 
 /**
