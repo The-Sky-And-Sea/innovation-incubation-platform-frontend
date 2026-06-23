@@ -84,3 +84,68 @@ export async function uploadFileAction(
   const { uploadFile } = await import("../utils/request");
   return uploadFile<FileInfo>(file);
 }
+
+/**
+ * 文件列表
+ */
+export async function getFileList(
+  page = 1,
+  page_size = 20,
+): Promise<ApiResponse<{ list: FileInfo[]; total: number; page: number; page_size: number }>> {
+  if (USE_MOCK) {
+    const all = Array.from(mockFiles.values());
+    const list = all.slice((page - 1) * page_size, page * page_size);
+    return mockApi({ list, total: all.length, page, page_size });
+  }
+
+  const { get } = await import("../utils/request");
+  return get("/files/list", { page: String(page), page_size: String(page_size) });
+}
+
+/**
+ * 下载文件（返回 Blob URL 用于浏览器下载）
+ */
+export async function downloadFile(fileId: number): Promise<string> {
+  if (USE_MOCK) {
+    const info = mockFiles.get(fileId);
+    if (!info) {
+      await mockApiFail(10002, "文件不存在");
+      throw new Error("unreachable");
+    }
+
+    // 生成一个假的文件内容 blob 用于下载
+    const content = `[Mock file content] File: ${info.filename}\nSize: ${info.size}\nMime: ${info.mime_type}`;
+    const blob = new Blob([content], { type: info.mime_type });
+    const url = URL.createObjectURL(blob);
+
+    // 模拟延时
+    await new Promise((r) => setTimeout(r, 300));
+    return url;
+  }
+
+  // 真实后端：fetch 二进制并创建 Blob URL
+  const token = localStorage.getItem("token");
+  const res = await fetch(`http://localhost:8080/api/v1/files/${fileId}/download`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("下载失败");
+  const blob = await res.blob();
+  return URL.createObjectURL(blob);
+}
+
+/**
+ * 删除文件
+ */
+export async function deleteFileAction(fileId: number): Promise<ApiResponse<null>> {
+  if (USE_MOCK) {
+    if (!mockFiles.has(fileId)) {
+      await mockApiFail(10002, "文件不存在");
+      throw new Error("unreachable");
+    }
+    mockFiles.delete(fileId);
+    return mockApi(null, 200);
+  }
+
+  const { del } = await import("../utils/request");
+  return del(`/files/${fileId}`);
+}
