@@ -12,8 +12,11 @@ import RegisterPage from "../pages/auth/RegisterPage";
 import EnterpriseDashboard from "../pages/enterprise/Dashboard";
 import EnterpriseFileManagement from "../pages/enterprise/FileManagement";
 import EnterpriseMyInfo from "../pages/enterprise/MyInfo";
+import EnterpriseCarrierList from "../pages/enterprise/CarrierList";
 import CarrierDashboard from "../pages/carrier/Dashboard";
 import GovDashboard from "../pages/gov/Dashboard";
+import GovEnterpriseSearch from "../pages/gov/EnterpriseSearch";
+import GovCarrierSearch from "../pages/gov/CarrierSearch";
 
 /** 未登录 → 跳转登录 */
 function GuestGuard() {
@@ -133,8 +136,11 @@ const router = createBrowserRouter([
                 path: "/enterprise/files",
                 element: <EnterpriseFileManagement />,
               },
+              {
+                path: "/enterprise/carriers",
+                element: <EnterpriseCarrierList />,
+              },
               // TODO: 后续按层级逐步添加
-              // /enterprise/carriers
               // /enterprise/incubation/*
               // /enterprise/changes/*
               // /enterprise/policies/*
@@ -188,8 +194,15 @@ const router = createBrowserRouter([
                 path: "/gov/dashboard",
                 element: <GovDashboard />,
               },
+              {
+                path: "/gov/enterprises",
+                element: <GovEnterpriseSearch />,
+              },
+              {
+                path: "/gov/carriers",
+                element: <GovCarrierSearch />,
+              },
               // TODO: 后续按层级逐步添加
-              // /gov/enterprises/*
               // /gov/carriers/*
               // /gov/policies/*
               // /gov/applications/*
