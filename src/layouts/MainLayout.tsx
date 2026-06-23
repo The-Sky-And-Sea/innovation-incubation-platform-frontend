@@ -13,6 +13,7 @@ import {
 import {
   DashboardOutlined,
   BankOutlined,
+  UploadOutlined,
   FileProtectOutlined,
   FormOutlined,
   FileTextOutlined,
@@ -48,6 +49,7 @@ interface MenuItem {
 const roleMenuMap: Record<UserRole, MenuItem[]> = {
   enterprise: [
     { key: "/enterprise/dashboard", icon: <DashboardOutlined />, label: "工作台" },
+    { key: "/enterprise/files", icon: <UploadOutlined />, label: "文件管理" },
     { key: "/enterprise/carriers", icon: <BankOutlined />, label: "载体浏览" },
     { key: "/enterprise/incubation", icon: <HomeOutlined />, label: "企业入驻" },
     { key: "/enterprise/changes", icon: <FormOutlined />, label: "重大事项变更" },

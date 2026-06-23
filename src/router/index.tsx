@@ -10,6 +10,7 @@ import MainLayout from "../layouts/MainLayout";
 import LoginPage from "../pages/auth/LoginPage";
 import RegisterPage from "../pages/auth/RegisterPage";
 import EnterpriseDashboard from "../pages/enterprise/Dashboard";
+import EnterpriseFileManagement from "../pages/enterprise/FileManagement";
 import CarrierDashboard from "../pages/carrier/Dashboard";
 import GovDashboard from "../pages/gov/Dashboard";
 
@@ -122,6 +123,10 @@ const router = createBrowserRouter([
               {
                 path: "/enterprise/dashboard",
                 element: <EnterpriseDashboard />,
+              },
+              {
+                path: "/enterprise/files",
+                element: <EnterpriseFileManagement />,
               },
               // TODO: 后续按层级逐步添加
               // /enterprise/carriers
