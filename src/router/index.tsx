@@ -11,6 +11,7 @@ import LoginPage from "../pages/auth/LoginPage";
 import RegisterPage from "../pages/auth/RegisterPage";
 import EnterpriseDashboard from "../pages/enterprise/Dashboard";
 import EnterpriseFileManagement from "../pages/enterprise/FileManagement";
+import EnterpriseMyInfo from "../pages/enterprise/MyInfo";
 import CarrierDashboard from "../pages/carrier/Dashboard";
 import GovDashboard from "../pages/gov/Dashboard";
 
@@ -123,6 +124,10 @@ const router = createBrowserRouter([
               {
                 path: "/enterprise/dashboard",
                 element: <EnterpriseDashboard />,
+              },
+              {
+                path: "/enterprise/info",
+                element: <EnterpriseMyInfo />,
               },
               {
                 path: "/enterprise/files",

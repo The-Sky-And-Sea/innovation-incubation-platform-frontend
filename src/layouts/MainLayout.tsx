@@ -12,6 +12,7 @@ import {
 } from "antd";
 import {
   DashboardOutlined,
+  IdcardOutlined,
   BankOutlined,
   UploadOutlined,
   FileProtectOutlined,
@@ -49,6 +50,7 @@ interface MenuItem {
 const roleMenuMap: Record<UserRole, MenuItem[]> = {
   enterprise: [
     { key: "/enterprise/dashboard", icon: <DashboardOutlined />, label: "工作台" },
+    { key: "/enterprise/info", icon: <IdcardOutlined />, label: "企业信息" },
     { key: "/enterprise/files", icon: <UploadOutlined />, label: "文件管理" },
     { key: "/enterprise/carriers", icon: <BankOutlined />, label: "载体浏览" },
     { key: "/enterprise/incubation", icon: <HomeOutlined />, label: "企业入驻" },
