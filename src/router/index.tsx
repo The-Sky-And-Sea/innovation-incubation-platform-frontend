@@ -13,7 +13,9 @@ import EnterpriseDashboard from "../pages/enterprise/Dashboard";
 import EnterpriseFileManagement from "../pages/enterprise/FileManagement";
 import EnterpriseMyInfo from "../pages/enterprise/MyInfo";
 import EnterpriseCarrierList from "../pages/enterprise/CarrierList";
+import EnterpriseIncubationManagement from "../pages/enterprise/IncubationManagement";
 import CarrierDashboard from "../pages/carrier/Dashboard";
+import CarrierIncubationReview from "../pages/carrier/IncubationReview";
 import GovDashboard from "../pages/gov/Dashboard";
 import GovEnterpriseSearch from "../pages/gov/EnterpriseSearch";
 import GovCarrierSearch from "../pages/gov/CarrierSearch";
@@ -147,8 +149,11 @@ const router = createBrowserRouter([
                 path: "/enterprise/carriers",
                 element: <EnterpriseCarrierList />,
               },
+              {
+                path: "/enterprise/incubation",
+                element: <EnterpriseIncubationManagement />,
+              },
               // TODO: 后续按层级逐步添加
-              // /enterprise/incubation/*
               // /enterprise/changes/*
               // /enterprise/policies/*
               // /enterprise/applications/*
@@ -173,8 +178,11 @@ const router = createBrowserRouter([
                 path: "/carrier/dashboard",
                 element: <CarrierDashboard />,
               },
+              {
+                path: "/carrier/incubation",
+                element: <CarrierIncubationReview />,
+              },
               // TODO: 后续按层级逐步添加
-              // /carrier/incubation/*
               // /carrier/info
               // /carrier/changes/*
               // /carrier/policies/*
