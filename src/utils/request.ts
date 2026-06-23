@@ -1,0 +1,159 @@
+import { ApiResponse, ERROR_CODE_MAP } from "../types";
+
+const BASE_URL = "http://localhost:8080/api/v1";
+
+/** 从 localStorage 获取 token */
+function getToken(): string | null {
+  return localStorage.getItem("token");
+}
+
+/** 默认请求选项 */
+interface RequestOptions extends Omit<RequestInit, "body"> {
+  body?: unknown;
+  params?: Record<string, string | number | undefined>;
+  timeout?: number;
+}
+
+/** 统一请求方法 */
+export async function request<T = unknown>(
+  url: string,
+  options: RequestOptions = {},
+): Promise<ApiResponse<T>> {
+  const { body, params, timeout = 15000, ...restOptions } = options;
+
+  // 拼接查询参数
+  let fullUrl = `${BASE_URL}${url}`;
+  if (params) {
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        searchParams.append(key, String(value));
+      }
+    });
+    const qs = searchParams.toString();
+    if (qs) fullUrl += `?${qs}`;
+  }
+
+  // 构建请求头
+  const headers: Record<string, string> = {
+    ...(restOptions.headers as Record<string, string>),
+  };
+
+  const token = getToken();
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  if (body && !(body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  // 超时控制
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const response = await fetch(fullUrl, {
+      ...restOptions,
+      headers,
+      body: body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,
+      signal: controller.signal,
+    });
+
+    clearTimeout(timer);
+
+    const json: ApiResponse<T> = await response.json();
+
+    // 如果业务码非 0，抛出业务异常
+    if (json.code !== 0) {
+      const errorMsg =
+        ERROR_CODE_MAP[json.code] || json.message || "未知错误";
+      const error = new Error(errorMsg) as Error & {
+        code: number;
+        response: ApiResponse<T>;
+      };
+      error.code = json.code;
+      error.response = json;
+
+      // 认证过期自动跳转登录
+      if (json.code === 10101) {
+        localStorage.removeItem("token");
+        window.location.href = "/login";
+      }
+
+      throw error;
+    }
+
+    return json;
+  } catch (err) {
+    clearTimeout(timer);
+
+    if (err instanceof DOMException && err.name === "AbortError") {
+      const timeoutError = new Error("请求超时，请稍后重试") as Error & {
+        code: number;
+      };
+      timeoutError.code = -1;
+      throw timeoutError;
+    }
+
+    // 如果是业务异常，直接抛出
+    if ((err as Error & { code?: number }).code !== undefined) {
+      throw err;
+    }
+
+    // 网络错误
+    const networkError = new Error("网络连接失败，请检查网络或后端服务状态") as Error & {
+      code: number;
+    };
+    networkError.code = -2;
+    throw networkError;
+  }
+}
+
+/** GET 请求 */
+export function get<T = unknown>(
+  url: string,
+  params?: Record<string, string | number | undefined>,
+): Promise<ApiResponse<T>> {
+  return request<T>(url, { method: "GET", params });
+}
+
+/** POST 请求 */
+export function post<T = unknown>(
+  url: string,
+  body?: unknown,
+): Promise<ApiResponse<T>> {
+  return request<T>(url, { method: "POST", body });
+}
+
+/** PUT 请求 */
+export function put<T = unknown>(
+  url: string,
+  body?: unknown,
+): Promise<ApiResponse<T>> {
+  return request<T>(url, { method: "PUT", body });
+}
+
+/** PATCH 请求 */
+export function patch<T = unknown>(
+  url: string,
+  body?: unknown,
+): Promise<ApiResponse<T>> {
+  return request<T>(url, { method: "PATCH", body });
+}
+
+/** DELETE 请求 */
+export function del<T = unknown>(
+  url: string,
+): Promise<ApiResponse<T>> {
+  return request<T>(url, { method: "DELETE" });
+}
+
+/** 文件上传 */
+export function uploadFile<T = unknown>(
+  file: File,
+): Promise<ApiResponse<T>> {
+  const formData = new FormData();
+  formData.append("file", file);
+  return request<T>("/files/upload", { method: "POST", body: formData });
+}

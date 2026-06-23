@@ -1,7 +1,7 @@
-# Tauri + React + Typescript
 
-初始化项目名称
+## 创新创业孵化载体管理平台前端
+使用react构建的创新创业孵化载体管理平台的前端
 
-## Recommended IDE Setup
-
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+### 技术栈
+- react + tauri
+- HTTPS/SSE与后端联系
