@@ -20,9 +20,16 @@ import GovCarrierSearch from "../pages/gov/CarrierSearch";
 
 /** 未登录 → 跳转登录 */
 function GuestGuard() {
-  const { token, loading } = useAuthStore();
+  const { token, loading, initAuth } = useAuthStore();
+  const [initialized, setInitialized] = useState(false);
 
-  if (loading) {
+  useEffect(() => {
+    if (!initialized) {
+      initAuth().finally(() => setInitialized(true));
+    }
+  }, [initAuth, initialized]);
+
+  if (!initialized || loading) {
     return <div style={{ padding: 48, textAlign: "center" }}>加载中...</div>;
   }
 
