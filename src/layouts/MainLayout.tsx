@@ -32,6 +32,7 @@ import {
   AppstoreOutlined,
   HomeOutlined,
   InboxOutlined,
+  BulbOutlined,
 } from "@ant-design/icons";
 import { useAuthStore } from "../store/authStore";
 import type { UserRole } from "../types";
@@ -69,6 +70,7 @@ const roleMenuMap: Record<UserRole, MenuItem[]> = {
     { key: "/enterprise/incubation", icon: <HomeOutlined />, label: "企业入驻" },
     { key: "/enterprise/changes", icon: <FormOutlined />, label: "重大事项变更" },
     { key: "/enterprise/policies", icon: <FileTextOutlined />, label: "政策申报" },
+    { key: "/enterprise/ai-assist", icon: <BulbOutlined />, label: "智能辅助申报" },
     { key: "/enterprise/notifications", icon: <BellOutlined />, label: "通知中心" },
   ],
   carrier: [
