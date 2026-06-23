@@ -56,6 +56,7 @@ const IMPLEMENTED_ROUTES = new Set([
   "/enterprise/carriers",
   "/enterprise/incubation",
   "/carrier/dashboard",
+  "/carrier/incubation",
   "/gov/dashboard",
   "/gov/enterprises",
   "/gov/carriers",
