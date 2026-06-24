@@ -16,6 +16,7 @@ import EnterpriseCarrierList from "../pages/enterprise/CarrierList";
 import EnterpriseIncubationManagement from "../pages/enterprise/IncubationManagement";
 import EnterpriseChangeManagement from "../pages/enterprise/ChangeManagement";
 import EnterprisePolicyList from "../pages/enterprise/PolicyList";
+import EnterpriseAiAssist from "../pages/enterprise/AiAssist";
 import CarrierDashboard from "../pages/carrier/Dashboard";
 import CarrierIncubationReview from "../pages/carrier/IncubationReview";
 import CarrierChangeReview from "../pages/carrier/ChangeReview";
@@ -166,6 +167,10 @@ const router = createBrowserRouter([
               {
                 path: "/enterprise/policies",
                 element: <EnterprisePolicyList />,
+              },
+              {
+                path: "/enterprise/ai-assist",
+                element: <EnterpriseAiAssist />,
               },
               // TODO: 后续按层级逐步添加
               // /enterprise/applications/*
