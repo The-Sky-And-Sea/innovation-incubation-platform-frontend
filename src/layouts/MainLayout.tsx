@@ -62,6 +62,7 @@ const IMPLEMENTED_ROUTES = new Set([
   "/gov/dashboard",
   "/gov/enterprises",
   "/gov/carriers",
+  "/gov/policies",
 ]);
 
 /** 各角色菜单配置 */

@@ -21,6 +21,7 @@ import CarrierChangeReview from "../pages/carrier/ChangeReview";
 import GovDashboard from "../pages/gov/Dashboard";
 import GovEnterpriseSearch from "../pages/gov/EnterpriseSearch";
 import GovCarrierSearch from "../pages/gov/CarrierSearch";
+import GovPolicyManagement from "../pages/gov/PolicyManagement";
 
 /** 未登录 → 跳转登录 */
 function GuestGuard() {
@@ -225,8 +226,11 @@ const router = createBrowserRouter([
                 path: "/gov/carriers",
                 element: <GovCarrierSearch />,
               },
+              {
+                path: "/gov/policies",
+                element: <GovPolicyManagement />,
+              },
               // TODO: 后续按层级逐步添加
-              // /gov/carriers/*
               // /gov/policies/*
               // /gov/applications/*
               // /gov/incubation/*

@@ -61,6 +61,8 @@ const statusMap: Record<AuditStatus, { color: string; icon: React.ReactNode; lab
   approved: { color: "success", icon: <CheckCircleOutlined />, label: "已通过" },
   rejected: { color: "error", icon: <CloseCircleOutlined />, label: "已拒绝" },
   returned: { color: "warning", icon: <RollbackOutlined />, label: "已退回" },
+  carrier_review: { color: "processing", icon: <ClockCircleOutlined />, label: "载体审核中" },
+  gov_review: { color: "processing", icon: <ClockCircleOutlined />, label: "政务审核中" },
 };
 
 export default function EnterpriseChangeManagement() {
