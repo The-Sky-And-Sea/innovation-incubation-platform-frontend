@@ -14,11 +14,17 @@ import EnterpriseFileManagement from "../pages/enterprise/FileManagement";
 import EnterpriseMyInfo from "../pages/enterprise/MyInfo";
 import EnterpriseCarrierList from "../pages/enterprise/CarrierList";
 import EnterpriseIncubationManagement from "../pages/enterprise/IncubationManagement";
+import EnterpriseChangeManagement from "../pages/enterprise/ChangeManagement";
+import EnterprisePolicyList from "../pages/enterprise/PolicyList";
 import CarrierDashboard from "../pages/carrier/Dashboard";
 import CarrierIncubationReview from "../pages/carrier/IncubationReview";
+import CarrierChangeReview from "../pages/carrier/ChangeReview";
+import CarrierApplicationReview from "../pages/carrier/ApplicationReview";
 import GovDashboard from "../pages/gov/Dashboard";
 import GovEnterpriseSearch from "../pages/gov/EnterpriseSearch";
 import GovCarrierSearch from "../pages/gov/CarrierSearch";
+import GovPolicyManagement from "../pages/gov/PolicyManagement";
+import GovApplicationReview from "../pages/gov/ApplicationReview";
 
 /** 未登录 → 跳转登录 */
 function GuestGuard() {
@@ -153,9 +159,15 @@ const router = createBrowserRouter([
                 path: "/enterprise/incubation",
                 element: <EnterpriseIncubationManagement />,
               },
+              {
+                path: "/enterprise/changes",
+                element: <EnterpriseChangeManagement />,
+              },
+              {
+                path: "/enterprise/policies",
+                element: <EnterprisePolicyList />,
+              },
               // TODO: 后续按层级逐步添加
-              // /enterprise/changes/*
-              // /enterprise/policies/*
               // /enterprise/applications/*
             ],
           },
@@ -182,10 +194,16 @@ const router = createBrowserRouter([
                 path: "/carrier/incubation",
                 element: <CarrierIncubationReview />,
               },
+              {
+                path: "/carrier/changes",
+                element: <CarrierChangeReview />,
+              },
+              {
+                path: "/carrier/policies",
+                element: <CarrierApplicationReview />,
+              },
               // TODO: 后续按层级逐步添加
               // /carrier/info
-              // /carrier/changes/*
-              // /carrier/policies/*
               // /carrier/applications/*
               // /carrier/performances/*
             ],
@@ -217,9 +235,15 @@ const router = createBrowserRouter([
                 path: "/gov/carriers",
                 element: <GovCarrierSearch />,
               },
+              {
+                path: "/gov/policies",
+                element: <GovPolicyManagement />,
+              },
+              {
+                path: "/gov/applications",
+                element: <GovApplicationReview />,
+              },
               // TODO: 后续按层级逐步添加
-              // /gov/carriers/*
-              // /gov/policies/*
               // /gov/applications/*
               // /gov/incubation/*
               // /gov/performances/*

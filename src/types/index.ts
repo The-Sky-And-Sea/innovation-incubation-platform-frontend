@@ -78,7 +78,10 @@ export type AuditStatus =
   | "pending"
   | "approved"
   | "rejected"
-  | "returned";
+  | "returned"
+  /** 多级审核中间态 */
+  | "carrier_review"
+  | "gov_review";
 
 /** 审核操作 */
 export type AuditAction = "approve" | "reject" | "return";
