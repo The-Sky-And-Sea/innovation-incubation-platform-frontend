@@ -21,11 +21,13 @@ import CarrierDashboard from "../pages/carrier/Dashboard";
 import CarrierIncubationReview from "../pages/carrier/IncubationReview";
 import CarrierChangeReview from "../pages/carrier/ChangeReview";
 import CarrierApplicationReview from "../pages/carrier/ApplicationReview";
+import CarrierPerformanceSubmit from "../pages/carrier/PerformanceSubmit";
 import GovDashboard from "../pages/gov/Dashboard";
 import GovEnterpriseSearch from "../pages/gov/EnterpriseSearch";
 import GovCarrierSearch from "../pages/gov/CarrierSearch";
 import GovPolicyManagement from "../pages/gov/PolicyManagement";
 import GovApplicationReview from "../pages/gov/ApplicationReview";
+import GovPerformanceManagement from "../pages/gov/PerformanceManagement";
 
 /** 未登录 → 跳转登录 */
 function GuestGuard() {
@@ -207,10 +209,12 @@ const router = createBrowserRouter([
                 path: "/carrier/policies",
                 element: <CarrierApplicationReview />,
               },
+              {
+                path: "/carrier/performances",
+                element: <CarrierPerformanceSubmit />,
+              },
               // TODO: 后续按层级逐步添加
               // /carrier/info
-              // /carrier/applications/*
-              // /carrier/performances/*
             ],
           },
         ],
@@ -248,10 +252,12 @@ const router = createBrowserRouter([
                 path: "/gov/applications",
                 element: <GovApplicationReview />,
               },
+              {
+                path: "/gov/performances",
+                element: <GovPerformanceManagement />,
+              },
               // TODO: 后续按层级逐步添加
-              // /gov/applications/*
               // /gov/incubation/*
-              // /gov/performances/*
               // /gov/account/*
             ],
           },
