@@ -56,13 +56,16 @@ const IMPLEMENTED_ROUTES = new Set([
   "/enterprise/carriers",
   "/enterprise/incubation",
   "/enterprise/changes",
+  "/enterprise/policies",
   "/carrier/dashboard",
   "/carrier/incubation",
   "/carrier/changes",
+  "/carrier/policies",
   "/gov/dashboard",
   "/gov/enterprises",
   "/gov/carriers",
   "/gov/policies",
+  "/gov/applications",
 ]);
 
 /** 各角色菜单配置 */
