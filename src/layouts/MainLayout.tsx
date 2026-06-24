@@ -62,11 +62,13 @@ const IMPLEMENTED_ROUTES = new Set([
   "/carrier/incubation",
   "/carrier/changes",
   "/carrier/policies",
+  "/carrier/performances",
   "/gov/dashboard",
   "/gov/enterprises",
   "/gov/carriers",
   "/gov/policies",
   "/gov/applications",
+  "/gov/performances",
 ]);
 
 /** 各角色菜单配置 */
