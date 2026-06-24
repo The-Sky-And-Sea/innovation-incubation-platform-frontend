@@ -28,6 +28,7 @@ import GovCarrierSearch from "../pages/gov/CarrierSearch";
 import GovPolicyManagement from "../pages/gov/PolicyManagement";
 import GovApplicationReview from "../pages/gov/ApplicationReview";
 import GovPerformanceManagement from "../pages/gov/PerformanceManagement";
+import NotificationCenter from "../pages/Notifications";
 
 /** 未登录 → 跳转登录 */
 function GuestGuard() {
@@ -174,6 +175,10 @@ const router = createBrowserRouter([
                 path: "/enterprise/ai-assist",
                 element: <EnterpriseAiAssist />,
               },
+              {
+                path: "/enterprise/notifications",
+                element: <NotificationCenter />,
+              },
               // TODO: 后续按层级逐步添加
               // /enterprise/applications/*
             ],
@@ -212,6 +217,10 @@ const router = createBrowserRouter([
               {
                 path: "/carrier/performances",
                 element: <CarrierPerformanceSubmit />,
+              },
+              {
+                path: "/carrier/notifications",
+                element: <NotificationCenter />,
               },
               // TODO: 后续按层级逐步添加
               // /carrier/info
@@ -255,6 +264,10 @@ const router = createBrowserRouter([
               {
                 path: "/gov/performances",
                 element: <GovPerformanceManagement />,
+              },
+              {
+                path: "/gov/notifications",
+                element: <NotificationCenter />,
               },
               // TODO: 后续按层级逐步添加
               // /gov/incubation/*

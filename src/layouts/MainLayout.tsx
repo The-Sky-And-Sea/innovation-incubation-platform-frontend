@@ -4,6 +4,7 @@ import {
   Layout,
   Menu,
   Button,
+  Badge,
   theme,
   Dropdown,
   Avatar,
@@ -35,6 +36,7 @@ import {
   BulbOutlined,
 } from "@ant-design/icons";
 import { useAuthStore } from "../store/authStore";
+import { useNotificationStore } from "../store/notificationStore";
 import type { UserRole } from "../types";
 
 const { Header, Sider, Content } = Layout;
@@ -58,17 +60,20 @@ const IMPLEMENTED_ROUTES = new Set([
   "/enterprise/changes",
   "/enterprise/policies",
   "/enterprise/ai-assist",
+  "/enterprise/notifications",
   "/carrier/dashboard",
   "/carrier/incubation",
   "/carrier/changes",
   "/carrier/policies",
   "/carrier/performances",
+  "/carrier/notifications",
   "/gov/dashboard",
   "/gov/enterprises",
   "/gov/carriers",
   "/gov/policies",
   "/gov/applications",
   "/gov/performances",
+  "/gov/notifications",
 ]);
 
 /** 各角色菜单配置 */
@@ -110,6 +115,7 @@ export default function MainLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuthStore();
+  const unreadCount = useNotificationStore((s) => s.unreadCount);
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
@@ -210,18 +216,20 @@ export default function MainLayout() {
 
           {/* 用户区域 */}
           <Space>
-            <BellOutlined
-              style={{ fontSize: 18, cursor: "pointer" }}
-              onClick={() => {
-                const prefix =
-                  role === "enterprise"
-                    ? "/enterprise"
-                    : role === "carrier"
-                      ? "/carrier"
-                      : "/gov";
-                navigate(`${prefix}/notifications`);
-              }}
-            />
+            <Badge count={unreadCount} size="small" offset={[-2, 2]}>
+              <BellOutlined
+                style={{ fontSize: 18, cursor: "pointer" }}
+                onClick={() => {
+                  const prefix =
+                    role === "enterprise"
+                      ? "/enterprise"
+                      : role === "carrier"
+                        ? "/carrier"
+                        : "/gov";
+                  navigate(`${prefix}/notifications`);
+                }}
+              />
+            </Badge>
             <Dropdown
               menu={{
                 items: userMenuItems,
