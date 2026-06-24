@@ -85,7 +85,7 @@ npm run dev
 
 #### 6. 运行自动化测试
 ```bash
-npm test                 # 一次性运行 14 个测试（3 组）
+npm test                 # 一次性运行 43 个测试（4 组）
 npm run test:watch       # watch 模式，修改文件自动重跑
 ```
 
