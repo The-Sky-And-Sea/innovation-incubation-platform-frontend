@@ -22,6 +22,7 @@ import CarrierIncubationReview from "../pages/carrier/IncubationReview";
 import CarrierChangeReview from "../pages/carrier/ChangeReview";
 import CarrierApplicationReview from "../pages/carrier/ApplicationReview";
 import CarrierPerformanceSubmit from "../pages/carrier/PerformanceSubmit";
+import CarrierInfoPage from "../pages/carrier/CarrierInfo";
 import GovDashboard from "../pages/gov/Dashboard";
 import GovEnterpriseSearch from "../pages/gov/EnterpriseSearch";
 import GovCarrierSearch from "../pages/gov/CarrierSearch";
@@ -219,11 +220,14 @@ const router = createBrowserRouter([
                 element: <CarrierPerformanceSubmit />,
               },
               {
+                path: "/carrier/info",
+                element: <CarrierInfoPage />,
+              },
+              {
                 path: "/carrier/notifications",
                 element: <NotificationCenter />,
               },
               // TODO: 后续按层级逐步添加
-              // /carrier/info
             ],
           },
         ],

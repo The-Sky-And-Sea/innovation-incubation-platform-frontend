@@ -66,6 +66,7 @@ const IMPLEMENTED_ROUTES = new Set([
   "/carrier/changes",
   "/carrier/policies",
   "/carrier/performances",
+  "/carrier/info",
   "/carrier/notifications",
   "/gov/dashboard",
   "/gov/enterprises",
