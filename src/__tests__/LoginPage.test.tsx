@@ -30,7 +30,7 @@ describe("LoginPage 组件", () => {
   it("应渲染登录表单", () => {
     renderLogin();
     expect(screen.getByText("创新创业孵化管理平台")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("信用代码 / 手机号")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("统一社会信用代码")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("请输入密码")).toBeInTheDocument();
   });
 
@@ -38,10 +38,10 @@ describe("LoginPage 组件", () => {
     renderLogin();
     const user = userEvent.setup();
 
-    await user.type(screen.getByPlaceholderText("信用代码 / 手机号"), "91440101MA5XXXX");
+    await user.type(screen.getByPlaceholderText("统一社会信用代码"), "91440101MA5XXXX");
     await user.type(screen.getByPlaceholderText("请输入密码"), "password123");
 
-    expect(screen.getByPlaceholderText("信用代码 / 手机号")).toHaveValue("91440101MA5XXXX");
+    expect(screen.getByPlaceholderText("统一社会信用代码")).toHaveValue("91440101MA5XXXX");
     expect(screen.getByPlaceholderText("请输入密码")).toHaveValue("password123");
     expect(screen.getByRole("button", { name: /登 录/ })).toBeInTheDocument();
   });

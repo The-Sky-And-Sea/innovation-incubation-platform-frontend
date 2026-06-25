@@ -112,6 +112,13 @@ const roleMenuMap: Record<UserRole, MenuItem[]> = {
   ],
 };
 
+/** 角色配色 */
+const ROLE_COLORS: Record<UserRole, { primary: string; light: string; headerBg: string }> = {
+  enterprise: { primary: "#1B4FD8", light: "#EEF2FF", headerBg: "#1B4FD8" },
+  carrier: { primary: "#0D9488", light: "#E6FFFA", headerBg: "#0D9488" },
+  government: { primary: "#D97706", light: "#FFF7ED", headerBg: "#D97706" },
+};
+
 export default function MainLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
@@ -123,6 +130,7 @@ export default function MainLayout() {
   } = theme.useToken();
 
   const role = user?.role as UserRole;
+  const roleColor = ROLE_COLORS[role] || ROLE_COLORS.enterprise;
   const menus = roleMenuMap[role] || [];
 
   /** 当前选中菜单 */
@@ -202,17 +210,17 @@ export default function MainLayout() {
         <Header
           style={{
             padding: "0 24px",
-            background: colorBgContainer,
+            background: roleColor.headerBg,
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            borderBottom: "1px solid #f0f0f0",
+            borderBottom: "none",
           }}
         >
           {/* 折叠按钮 */}
           <Button
             type="text"
-            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            icon={collapsed ? <MenuUnfoldOutlined style={{ color: "#fff" }} /> : <MenuFoldOutlined style={{ color: "#fff" }} />}
             onClick={() => setCollapsed(!collapsed)}
           />
 
@@ -220,7 +228,7 @@ export default function MainLayout() {
           <Space>
             <Badge count={unreadCount} size="small" offset={[-2, 2]}>
               <BellOutlined
-                style={{ fontSize: 18, cursor: "pointer" }}
+                style={{ fontSize: 18, cursor: "pointer", color: "#fff" }}
                 onClick={() => {
                   const prefix =
                     role === "enterprise"
@@ -244,8 +252,8 @@ export default function MainLayout() {
               }}
             >
               <Space style={{ cursor: "pointer" }}>
-                <Avatar size="small" icon={<UserOutlined />} />
-                <Text>{user?.name || user?.phone || "用户"}</Text>
+                <Avatar size="small" icon={<UserOutlined />} style={{ backgroundColor: "#ffffff30" }} />
+                <Text style={{ color: "#fff" }}>{user?.name || user?.phone || "用户"}</Text>
               </Space>
             </Dropdown>
           </Space>
