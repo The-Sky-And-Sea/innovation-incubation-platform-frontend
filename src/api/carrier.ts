@@ -15,6 +15,7 @@ import type {
   IncubationRecord,
   AuditRequestBody,
   AuditStatus,
+  CarrierInfo,
 } from "../types";
 
 const USE_MOCK = true;
@@ -127,4 +128,42 @@ export async function completeIncubation(
 
   const { post } = await import("../utils/request");
   return post(`/carrier/incubation/${id}/complete`);
+}
+
+// ============ 载体基础信息 ============
+
+const mockCarrierInfo: CarrierInfo = {
+  id: 1,
+  name: "天河软件园孵化器",
+  type: "科技企业孵化器",
+  address: "广州市天河区科韵路16号",
+  area: "天河区",
+  manager_name: "王经理",
+  contact_phone: "020-88880001",
+  description: "国家级科技企业孵化器",
+};
+
+/**
+ * 获取载体自身信息
+ */
+export async function getCarrierInfo(): Promise<ApiResponse<CarrierInfo>> {
+  if (USE_MOCK) {
+    return mockApi<CarrierInfo>(mockCarrierInfo);
+  }
+  const { get } = await import("../utils/request");
+  return get<CarrierInfo>("/carrier/info");
+}
+
+/**
+ * 更新载体自身信息
+ */
+export async function updateCarrierInfo(
+  data: Partial<CarrierInfo>,
+): Promise<ApiResponse<CarrierInfo>> {
+  if (USE_MOCK) {
+    Object.assign(mockCarrierInfo, data);
+    return mockApi({ ...mockCarrierInfo });
+  }
+  const { put } = await import("../utils/request");
+  return put<CarrierInfo>("/carrier/info", data);
 }

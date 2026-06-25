@@ -22,12 +22,15 @@ import CarrierIncubationReview from "../pages/carrier/IncubationReview";
 import CarrierChangeReview from "../pages/carrier/ChangeReview";
 import CarrierApplicationReview from "../pages/carrier/ApplicationReview";
 import CarrierPerformanceSubmit from "../pages/carrier/PerformanceSubmit";
+import CarrierInfoPage from "../pages/carrier/CarrierInfo";
 import GovDashboard from "../pages/gov/Dashboard";
 import GovEnterpriseSearch from "../pages/gov/EnterpriseSearch";
 import GovCarrierSearch from "../pages/gov/CarrierSearch";
 import GovPolicyManagement from "../pages/gov/PolicyManagement";
 import GovApplicationReview from "../pages/gov/ApplicationReview";
 import GovPerformanceManagement from "../pages/gov/PerformanceManagement";
+import GovAccountDeletion from "../pages/gov/AccountDeletion";
+import NotificationCenter from "../pages/Notifications";
 
 /** 未登录 → 跳转登录 */
 function GuestGuard() {
@@ -174,6 +177,10 @@ const router = createBrowserRouter([
                 path: "/enterprise/ai-assist",
                 element: <EnterpriseAiAssist />,
               },
+              {
+                path: "/enterprise/notifications",
+                element: <NotificationCenter />,
+              },
               // TODO: 后续按层级逐步添加
               // /enterprise/applications/*
             ],
@@ -213,8 +220,15 @@ const router = createBrowserRouter([
                 path: "/carrier/performances",
                 element: <CarrierPerformanceSubmit />,
               },
+              {
+                path: "/carrier/info",
+                element: <CarrierInfoPage />,
+              },
+              {
+                path: "/carrier/notifications",
+                element: <NotificationCenter />,
+              },
               // TODO: 后续按层级逐步添加
-              // /carrier/info
             ],
           },
         ],
@@ -256,9 +270,16 @@ const router = createBrowserRouter([
                 path: "/gov/performances",
                 element: <GovPerformanceManagement />,
               },
+              {
+                path: "/gov/account",
+                element: <GovAccountDeletion />,
+              },
+              {
+                path: "/gov/notifications",
+                element: <NotificationCenter />,
+              },
               // TODO: 后续按层级逐步添加
               // /gov/incubation/*
-              // /gov/account/*
             ],
           },
         ],
