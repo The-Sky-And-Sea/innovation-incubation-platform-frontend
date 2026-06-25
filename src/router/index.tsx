@@ -29,6 +29,7 @@ import GovCarrierSearch from "../pages/gov/CarrierSearch";
 import GovPolicyManagement from "../pages/gov/PolicyManagement";
 import GovApplicationReview from "../pages/gov/ApplicationReview";
 import GovPerformanceManagement from "../pages/gov/PerformanceManagement";
+import GovAccountDeletion from "../pages/gov/AccountDeletion";
 import NotificationCenter from "../pages/Notifications";
 
 /** 未登录 → 跳转登录 */
@@ -270,12 +271,15 @@ const router = createBrowserRouter([
                 element: <GovPerformanceManagement />,
               },
               {
+                path: "/gov/account",
+                element: <GovAccountDeletion />,
+              },
+              {
                 path: "/gov/notifications",
                 element: <NotificationCenter />,
               },
               // TODO: 后续按层级逐步添加
               // /gov/incubation/*
-              // /gov/account/*
             ],
           },
         ],

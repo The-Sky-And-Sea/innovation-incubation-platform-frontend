@@ -74,6 +74,7 @@ const IMPLEMENTED_ROUTES = new Set([
   "/gov/policies",
   "/gov/applications",
   "/gov/performances",
+  "/gov/account",
   "/gov/notifications",
 ]);
 

@@ -41,17 +41,20 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   _intervalId: null,
 
   /** 开始定时轮询（每 30 秒检查一次，模拟 SSE） */
-  startPolling: (userId = 1) => {
+  startPolling: (userId?: number) => {
+    // 从 authStore 获取当前用户 ID（如果未传入）
+    const resolveUserId = userId ?? 1;
+
     // 先停止旧的
     const prev = get()._intervalId;
     if (prev) clearInterval(prev);
 
     // 立即拉取一次
-    get().refresh(userId);
+    get().refresh(resolveUserId);
 
     // 每 30 秒拉取一次（模拟 SSE heartbeat）
     const id = setInterval(() => {
-      get().refresh(userId);
+      get().refresh(resolveUserId);
     }, 30000);
 
     set({ _intervalId: id });

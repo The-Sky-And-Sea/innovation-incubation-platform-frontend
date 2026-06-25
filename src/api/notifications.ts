@@ -28,16 +28,55 @@ const USE_MOCK = true;
 let notificationIdCounter = 5000;
 const mockNotifications: Notification[] = [];
 
-/** 预置几条演示通知 */
+/** 预置几条演示通知，按角色（user_id）分发 */
 function seedNotifications() {
   const now = new Date().toISOString();
+
+  // 企业端（user_id=1）
   mockNotifications.push(
     {
       id: ++notificationIdCounter,
       user_id: 1,
+      type: "incubation_reviewed",
+      title: "入驻审核结果已出",
+      content: "您的入驻申请 #201 审核已通过",
+      target_type: "incubation",
+      target_id: 201,
+      is_read: false,
+      created_at: new Date(Date.now() - 3600000).toISOString(),
+    },
+    {
+      id: ++notificationIdCounter,
+      user_id: 1,
+      type: "policy_published",
+      title: "新政策已发布",
+      content: "政务端发布了「2026年度高新技术企业补贴」政策，查看是否符合申报条件",
+      target_type: "policy",
+      target_id: 601,
+      is_read: false,
+      created_at: new Date(Date.now() - 7200000).toISOString(),
+    },
+    {
+      id: ++notificationIdCounter,
+      user_id: 1,
+      type: "change_reviewed",
+      title: "变更审核结果已出",
+      content: "您的企业名称变更申请已通过",
+      target_type: "change",
+      target_id: 301,
+      is_read: false,
+      created_at: new Date(Date.now() - 10800000).toISOString(),
+    },
+  );
+
+  // 载体端（user_id=2）
+  mockNotifications.push(
+    {
+      id: ++notificationIdCounter,
+      user_id: 2,
       type: "incubation_pending",
       title: "有一份新的入驻申请待审核",
-      content: "企业「测试科技有限公司」提交了入驻申请",
+      content: "企业「测试科技有限公司」提交了入驻申请 #201",
       target_type: "incubation",
       target_id: 201,
       is_read: false,
@@ -45,23 +84,49 @@ function seedNotifications() {
     },
     {
       id: ++notificationIdCounter,
-      user_id: 1,
-      type: "policy_published",
-      title: "新政策已发布",
-      content: "政务端发布了「2026年度高新技术企业补贴」政策",
-      target_type: "policy",
-      target_id: 601,
+      user_id: 2,
+      type: "change_pending",
+      title: "企业变更申请待审核",
+      content: "企业「测试科技有限公司」发起了企业名称变更",
+      target_type: "change",
+      target_id: 301,
       is_read: false,
       created_at: new Date(Date.now() - 3600000).toISOString(),
     },
     {
       id: ++notificationIdCounter,
-      user_id: 1,
-      type: "incubation_reviewed",
-      title: "入驻审核结果已出",
-      content: "您的入驻申请 #201 已通过",
-      target_type: "incubation",
-      target_id: 201,
+      user_id: 2,
+      type: "application_pending",
+      title: "企业政策申报待审核",
+      content: "企业「测试科技有限公司」提交了政策申报",
+      target_type: "application",
+      target_id: 701,
+      is_read: false,
+      created_at: new Date(Date.now() - 5400000).toISOString(),
+    },
+  );
+
+  // 政务端（user_id=3）
+  mockNotifications.push(
+    {
+      id: ++notificationIdCounter,
+      user_id: 3,
+      type: "application_carrier_approved",
+      title: "有新的政策申报需要终审",
+      content: "载体已审核通过企业「测试科技有限公司」的政策申报，等待政务终审",
+      target_type: "application",
+      target_id: 701,
+      is_read: false,
+      created_at: now,
+    },
+    {
+      id: ++notificationIdCounter,
+      user_id: 3,
+      type: "deletion_applied",
+      title: "有新的账号注销申请待审核",
+      content: "企业「测试科技有限公司」提交了账号注销申请",
+      target_type: "account",
+      target_id: 1,
       is_read: false,
       created_at: new Date(Date.now() - 7200000).toISOString(),
     },

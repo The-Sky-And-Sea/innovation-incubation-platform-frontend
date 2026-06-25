@@ -24,6 +24,7 @@ import {
   ReloadOutlined,
 } from "@ant-design/icons";
 import type { NotificationType } from "../types";
+import { useAuthStore } from "../store/authStore";
 import { useNotificationStore } from "../store/notificationStore";
 
 const { Title, Text } = Typography;
@@ -60,11 +61,14 @@ export default function NotificationCenter() {
     markAllAsRead,
   } = useNotificationStore();
 
+  const authUser = useAuthStore((s) => s.user);
+  const userId = authUser?.id ?? 1;
+
   // 进入页面时启动轮询，离开时停止
   useEffect(() => {
-    startPolling(1);
+    startPolling(userId);
     return () => stopPolling();
-  }, [startPolling, stopPolling]);
+  }, [startPolling, stopPolling, userId]);
 
   return (
     <div>
@@ -94,7 +98,7 @@ export default function NotificationCenter() {
             <Button
               size="small"
               icon={<ReloadOutlined />}
-              onClick={() => refresh(1)}
+              onClick={() => refresh(userId)}
             >
               刷新
             </Button>
