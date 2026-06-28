@@ -10,6 +10,7 @@ import {
   TrophyOutlined,
 } from "@ant-design/icons";
 import CountUp from "../../components/react-bits/CountUp";
+import AnimatedList from "../../components/react-bits/AnimatedList";
 import SpotlightCard from "../../components/react-bits/SpotlightCard";
 
 const { Text } = Typography;
@@ -77,7 +78,7 @@ export default function CarrierDashboard() {
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={14}>
           <Card className="role-section-card" variant="borderless" title="待处理队列">
-            <div className="role-task-list">
+            <AnimatedList className="role-task-list" delayStep={58}>
               {tasks.map((item) => (
                 <button key={item.title} type="button" onClick={() => navigate(item.path)}>
                   <span>
@@ -87,7 +88,7 @@ export default function CarrierDashboard() {
                   <RightOutlined />
                 </button>
               ))}
-            </div>
+            </AnimatedList>
           </Card>
         </Col>
         <Col xs={24} lg={10}>

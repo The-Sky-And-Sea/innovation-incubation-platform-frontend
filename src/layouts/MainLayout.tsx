@@ -29,6 +29,7 @@ import {
 } from "@ant-design/icons";
 import { useAuthStore } from "../store/authStore";
 import { useNotificationStore } from "../store/notificationStore";
+import AnimatedList from "../components/react-bits/AnimatedList";
 import type { UserRole } from "../types";
 
 const { Header, Sider, Content } = Layout;
@@ -349,7 +350,7 @@ export default function MainLayout() {
           onChange={(event) => setCommandQuery(event.target.value)}
           onPressEnter={() => filteredActions[0] && goRoute(filteredActions[0].path)}
         />
-        <div className="command-list">
+        <AnimatedList className="command-list" delayStep={34}>
           {filteredActions.map((item) => (
             <button className="command-item" key={item.key} type="button" onClick={() => goRoute(item.path)}>
               <span className="command-icon">{item.icon}</span>
@@ -361,7 +362,7 @@ export default function MainLayout() {
             </button>
           ))}
           {filteredActions.length === 0 && <div className="command-empty">没有匹配的功能入口</div>}
-        </div>
+        </AnimatedList>
       </Modal>
     </Layout>
   );

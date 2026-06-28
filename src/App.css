@@ -1058,6 +1058,19 @@ select {
   z-index: 1;
 }
 
+.rb-animated-list-item {
+  animation: rbListIn 360ms var(--ease-out) both;
+  animation-delay: var(--rb-list-delay, 0ms);
+}
+
+.queue-item.rb-animated-list-item,
+.risk-item.rb-animated-list-item,
+.flow-step.rb-animated-list-item,
+.role-task-list .rb-animated-list-item,
+.command-item.rb-animated-list-item {
+  will-change: opacity, transform;
+}
+
 .command-modal .ant-modal-content {
   overflow: hidden;
   border-radius: 14px;
@@ -1458,6 +1471,17 @@ select {
 @keyframes govBar {
   from {
     width: 0;
+  }
+}
+
+@keyframes rbListIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
