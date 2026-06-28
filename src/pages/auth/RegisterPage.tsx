@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type MouseEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button, Card, Divider, Form, Input, Select, Space, Typography, message } from "antd";
 import {
@@ -13,12 +13,14 @@ import {
 } from "@ant-design/icons";
 import { useAuthStore } from "../../store/authStore";
 import type { RegisterRequest } from "../../types";
+import AuthRouteTransition from "../../components/AuthRouteTransition";
 
 const { Title, Text } = Typography;
 
 export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [role, setRole] = useState<"enterprise" | "carrier">("enterprise");
+  const [routeTransitioning, setRouteTransitioning] = useState(false);
   const navigate = useNavigate();
   const register = useAuthStore((s) => s.register);
   const [form] = Form.useForm<RegisterRequest>();
@@ -36,8 +38,15 @@ export default function RegisterPage() {
     }
   };
 
+  const goLogin = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    setRouteTransitioning(true);
+    window.setTimeout(() => navigate("/login"), 520);
+  };
+
   return (
     <div className="auth-register-page">
+      <AuthRouteTransition active={routeTransitioning} />
       <section className="auth-register-aside">
         <div className="gov-login-brand">
           <span className="gov-login-brand-mark">孵</span>
@@ -161,7 +170,7 @@ export default function RegisterPage() {
           </Form>
 
           <div className="auth-register-login">
-            <Link to="/login">已有账号？立即登录</Link>
+            <Link to="/login" onClick={goLogin}>已有账号？立即登录</Link>
           </div>
         </Card>
       </main>

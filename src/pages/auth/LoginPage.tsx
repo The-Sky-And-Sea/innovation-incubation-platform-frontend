@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useState, type MouseEvent, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button, Card, ConfigProvider, Form, Input, Space, Typography, message } from "antd";
 import {
@@ -12,6 +12,7 @@ import {
 } from "@ant-design/icons";
 import { useAuthStore } from "../../store/authStore";
 import type { LoginRequest, UserRole } from "../../types";
+import AuthRouteTransition from "../../components/AuthRouteTransition";
 
 const { Title, Text } = Typography;
 
@@ -45,6 +46,7 @@ const ROLE_CONFIG: Record<
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [selectedRole, setSelectedRole] = useState<UserRole>("government");
+  const [routeTransitioning, setRouteTransitioning] = useState(false);
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
   const [form] = Form.useForm<LoginRequest>();
@@ -64,8 +66,15 @@ export default function LoginPage() {
     }
   };
 
+  const goRegister = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    setRouteTransitioning(true);
+    window.setTimeout(() => navigate("/register"), 520);
+  };
+
   return (
     <div className="gov-login-page">
+      <AuthRouteTransition active={routeTransitioning} />
       <section className="gov-login-visual" aria-label="平台介绍">
         <div className="gov-login-brand">
           <span className="gov-login-brand-mark">孵</span>
@@ -73,13 +82,14 @@ export default function LoginPage() {
         </div>
 
         <div className="gov-login-copy">
-          <Title level={1}>面向政企协同的孵化载体治理工作台</Title>
-          <p>聚合企业入驻、政策兑现、绩效考核与多级审核流程，让政务人员在同一入口完成监督、流转和跟踪。</p>
+          <Title level={1}>注册创新孵化 ID，成为平台实名用户</Title>
+          <p>即可同步开通入驻管理、政策申报、绩效考核与多端审核业务。</p>
+          <span>企业服务平台、载体协同平台、政策兑现平台、数据开放平台</span>
+          <a href="#login-panel">了解更多 &gt;</a>
         </div>
-
       </section>
 
-      <main className="gov-login-panel">
+      <main className="gov-login-panel" id="login-panel">
         <Card className="gov-login-card" variant="borderless">
           <Space orientation="vertical" size={2} style={{ width: "100%" }}>
             <Text strong style={{ color: "#14508c" }}>
@@ -170,7 +180,7 @@ export default function LoginPage() {
               已启用角色隔离、审核流转与通知追踪。
             </Text>
             <div style={{ textAlign: "center" }}>
-              <Link to="/register" style={{ color: "#14508c", fontSize: 13 }}>
+              <Link to="/register" onClick={goRegister} style={{ color: "#14508c", fontSize: 13 }}>
                 还没有账号？立即注册
               </Link>
             </div>

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, Card, Col, Drawer, Modal, Progress, Row, Segmented, Space, Tag, Timeline, Typography } from "antd";
+import { Button, Card, Drawer, Modal, Progress, Segmented, Space, Tag, Timeline, Typography } from "antd";
 import {
   AuditOutlined,
   BankOutlined,
@@ -146,9 +146,9 @@ export default function GovDashboard() {
         </div>
       </section>
 
-      <Row gutter={[16, 16]}>
+      <div className="gov-stat-grid">
         {stats.map((item, index) => (
-          <Col xs={24} sm={12} lg={6} key={item.title}>
+          <div key={item.title}>
             <SpotlightCard
               className="gov-stat-card gov-animate-card"
               spotlightColor="rgba(20, 80, 140, 0.14)"
@@ -162,12 +162,12 @@ export default function GovDashboard() {
               </div>
               <Text className="stat-trend">{item.trend}</Text>
             </SpotlightCard>
-          </Col>
+          </div>
         ))}
-      </Row>
+      </div>
 
-      <Row gutter={[16, 16]} align="stretch">
-        <Col xs={24} xl={15}>
+      <div className="gov-dashboard-grid gov-dashboard-grid-main">
+        <div className="gov-dashboard-primary">
           <Card
             className="gov-section-card workbench-card"
             variant="borderless"
@@ -204,9 +204,9 @@ export default function GovDashboard() {
               ))}
             </div>
           </Card>
-        </Col>
+        </div>
 
-        <Col xs={24} xl={9}>
+        <div className="gov-dashboard-aside">
           <Card className="gov-section-card" variant="borderless" title="风险提示">
             <div className="risk-list">
               {riskItems.map((item) => (
@@ -218,11 +218,11 @@ export default function GovDashboard() {
               ))}
             </div>
           </Card>
-        </Col>
-      </Row>
+        </div>
+      </div>
 
-      <Row gutter={[16, 16]}>
-        <Col xs={24} lg={14}>
+      <div className="gov-dashboard-grid gov-dashboard-grid-support">
+        <div>
           <Card className="gov-section-card flow-card" variant="borderless" title="全链路流转态势">
             <div className="flow-grid">
               {flowSteps.map((step) => (
@@ -238,8 +238,8 @@ export default function GovDashboard() {
               ))}
             </div>
           </Card>
-        </Col>
-        <Col xs={24} lg={10}>
+        </div>
+        <div>
           <Card className="gov-section-card" variant="borderless" title="快捷办理">
             <div className="quick-grid">
               <Button icon={<SearchOutlined />} onClick={() => navigate("/gov/enterprises")}>
@@ -256,8 +256,8 @@ export default function GovDashboard() {
               </Button>
             </div>
           </Card>
-        </Col>
-      </Row>
+        </div>
+      </div>
 
       <Drawer title="今日调度" open={scheduleOpen} onClose={() => setScheduleOpen(false)} width={420} className="gov-drawer">
         <Timeline

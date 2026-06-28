@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Avatar, Badge, Button, Dropdown, Input, Layout, Menu, Modal, Space, Tag, Typography, message } from "antd";
 import {
@@ -165,8 +165,11 @@ const GOV_COMMANDS: CommandAction[] = [
 
 export default function MainLayout() {
   const [collapsed, setCollapsed] = useState(false);
+  const [hoverExpanded, setHoverExpanded] = useState(false);
+  const [hoverClosing, setHoverClosing] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
   const [commandQuery, setCommandQuery] = useState("");
+  const hoverCloseTimer = useRef<number | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuthStore();
@@ -177,6 +180,14 @@ export default function MainLayout() {
   const menus = roleMenuMap[role] || [];
   const selectedKey = location.pathname;
   const activeMenu = menus.find((item) => item.key === selectedKey);
+  const siderCollapsed = collapsed && !hoverExpanded && !hoverClosing;
+
+  const clearHoverCloseTimer = () => {
+    if (hoverCloseTimer.current !== null) {
+      window.clearTimeout(hoverCloseTimer.current);
+      hoverCloseTimer.current = null;
+    }
+  };
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -188,6 +199,8 @@ export default function MainLayout() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  useEffect(() => () => clearHoverCloseTimer(), []);
 
   const commandActions = useMemo<CommandAction[]>(() => {
     if (role === "government") return GOV_COMMANDS;
@@ -228,16 +241,34 @@ export default function MainLayout() {
         跳到主内容
       </a>
       <Sider
-        className="app-sider"
+        className={`app-sider ${collapsed ? "is-collapse-locked" : ""} ${hoverExpanded ? "is-hover-expanded" : ""} ${hoverClosing ? "is-hover-closing" : ""}`}
         trigger={null}
         collapsible
-        collapsed={collapsed}
+        collapsed={siderCollapsed}
         breakpoint="lg"
         width={238}
+        onMouseEnter={() => {
+          if (collapsed) {
+            clearHoverCloseTimer();
+            setHoverClosing(false);
+            setHoverExpanded(true);
+          }
+        }}
+        onMouseLeave={() => {
+          if (collapsed) {
+            clearHoverCloseTimer();
+            setHoverExpanded(false);
+            setHoverClosing(true);
+            hoverCloseTimer.current = window.setTimeout(() => {
+              setHoverClosing(false);
+              hoverCloseTimer.current = null;
+            }, 220);
+          }
+        }}
       >
         <div className="layout-brand">
           <span className="layout-brand-mark">孵</span>
-          {!collapsed && (
+          {!siderCollapsed && (
             <div className="layout-brand-copy">
               <strong>孵化载体管理平台</strong>
               <span>{roleMeta.scope}</span>
@@ -253,7 +284,7 @@ export default function MainLayout() {
           onClick={({ key }) => goRoute(key)}
           items={menus.map((item) => ({ key: item.key, icon: item.icon, label: item.label }))}
         />
-        {!collapsed && (
+        {!siderCollapsed && (
           <div className="sider-status-card">
             <span>今日工作状态</span>
             <strong>{unreadCount > 0 ? `${unreadCount} 条未读提醒` : "暂无未读提醒"}</strong>
@@ -269,7 +300,12 @@ export default function MainLayout() {
               type="text"
               aria-label={collapsed ? "展开侧边栏" : "收起侧边栏"}
               icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-              onClick={() => setCollapsed(!collapsed)}
+              onClick={() => {
+                clearHoverCloseTimer();
+                setHoverExpanded(false);
+                setHoverClosing(false);
+                setCollapsed(!collapsed);
+              }}
             />
             <SafetyCertificateOutlined style={{ color: roleMeta.primary, fontSize: 20 }} />
             <div className="header-title">

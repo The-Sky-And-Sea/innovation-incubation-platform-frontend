@@ -46,16 +46,20 @@ export default function NotificationCenter() {
 
   return (
     <div className="notifications-page">
-      <section className="page-heading">
-        <div>
-          <Space>
+      <section className="notification-heading">
+        <div className="notification-heading-main">
+          <span className="notification-heading-icon">
             <BellOutlined />
-            <Title level={3}>通知中心</Title>
-            {unreadCount > 0 && <Badge count={unreadCount} />}
-          </Space>
-          <Text type="secondary">统一查看审核流转、政策发布、绩效考核与账号治理提醒。</Text>
+          </span>
+          <div className="notification-heading-copy">
+            <div className="notification-title-row">
+              <Title level={3}>通知中心</Title>
+              {unreadCount > 0 && <span className="notification-unread-pill">未读 {unreadCount}</span>}
+            </div>
+            <Text type="secondary">统一查看审核流转、政策发布、绩效考核与账号治理提醒。</Text>
+          </div>
         </div>
-        <Space>
+        <Space className="notification-actions">
           {unreadCount > 0 && (
             <Button icon={<CheckCircleOutlined />} onClick={markAllAsRead}>
               全部已读
@@ -68,7 +72,7 @@ export default function NotificationCenter() {
       </section>
 
       <Card
-        className="role-section-card"
+        className="role-section-card notification-list-card"
         variant="borderless"
         title="通知列表"
         extra={
