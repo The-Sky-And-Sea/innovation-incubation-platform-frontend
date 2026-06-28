@@ -21,7 +21,6 @@ import {
   WarningOutlined,
 } from "@ant-design/icons";
 import CountUp from "../../components/react-bits/CountUp";
-import AnimatedList from "../../components/react-bits/AnimatedList";
 import SpotlightCard from "../../components/react-bits/SpotlightCard";
 
 const { Text } = Typography;
@@ -187,7 +186,7 @@ export default function GovDashboard() {
               />
             }
           >
-            <AnimatedList className="queue-list" delayStep={42}>
+            <div className="queue-list">
               {filteredQueue.map((item) => (
                 <button key={item.id} className={`queue-item queue-${item.level}`} type="button" onClick={() => openCase(item)}>
                   <span className="queue-badge">{item.id}</span>
@@ -203,13 +202,13 @@ export default function GovDashboard() {
                   </span>
                 </button>
               ))}
-            </AnimatedList>
+            </div>
           </Card>
         </Col>
 
         <Col xs={24} xl={9}>
           <Card className="gov-section-card" variant="borderless" title="风险提示">
-            <AnimatedList className="risk-list" delayStep={58}>
+            <div className="risk-list">
               {riskItems.map((item) => (
                 <div className={`risk-item risk-${item.tone}`} key={item.label}>
                   <WarningOutlined />
@@ -217,7 +216,7 @@ export default function GovDashboard() {
                   <strong>{item.value}</strong>
                 </div>
               ))}
-            </AnimatedList>
+            </div>
           </Card>
         </Col>
       </Row>
@@ -225,7 +224,7 @@ export default function GovDashboard() {
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={14}>
           <Card className="gov-section-card flow-card" variant="borderless" title="全链路流转态势">
-            <AnimatedList className="flow-grid" delayStep={64}>
+            <div className="flow-grid">
               {flowSteps.map((step) => (
                 <div className="flow-step" key={step.label}>
                   <div className="flow-value">
@@ -237,7 +236,7 @@ export default function GovDashboard() {
                   </div>
                 </div>
               ))}
-            </AnimatedList>
+            </div>
           </Card>
         </Col>
         <Col xs={24} lg={10}>

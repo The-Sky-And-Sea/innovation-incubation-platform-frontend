@@ -11,7 +11,6 @@ import {
   UploadOutlined,
 } from "@ant-design/icons";
 import CountUp from "../../components/react-bits/CountUp";
-import AnimatedList from "../../components/react-bits/AnimatedList";
 import SpotlightCard from "../../components/react-bits/SpotlightCard";
 
 const { Text } = Typography;
@@ -79,7 +78,7 @@ export default function EnterpriseDashboard() {
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={14}>
           <Card className="role-section-card" variant="borderless" title="今日建议">
-            <AnimatedList className="role-task-list" delayStep={58}>
+            <div className="role-task-list">
               {tasks.map((item) => (
                 <button key={item.title} type="button" onClick={() => navigate(item.path)}>
                   <span>
@@ -89,7 +88,7 @@ export default function EnterpriseDashboard() {
                   <RightOutlined />
                 </button>
               ))}
-            </AnimatedList>
+            </div>
           </Card>
         </Col>
         <Col xs={24} lg={10}>
