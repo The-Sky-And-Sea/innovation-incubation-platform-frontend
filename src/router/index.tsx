@@ -32,6 +32,19 @@ import GovPerformanceManagement from "../pages/gov/PerformanceManagement";
 import GovAccountDeletion from "../pages/gov/AccountDeletion";
 import NotificationCenter from "../pages/Notifications";
 
+function RouteLoading() {
+  return (
+    <div className="route-loading" role="status" aria-live="polite">
+      <div className="route-loading-mark">孵</div>
+      <div>
+        <strong>正在恢复工作空间</strong>
+        <span>正在校验登录状态与角色权限</span>
+      </div>
+      <div className="route-loading-bar" />
+    </div>
+  );
+}
+
 /** 未登录 → 跳转登录 */
 function GuestGuard() {
   const { token, loading, initAuth } = useAuthStore();
@@ -44,7 +57,7 @@ function GuestGuard() {
   }, [initAuth, initialized]);
 
   if (!initialized || loading) {
-    return <div style={{ padding: 48, textAlign: "center" }}>加载中...</div>;
+    return <RouteLoading />;
   }
 
   if (token) {
@@ -66,7 +79,7 @@ function AuthGuard() {
   }, [initAuth, initialized]);
 
   if (!initialized || loading) {
-    return <div style={{ padding: 48, textAlign: "center" }}>加载中...</div>;
+    return <RouteLoading />;
   }
 
   if (!token) {

@@ -1,39 +1,31 @@
-import { useState } from "react";
-import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Avatar, Badge, Button, Dropdown, Input, Layout, Menu, Modal, Space, Tag, Typography, message } from "antd";
 import {
-  Layout,
-  Menu,
-  Button,
-  Badge,
-  theme,
-  Dropdown,
-  Avatar,
-  Space,
-  Typography,
-} from "antd";
-import { message } from "antd";
-import {
-  DashboardOutlined,
-  IdcardOutlined,
+  AuditOutlined,
   BankOutlined,
-  UploadOutlined,
-  FileProtectOutlined,
-  FormOutlined,
-  FileTextOutlined,
   BellOutlined,
-  SettingOutlined,
-  TeamOutlined,
+  BulbOutlined,
+  ClockCircleOutlined,
+  DashboardOutlined,
+  FileProtectOutlined,
+  FileTextOutlined,
+  FormOutlined,
+  HomeOutlined,
+  IdcardOutlined,
+  InboxOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  AuditOutlined,
+  SafetyCertificateOutlined,
+  SearchOutlined,
+  SettingOutlined,
+  TeamOutlined,
+  ThunderboltOutlined,
   TrophyOutlined,
+  UploadOutlined,
   UserDeleteOutlined,
   UserOutlined,
-  AppstoreOutlined,
-  HomeOutlined,
-  InboxOutlined,
-  BulbOutlined,
 } from "@ant-design/icons";
 import { useAuthStore } from "../store/authStore";
 import { useNotificationStore } from "../store/notificationStore";
@@ -42,15 +34,21 @@ import type { UserRole } from "../types";
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
 
-/** 菜单配置 */
 interface MenuItem {
   key: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
   label: string;
-  path?: string;
 }
 
-/** 已实现的路由集合 */
+interface CommandAction {
+  key: string;
+  title: string;
+  description: string;
+  path: string;
+  icon: ReactNode;
+  tag?: string;
+}
+
 const IMPLEMENTED_ROUTES = new Set([
   "/enterprise/dashboard",
   "/enterprise/info",
@@ -78,7 +76,6 @@ const IMPLEMENTED_ROUTES = new Set([
   "/gov/notifications",
 ]);
 
-/** 各角色菜单配置 */
 const roleMenuMap: Record<UserRole, MenuItem[]> = {
   enterprise: [
     { key: "/enterprise/dashboard", icon: <DashboardOutlined />, label: "工作台" },
@@ -96,146 +93,245 @@ const roleMenuMap: Record<UserRole, MenuItem[]> = {
     { key: "/carrier/incubation", icon: <AuditOutlined />, label: "入驻审核" },
     { key: "/carrier/info", icon: <SettingOutlined />, label: "基础信息" },
     { key: "/carrier/changes", icon: <FormOutlined />, label: "变更审核" },
-    { key: "/carrier/policies", icon: <FileTextOutlined />, label: "政策申报" },
+    { key: "/carrier/policies", icon: <FileTextOutlined />, label: "政策申报审核" },
     { key: "/carrier/performances", icon: <TrophyOutlined />, label: "绩效考核" },
     { key: "/carrier/notifications", icon: <BellOutlined />, label: "通知中心" },
   ],
   government: [
-    { key: "/gov/dashboard", icon: <DashboardOutlined />, label: "工作台" },
+    { key: "/gov/dashboard", icon: <DashboardOutlined />, label: "政务工作台" },
     { key: "/gov/enterprises", icon: <TeamOutlined />, label: "企业查询" },
     { key: "/gov/carriers", icon: <BankOutlined />, label: "载体查询" },
     { key: "/gov/policies", icon: <FileProtectOutlined />, label: "政策管理" },
-    { key: "/gov/applications", icon: <InboxOutlined />, label: "申报审核" },
+    { key: "/gov/applications", icon: <InboxOutlined />, label: "申报终审" },
     { key: "/gov/performances", icon: <TrophyOutlined />, label: "绩效考核" },
     { key: "/gov/account", icon: <UserDeleteOutlined />, label: "账号注销管理" },
     { key: "/gov/notifications", icon: <BellOutlined />, label: "通知中心" },
   ],
 };
 
-/** 角色配色 */
-const ROLE_COLORS: Record<UserRole, { primary: string; light: string; headerBg: string }> = {
-  enterprise: { primary: "#1B4FD8", light: "#EEF2FF", headerBg: "#1B4FD8" },
-  carrier: { primary: "#0D9488", light: "#E6FFFA", headerBg: "#0D9488" },
-  government: { primary: "#D97706", light: "#FFF7ED", headerBg: "#D97706" },
+const ROLE_META: Record<UserRole, { label: string; scope: string; primary: string }> = {
+  enterprise: { label: "企业端", scope: "申报服务", primary: "#14508c" },
+  carrier: { label: "载体端", scope: "审核协同", primary: "#0b7568" },
+  government: { label: "政务端", scope: "监督治理", primary: "#9a5b12" },
 };
+
+const GOV_COMMANDS: CommandAction[] = [
+  {
+    key: "gov-dashboard",
+    title: "政务驾驶舱",
+    description: "查看待办、风险预警、流转态势",
+    path: "/gov/dashboard",
+    icon: <DashboardOutlined />,
+    tag: "总览",
+  },
+  {
+    key: "gov-policy",
+    title: "发布政策",
+    description: "进入政策管理，创建模板并发布政策",
+    path: "/gov/policies",
+    icon: <FileProtectOutlined />,
+    tag: "常用",
+  },
+  {
+    key: "gov-review",
+    title: "申报终审",
+    description: "处理载体初审后的政策申报",
+    path: "/gov/applications",
+    icon: <InboxOutlined />,
+    tag: "待办",
+  },
+  {
+    key: "gov-performance",
+    title: "绩效考核",
+    description: "启动考核、查看提交、完成评分",
+    path: "/gov/performances",
+    icon: <TrophyOutlined />,
+  },
+  {
+    key: "gov-enterprise",
+    title: "企业查询",
+    description: "按名称、行业、信用代码检索企业",
+    path: "/gov/enterprises",
+    icon: <TeamOutlined />,
+  },
+  {
+    key: "gov-notice",
+    title: "通知中心",
+    description: "查看审核提醒与系统通知",
+    path: "/gov/notifications",
+    icon: <BellOutlined />,
+  },
+];
 
 export default function MainLayout() {
   const [collapsed, setCollapsed] = useState(false);
+  const [hoverExpanded, setHoverExpanded] = useState(false);
+  const [hoverClosing, setHoverClosing] = useState(false);
+  const [commandOpen, setCommandOpen] = useState(false);
+  const [commandQuery, setCommandQuery] = useState("");
+  const hoverCloseTimer = useRef<number | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuthStore();
   const unreadCount = useNotificationStore((s) => s.unreadCount);
-  const {
-    token: { colorBgContainer, borderRadiusLG },
-  } = theme.useToken();
 
-  const role = user?.role as UserRole;
-  const roleColor = ROLE_COLORS[role] || ROLE_COLORS.enterprise;
+  const role = (user?.role || "enterprise") as UserRole;
+  const roleMeta = ROLE_META[role];
   const menus = roleMenuMap[role] || [];
-
-  /** 当前选中菜单 */
   const selectedKey = location.pathname;
+  const activeMenu = menus.find((item) => item.key === selectedKey);
+  const siderCollapsed = collapsed && !hoverExpanded && !hoverClosing;
 
-  /** 用户下拉菜单 */
+  const clearHoverCloseTimer = () => {
+    if (hoverCloseTimer.current !== null) {
+      window.clearTimeout(hoverCloseTimer.current);
+      hoverCloseTimer.current = null;
+    }
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setCommandOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  useEffect(() => () => clearHoverCloseTimer(), []);
+
+  const commandActions = useMemo<CommandAction[]>(() => {
+    if (role === "government") return GOV_COMMANDS;
+    return menus.map((item) => ({
+      key: item.key,
+      title: item.label,
+      description: `打开${item.label}`,
+      path: item.key,
+      icon: item.icon,
+    }));
+  }, [menus, role]);
+
+  const filteredActions = commandActions.filter((item) => {
+    const keyword = commandQuery.trim().toLowerCase();
+    if (!keyword) return true;
+    return `${item.title} ${item.description}`.toLowerCase().includes(keyword);
+  });
+
+  const goRoute = (path: string) => {
+    if (IMPLEMENTED_ROUTES.has(path)) {
+      navigate(path);
+      setCommandOpen(false);
+      setCommandQuery("");
+    } else {
+      message.info("功能开发中，敬请期待");
+    }
+  };
+
   const userMenuItems = [
-    {
-      key: "role",
-      label: `角色：${role === "enterprise" ? "企业" : role === "carrier" ? "载体" : "政务"}`,
-      disabled: true,
-    },
+    { key: "role", label: `当前角色：${roleMeta.label}`, disabled: true },
     { type: "divider" as const },
-    {
-      key: "logout",
-      icon: <LogoutOutlined />,
-      label: "退出登录",
-      danger: true,
-    },
+    { key: "logout", icon: <LogoutOutlined />, label: "退出登录", danger: true },
   ];
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
-      {/* 侧边栏 */}
+    <Layout className="app-shell">
+      <a className="skip-link" href="#main-content">
+        跳到主内容
+      </a>
       <Sider
+        className={`app-sider ${collapsed ? "is-collapse-locked" : ""} ${hoverExpanded ? "is-hover-expanded" : ""} ${hoverClosing ? "is-hover-closing" : ""}`}
         trigger={null}
         collapsible
-        collapsed={collapsed}
+        collapsed={siderCollapsed}
         breakpoint="lg"
-        style={{ background: colorBgContainer }}
+        width={238}
+        onMouseEnter={() => {
+          if (collapsed) {
+            clearHoverCloseTimer();
+            setHoverClosing(false);
+            setHoverExpanded(true);
+          }
+        }}
+        onMouseLeave={() => {
+          if (collapsed) {
+            clearHoverCloseTimer();
+            setHoverExpanded(false);
+            setHoverClosing(true);
+            hoverCloseTimer.current = window.setTimeout(() => {
+              setHoverClosing(false);
+              hoverCloseTimer.current = null;
+            }, 220);
+          }
+        }}
       >
-        {/* Logo 区域 */}
-        <div
-          style={{
-            height: 64,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            borderBottom: "1px solid #f0f0f0",
-          }}
-        >
-          <AppstoreOutlined
-            style={{ fontSize: collapsed ? 20 : 24, color: "#1677ff" }}
-          />
-          {!collapsed && (
-            <Text
-              strong
-              style={{ marginLeft: 8, fontSize: 16, whiteSpace: "nowrap" }}
-            >
-              孵化管理平台
-            </Text>
+        <div className="layout-brand">
+          <span className="layout-brand-mark">孵</span>
+          {!siderCollapsed && (
+            <div className="layout-brand-copy">
+              <strong>孵化载体管理平台</strong>
+              <span>{roleMeta.scope}</span>
+            </div>
           )}
         </div>
 
-        {/* 菜单 */}
         <Menu
+          className="app-menu"
           mode="inline"
           selectedKeys={[selectedKey]}
-          onClick={({ key }) => {
-            if (IMPLEMENTED_ROUTES.has(key)) {
-              navigate(key);
-            } else {
-              message.info("功能开发中，敬请期待");
-            }
-          }}
-          items={menus.map((item) => ({
-            key: item.key,
-            icon: item.icon,
-            label: item.label,
-          }))}
-          style={{ borderInlineEnd: "none" }}
+          aria-label={`${roleMeta.label}导航`}
+          onClick={({ key }) => goRoute(key)}
+          items={menus.map((item) => ({ key: item.key, icon: item.icon, label: item.label }))}
         />
+        {!siderCollapsed && (
+          <div className="sider-status-card">
+            <span>今日工作状态</span>
+            <strong>{unreadCount > 0 ? `${unreadCount} 条未读提醒` : "暂无未读提醒"}</strong>
+            <small>使用 Ctrl K 可快速办理常用事项</small>
+          </div>
+        )}
       </Sider>
 
-      {/* 右侧内容区 */}
       <Layout>
-        <Header
-          style={{
-            padding: "0 24px",
-            background: roleColor.headerBg,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            borderBottom: "none",
-          }}
-        >
-          {/* 折叠按钮 */}
-          <Button
-            type="text"
-            icon={collapsed ? <MenuUnfoldOutlined style={{ color: "#fff" }} /> : <MenuFoldOutlined style={{ color: "#fff" }} />}
-            onClick={() => setCollapsed(!collapsed)}
-          />
+        <Header className="app-header">
+          <Space size={10} style={{ minWidth: 0 }}>
+            <Button
+              type="text"
+              aria-label={collapsed ? "展开侧边栏" : "收起侧边栏"}
+              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+              onClick={() => {
+                clearHoverCloseTimer();
+                setHoverExpanded(false);
+                setHoverClosing(false);
+                setCollapsed(!collapsed);
+              }}
+            />
+            <SafetyCertificateOutlined style={{ color: roleMeta.primary, fontSize: 20 }} />
+            <div className="header-title">
+              <strong>{activeMenu?.label || `${roleMeta.label}工作空间`}</strong>
+              <span>
+                {roleMeta.label} / {roleMeta.scope} / {activeMenu?.label || "工作台"}
+              </span>
+            </div>
+          </Space>
 
-          {/* 用户区域 */}
-          <Space>
+          <Space size={12} className="header-tools">
+            <Button className="command-trigger" icon={<SearchOutlined />} onClick={() => setCommandOpen(true)}>
+              快速办理
+              <kbd>Ctrl K</kbd>
+            </Button>
+            <Tag className="sync-tag" icon={<ClockCircleOutlined />}>
+              今日 20:30 已同步
+            </Tag>
             <Badge count={unreadCount} size="small" offset={[-2, 2]}>
-              <BellOutlined
-                style={{ fontSize: 18, cursor: "pointer", color: "#fff" }}
+              <Button
+                type="text"
+                shape="circle"
+                aria-label="通知中心"
+                icon={<BellOutlined style={{ color: "#334155" }} />}
                 onClick={() => {
-                  const prefix =
-                    role === "enterprise"
-                      ? "/enterprise"
-                      : role === "carrier"
-                        ? "/carrier"
-                        : "/gov";
+                  const prefix = role === "enterprise" ? "/enterprise" : role === "carrier" ? "/carrier" : "/gov";
                   navigate(`${prefix}/notifications`);
                 }}
               />
@@ -251,28 +347,58 @@ export default function MainLayout() {
                 },
               }}
             >
-              <Space style={{ cursor: "pointer" }}>
-                <Avatar size="small" icon={<UserOutlined />} style={{ backgroundColor: "#ffffff30" }} />
-                <Text style={{ color: "#fff" }}>{user?.name || user?.phone || "用户"}</Text>
+              <Space className="user-entry">
+                <Avatar size="small" icon={<UserOutlined />} style={{ backgroundColor: roleMeta.primary }} />
+                <Text style={{ color: "#334155" }}>{user?.name || user?.phone || "用户"}</Text>
               </Space>
             </Dropdown>
           </Space>
         </Header>
 
-        {/* 内容区 */}
-        <Content
-          style={{
-            margin: 24,
-            padding: 24,
-            background: colorBgContainer,
-            borderRadius: borderRadiusLG,
-            minHeight: 360,
-            overflow: "auto",
-          }}
-        >
-          <Outlet />
+        <Content className="app-content-wrap" id="main-content" tabIndex={-1}>
+          <div className="app-content">
+            <Outlet />
+          </div>
         </Content>
       </Layout>
+
+      <Modal
+        open={commandOpen}
+        onCancel={() => setCommandOpen(false)}
+        footer={null}
+        width={720}
+        className="command-modal"
+        title={
+          <Space>
+            <ThunderboltOutlined />
+            <span>快速办理</span>
+          </Space>
+        }
+      >
+        <Input
+          autoFocus
+          size="large"
+          allowClear
+          value={commandQuery}
+          prefix={<SearchOutlined />}
+          placeholder="搜索政策、申报、企业、载体或通知"
+          onChange={(event) => setCommandQuery(event.target.value)}
+          onPressEnter={() => filteredActions[0] && goRoute(filteredActions[0].path)}
+        />
+        <div className="command-list">
+          {filteredActions.map((item) => (
+            <button className="command-item" key={item.key} type="button" onClick={() => goRoute(item.path)}>
+              <span className="command-icon">{item.icon}</span>
+              <span className="command-copy">
+                <strong>{item.title}</strong>
+                <small>{item.description}</small>
+              </span>
+              {item.tag && <Tag color="gold">{item.tag}</Tag>}
+            </button>
+          ))}
+          {filteredActions.length === 0 && <div className="command-empty">没有匹配的功能入口</div>}
+        </div>
+      </Modal>
     </Layout>
   );
 }

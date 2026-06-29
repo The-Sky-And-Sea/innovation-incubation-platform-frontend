@@ -1,24 +1,57 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { Form, Input, Button, Card, Typography, message, ConfigProvider } from "antd";
-import { UserOutlined, LockOutlined, LoginOutlined, RocketOutlined } from "@ant-design/icons";
+import { useState, type MouseEvent, type ReactNode } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Button, Card, ConfigProvider, Form, Input, Space, Typography, message } from "antd";
+import {
+  BankOutlined,
+  CheckCircleOutlined,
+  LockOutlined,
+  LoginOutlined,
+  SafetyCertificateOutlined,
+  TeamOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
 import { useAuthStore } from "../../store/authStore";
 import type { LoginRequest, UserRole } from "../../types";
+import AuthRouteTransition from "../../components/AuthRouteTransition";
 
 const { Title, Text } = Typography;
 
-const ROLE_CONFIG: Record<UserRole, { label: string; emoji: string; color: string; bgColor: string }> = {
-  enterprise: { label: "企业端", emoji: "🏢", color: "#1B4FD8", bgColor: "#EEF2FF" },
-  carrier: { label: "载体端", emoji: "🏭", color: "#0D9488", bgColor: "#E6FFFA" },
-  government: { label: "政务端", emoji: "🏛️", color: "#D97706", bgColor: "#FFF7ED" },
+const ROLE_CONFIG: Record<
+  UserRole,
+  { label: string; description: string; icon: ReactNode; color: string; bgColor: string }
+> = {
+  enterprise: {
+    label: "企业端",
+    description: "企业申报与材料管理",
+    icon: <TeamOutlined />,
+    color: "#14508c",
+    bgColor: "#e6f0fa",
+  },
+  carrier: {
+    label: "载体端",
+    description: "载体审核与绩效填报",
+    icon: <BankOutlined />,
+    color: "#0b7568",
+    bgColor: "#e4f5f2",
+  },
+  government: {
+    label: "政务端",
+    description: "政策发布与监督审核",
+    icon: <SafetyCertificateOutlined />,
+    color: "#9a5b12",
+    bgColor: "#fff1dc",
+  },
 };
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<UserRole>("enterprise");
+  const [selectedRole, setSelectedRole] = useState<UserRole>("government");
+  const [routeTransitioning, setRouteTransitioning] = useState(false);
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
   const [form] = Form.useForm<LoginRequest>();
+
+  const roleConfig = ROLE_CONFIG[selectedRole];
 
   const onFinish = async (values: LoginRequest) => {
     setLoading(true);
@@ -33,156 +66,127 @@ export default function LoginPage() {
     }
   };
 
-  const roleConfig = ROLE_CONFIG[selectedRole];
+  const goRegister = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    setRouteTransitioning(true);
+    window.setTimeout(() => navigate("/register"), 520);
+  };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "#f0f3f8",
-        padding: 24,
-      }}
-    >
-      <Card
-        style={{
-          width: 480,
-          boxShadow: "0 8px 40px rgba(15, 23, 41, 0.12)",
-          borderRadius: 16,
-          border: "none",
-        }}
-        styles={{ body: { padding: 40 } }}
-      >
-        {/* Logo 区 */}
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <div
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: 14,
-              background: roleConfig.bgColor,
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 28,
-              marginBottom: 16,
+    <div className="gov-login-page">
+      <AuthRouteTransition active={routeTransitioning} />
+      <section className="gov-login-visual" aria-label="平台介绍">
+        <div className="gov-login-brand">
+          <span className="gov-login-brand-mark">孵</span>
+          <span>创新创业孵化载体管理平台</span>
+        </div>
+
+        <div className="gov-login-copy">
+          <Title level={1}>注册创新孵化 ID，成为平台实名用户</Title>
+          <p>即可同步开通入驻管理、政策申报、绩效考核与多端审核业务。</p>
+          <span>企业服务平台、载体协同平台、政策兑现平台、数据开放平台</span>
+          <a href="#login-panel">了解更多 &gt;</a>
+        </div>
+      </section>
+
+      <main className="gov-login-panel" id="login-panel">
+        <Card className="gov-login-card" variant="borderless">
+          <Space orientation="vertical" size={2} style={{ width: "100%" }}>
+            <Text strong style={{ color: "#14508c" }}>
+              统一身份认证
+            </Text>
+            <Title level={2} style={{ margin: 0, color: "#10243e" }}>
+              登录平台
+            </Title>
+            <Text style={{ color: "#65758b" }}>请选择角色后输入账号信息，Mock 环境任意账号可登录。</Text>
+          </Space>
+
+          <div className="login-role-grid" role="tablist" aria-label="选择登录角色">
+            {(Object.entries(ROLE_CONFIG) as [UserRole, (typeof ROLE_CONFIG)["enterprise"]][]).map(
+              ([key, cfg]) => {
+                const isActive = selectedRole === key;
+                return (
+                  <Button
+                    key={key}
+                    className="login-role-button"
+                    aria-pressed={isActive}
+                    style={{
+                      borderColor: isActive ? cfg.color : "#dbe4ee",
+                      backgroundColor: isActive ? cfg.bgColor : "#ffffff",
+                      color: isActive ? cfg.color : "#475569",
+                    }}
+                    onClick={() => {
+                      setSelectedRole(key);
+                      form.setFieldsValue({ credential: "", password: "" });
+                    }}
+                  >
+                    {cfg.icon}
+                    {cfg.label}
+                  </Button>
+                );
+              },
+            )}
+          </div>
+
+          <ConfigProvider
+            theme={{
+              token: {
+                colorPrimary: roleConfig.color,
+                borderRadius: 8,
+                controlHeight: 44,
+              },
             }}
           >
-            <RocketOutlined style={{ color: roleConfig.color }} />
-          </div>
-          <Title level={2} style={{ marginBottom: 4, color: "#0F1729" }}>
-            创新创业孵化管理平台
-          </Title>
-          <Text style={{ color: "#5A6B8A", fontSize: 14 }}>
-            企业 · 载体 · 政务 统一管理入口
-          </Text>
-        </div>
+            <Form form={form} layout="vertical" onFinish={onFinish} requiredMark={false}>
+              <Form.Item
+                name="credential"
+                label={selectedRole === "enterprise" ? "统一社会信用代码" : "登录账号"}
+                rules={[{ required: true, message: "请输入登录账号" }]}
+              >
+                <Input
+                  size="large"
+                  prefix={<UserOutlined style={{ color: "#7b8da3" }} />}
+                  placeholder={selectedRole === "enterprise" ? "请输入统一社会信用代码" : "请输入手机号或账号"}
+                />
+              </Form.Item>
 
-        {/* 角色选择 */}
-        <div style={{ display: "flex", gap: 10, marginBottom: 28 }}>
-          {(Object.entries(ROLE_CONFIG) as [UserRole, typeof ROLE_CONFIG["enterprise"]][]).map(
-            ([key, cfg]) => {
-              const isActive = selectedRole === key;
-              return (
+              <Form.Item name="password" label="密码" rules={[{ required: true, message: "请输入密码" }]}>
+                <Input.Password
+                  size="large"
+                  prefix={<LockOutlined style={{ color: "#7b8da3" }} />}
+                  placeholder="请输入 6 位以上密码"
+                />
+              </Form.Item>
+
+              <Form.Item style={{ marginBottom: 14 }}>
                 <Button
-                  key={key}
+                  type="primary"
+                  htmlType="submit"
                   block
                   size="large"
-                  style={{
-                    height: 48,
-                    borderRadius: 10,
-                    fontWeight: isActive ? 600 : 400,
-                    borderColor: isActive ? cfg.color : "#E2E8F0",
-                    backgroundColor: isActive ? cfg.bgColor : "#FFFFFF",
-                    color: isActive ? cfg.color : "#5A6B8A",
-                    boxShadow: isActive ? `0 0 0 2px ${cfg.color}20` : "none",
-                  }}
-                  onClick={() => {
-                    setSelectedRole(key);
-                    form.setFieldsValue({ credential: "", password: "" });
-                  }}
+                  loading={loading}
+                  icon={<LoginOutlined />}
+                  style={{ height: 46, fontWeight: 600 }}
                 >
-                  {cfg.emoji} {cfg.label}
+                  登录{roleConfig.label}
                 </Button>
-              );
-            },
-          )}
-        </div>
+              </Form.Item>
+            </Form>
+          </ConfigProvider>
 
-        {/* 登录表单 */}
-        <ConfigProvider
-          theme={{
-            token: {
-              colorPrimary: roleConfig.color,
-              borderRadius: 10,
-              controlHeight: 46,
-            },
-          }}
-        >
-          <Form form={form} layout="vertical" onFinish={onFinish}>
-            <Form.Item
-              name="credential"
-              rules={[{ required: true, message: "请输入凭据" }]}
-            >
-              <Input
-                size="large"
-                prefix={<UserOutlined style={{ color: "#94A3B8" }} />}
-                placeholder={
-                  selectedRole === "enterprise"
-                    ? "统一社会信用代码"
-                    : "手机号"
-                }
-                style={{ borderRadius: 10 }}
-              />
-            </Form.Item>
-
-            <Form.Item
-              name="password"
-              rules={[{ required: true, message: "请输入密码" }]}
-            >
-              <Input.Password
-                size="large"
-                prefix={<LockOutlined style={{ color: "#94A3B8" }} />}
-                placeholder="请输入密码"
-                style={{ borderRadius: 10 }}
-              />
-            </Form.Item>
-
-            <Form.Item style={{ marginBottom: 16 }}>
-              <Button
-                type="primary"
-                htmlType="submit"
-                block
-                size="large"
-                loading={loading}
-                icon={<LoginOutlined />}
-                style={{
-                  height: 48,
-                  borderRadius: 10,
-                  fontSize: 16,
-                  fontWeight: 600,
-                  background: roleConfig.color,
-                  borderColor: roleConfig.color,
-                  boxShadow: `0 4px 14px ${roleConfig.color}40`,
-                }}
-              >
-                登 录
-              </Button>
-            </Form.Item>
-          </Form>
-        </ConfigProvider>
-
-        <div style={{ textAlign: "center" }}>
-          <Link
-            to="/register"
-            style={{ color: "#5A6B8A", fontSize: 13 }}
-          >
-            还没有账号？立即注册
-          </Link>
-        </div>
-      </Card>
+          <Space orientation="vertical" size={10} style={{ width: "100%" }}>
+            <Text style={{ color: "#65758b", fontSize: 13 }}>
+              <CheckCircleOutlined style={{ color: "#0b7568", marginRight: 6 }} />
+              已启用角色隔离、审核流转与通知追踪。
+            </Text>
+            <div style={{ textAlign: "center" }}>
+              <Link to="/register" onClick={goRegister} style={{ color: "#14508c", fontSize: 13 }}>
+                还没有账号？立即注册
+              </Link>
+            </div>
+          </Space>
+        </Card>
+      </main>
     </div>
   );
 }

@@ -1,11 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import LoginPage from "../pages/auth/LoginPage";
 import { useAuthStore } from "../store/authStore";
 
-// Mock authStore
 vi.mock("../store/authStore", () => ({
   useAuthStore: vi.fn(),
 }));
@@ -27,23 +26,24 @@ describe("LoginPage 组件", () => {
       </MemoryRouter>,
     );
 
-  it("应渲染登录表单", () => {
+  it("应渲染政务风登录表单", () => {
     renderLogin();
-    expect(screen.getByText("创新创业孵化管理平台")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("统一社会信用代码")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("请输入密码")).toBeInTheDocument();
+    expect(screen.getByText("创新创业孵化载体管理平台")).toBeInTheDocument();
+    expect(screen.getByText("登录平台")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("请输入手机号或账号")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("请输入 6 位以上密码")).toBeInTheDocument();
   });
 
-  it("应允许用户填写表单并显示登录按钮", async () => {
+  it("应允许用户填写表单并显示政务端登录按钮", async () => {
     renderLogin();
     const user = userEvent.setup();
 
-    await user.type(screen.getByPlaceholderText("统一社会信用代码"), "91440101MA5XXXX");
-    await user.type(screen.getByPlaceholderText("请输入密码"), "password123");
+    await user.type(screen.getByPlaceholderText("请输入手机号或账号"), "01088880000");
+    await user.type(screen.getByPlaceholderText("请输入 6 位以上密码"), "password123");
 
-    expect(screen.getByPlaceholderText("统一社会信用代码")).toHaveValue("91440101MA5XXXX");
-    expect(screen.getByPlaceholderText("请输入密码")).toHaveValue("password123");
-    expect(screen.getByRole("button", { name: /登 录/ })).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("请输入手机号或账号")).toHaveValue("01088880000");
+    expect(screen.getByPlaceholderText("请输入 6 位以上密码")).toHaveValue("password123");
+    expect(screen.getByRole("button", { name: /登录政务端/ })).toBeInTheDocument();
   });
 
   it("应有注册链接", () => {
