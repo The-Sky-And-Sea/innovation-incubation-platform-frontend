@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Badge, Button, Card, Empty, List, Segmented, Space, Tag, Typography } from "antd";
-import { BellOutlined, CheckCircleOutlined, ClockCircleOutlined, ReloadOutlined } from "@ant-design/icons";
+import {
+  BellOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  ReloadOutlined,
+} from "@ant-design/icons";
 import type { NotificationType } from "../types";
 import { useAuthStore } from "../store/authStore";
 import { useNotificationStore } from "../store/notificationStore";
@@ -24,13 +29,15 @@ const typeLabels: Partial<Record<NotificationType, string>> = {
   deletion_approved: "注销通过",
   deletion_rejected: "注销驳回",
   account_deleted: "账号注销",
+  appeal_submitted: "诉求提交",
+  appeal_processed: "诉求处理",
 };
 
 export default function NotificationCenter() {
   const [filter, setFilter] = useState<"all" | "unread" | "read">("all");
   const { list, unreadCount, loading, startPolling, stopPolling, refresh, markAsRead, markAllAsRead } =
     useNotificationStore();
-  const authUser = useAuthStore((s) => s.user);
+  const authUser = useAuthStore((state) => state.user);
   const userId = authUser?.id ?? 1;
 
   const filteredList = useMemo(() => {
@@ -120,7 +127,7 @@ export default function NotificationCenter() {
                     </Space>
                   }
                   description={
-                    <Space orientation="vertical" size={4}>
+                    <Space direction="vertical" size={4}>
                       <Text type="secondary">{item.content}</Text>
                       <Text type="secondary" style={{ fontSize: 12 }}>
                         <ClockCircleOutlined /> {new Date(item.created_at).toLocaleString("zh-CN")}

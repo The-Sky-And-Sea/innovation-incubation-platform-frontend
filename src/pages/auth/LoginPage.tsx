@@ -1,4 +1,4 @@
-import { useState, type MouseEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button, Card, ConfigProvider, Form, Input, Space, Typography, message } from "antd";
 import {
@@ -45,22 +45,39 @@ const ROLE_CONFIG: Record<
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<UserRole>("government");
+  const [selectedRole, setSelectedRole] = useState<UserRole>("enterprise");
   const [routeTransitioning, setRouteTransitioning] = useState(false);
+  const [authError, setAuthError] = useState("");
+  const routeTimerRef = useRef<number | null>(null);
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
   const [form] = Form.useForm<LoginRequest>();
 
   const roleConfig = ROLE_CONFIG[selectedRole];
 
+  useEffect(() => {
+    return () => {
+      if (routeTimerRef.current) {
+        window.clearTimeout(routeTimerRef.current);
+      }
+    };
+  }, []);
+
   const onFinish = async (values: LoginRequest) => {
     setLoading(true);
+    setAuthError("");
     try {
       await login(values.credential, values.password, selectedRole);
       message.success("登录成功");
-      navigate("/dashboard");
+      setRouteTransitioning(true);
+      routeTimerRef.current = window.setTimeout(() => navigate("/dashboard"), 520);
     } catch (err) {
-      message.error((err as Error).message || "登录失败");
+      const errorMessage = (err as Error).message || "";
+      setAuthError(
+        errorMessage.includes("不能为空") || errorMessage.includes("至少")
+          ? errorMessage
+          : "账号或密码错误，请重新输入。",
+      );
     } finally {
       setLoading(false);
     }
@@ -68,8 +85,9 @@ export default function LoginPage() {
 
   const goRegister = (event: MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
+    setAuthError("");
     setRouteTransitioning(true);
-    window.setTimeout(() => navigate("/register"), 520);
+    routeTimerRef.current = window.setTimeout(() => navigate("/register"), 520);
   };
 
   return (
@@ -117,6 +135,7 @@ export default function LoginPage() {
                     }}
                     onClick={() => {
                       setSelectedRole(key);
+                      setAuthError("");
                       form.setFieldsValue({ credential: "", password: "" });
                     }}
                   >
@@ -137,7 +156,15 @@ export default function LoginPage() {
               },
             }}
           >
-            <Form form={form} layout="vertical" onFinish={onFinish} requiredMark={false}>
+            <Form
+              form={form}
+              layout="vertical"
+              onFinish={onFinish}
+              onValuesChange={() => {
+                if (authError) setAuthError("");
+              }}
+              requiredMark={false}
+            >
               <Form.Item
                 name="credential"
                 label={selectedRole === "enterprise" ? "统一社会信用代码" : "登录账号"}
@@ -157,6 +184,12 @@ export default function LoginPage() {
                   placeholder="请输入 6 位以上密码"
                 />
               </Form.Item>
+
+              {authError ? (
+                <div className="login-auth-error" role="alert">
+                  {authError}
+                </div>
+              ) : null}
 
               <Form.Item style={{ marginBottom: 14 }}>
                 <Button

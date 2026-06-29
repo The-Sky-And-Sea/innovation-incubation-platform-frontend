@@ -1,56 +1,81 @@
-/**
- * 绩效考核 API 层
- *
- * 对应后端接口：
- * 政务端：
- * - POST /gov/performances/templates      创建考核模板
- * - POST /gov/performances/campaigns       启动考核活动
- * - GET  /gov/performances/submissions     考核申报列表（分页）
- * - POST /gov/performances/:id/score       评分审核
- * 载体端：
- * - GET  /carrier/performances             考核活动列表
- * - POST /carrier/performances/:id/submit  提交考核申报
- */
-
+import { isMockEnabled } from "./config";
 import { mockApi, mockApiFail } from "./mock";
 import type {
   ApiResponse,
-  PerformanceTemplate,
   PerformanceCampaign,
   PerformanceSubmission,
+  PerformanceTemplate,
 } from "../types";
 
-const USE_MOCK = true;
+let templateIdCounter = 801;
+let campaignIdCounter = 901;
+let submissionIdCounter = 1001;
 
-// ============ Mock 数据 ============
+const mockTemplates = new Map<number, PerformanceTemplate>();
+const mockCampaigns = new Map<number, PerformanceCampaign>();
+const mockSubmissions = new Map<number, PerformanceSubmission>();
 
-let templateIdCounter = 800;
-let campaignIdCounter = 900;
-let submissionIdCounter = 1000;
+function seedPerformances() {
+  if (mockTemplates.size > 0) return;
 
-const mockTemplates: Map<number, PerformanceTemplate> = new Map();
-const mockCampaigns: Map<number, PerformanceCampaign> = new Map();
-const mockSubmissions: Map<number, PerformanceSubmission> = new Map();
+  mockTemplates.set(801, {
+    id: 801,
+    name: "年度孵化服务绩效模板",
+    year: 2026,
+    form_schema: {
+      service_enterprises: "服务企业数量",
+      incubation_results: "孵化成果说明",
+      events: "创业活动数量",
+    },
+  });
 
-// ============ 政务端 — 模板 ============
+  mockCampaigns.set(901, {
+    id: 901,
+    template_id: 801,
+    name: "2026 年度孵化载体绩效考核",
+    year: 2026,
+    start_date: "2026-06-01",
+    end_date: "2026-09-30",
+    is_active: true,
+  });
 
-/**
- * 创建考核模板
- */
+  mockSubmissions.set(1001, {
+    id: 1001,
+    campaign_id: 901,
+    carrier_id: 1,
+    form_data: {
+      service_enterprises: 42,
+      incubation_results: "完成 8 个创新项目孵化",
+      events: 12,
+    },
+    status: "pending",
+  });
+}
+
+seedPerformances();
+
+function paginate<T>(items: T[], page: number, pageSize: number) {
+  return {
+    list: items.slice((page - 1) * pageSize, page * pageSize),
+    total: items.length,
+    page,
+    page_size: pageSize,
+  };
+}
+
 export async function createPerformanceTemplate(
   name: string,
   year: number,
   formSchema: Record<string, unknown>,
 ): Promise<ApiResponse<PerformanceTemplate>> {
-  if (USE_MOCK) {
-    const id = ++templateIdCounter;
+  if (isMockEnabled()) {
     const template: PerformanceTemplate = {
-      id,
+      id: ++templateIdCounter,
       name,
       year,
       form_schema: formSchema,
     };
-    mockTemplates.set(id, template);
+    mockTemplates.set(template.id, template);
     return mockApi(template);
   }
 
@@ -58,11 +83,6 @@ export async function createPerformanceTemplate(
   return post("/gov/performances/templates", { name, year, form_schema: formSchema });
 }
 
-// ============ 政务端 — 启动考核 ============
-
-/**
- * 启动考核活动
- */
 export async function launchPerformanceCampaign(data: {
   template_id: number;
   name: string;
@@ -70,10 +90,9 @@ export async function launchPerformanceCampaign(data: {
   start_date: string;
   end_date: string;
 }): Promise<ApiResponse<PerformanceCampaign>> {
-  if (USE_MOCK) {
-    const id = ++campaignIdCounter;
+  if (isMockEnabled()) {
     const campaign: PerformanceCampaign = {
-      id,
+      id: ++campaignIdCounter,
       template_id: data.template_id,
       name: data.name,
       year: data.year,
@@ -81,7 +100,7 @@ export async function launchPerformanceCampaign(data: {
       end_date: data.end_date,
       is_active: true,
     };
-    mockCampaigns.set(id, campaign);
+    mockCampaigns.set(campaign.id, campaign);
     return mockApi(campaign);
   }
 
@@ -89,21 +108,13 @@ export async function launchPerformanceCampaign(data: {
   return post("/gov/performances/campaigns", data);
 }
 
-// ============ 载体端 — 考核活动列表 ============
-
-/**
- * 载体端查看已启动的考核活动
- */
 export async function getPerformanceCampaigns(
   page = 1,
   page_size = 20,
-): Promise<
-  ApiResponse<{ list: PerformanceCampaign[]; total: number; page: number; page_size: number }>
-> {
-  if (USE_MOCK) {
-    const all = Array.from(mockCampaigns.values()).filter((c) => c.is_active);
-    const list = all.slice((page - 1) * page_size, page * page_size);
-    return mockApi({ list, total: all.length, page, page_size });
+): Promise<ApiResponse<{ list: PerformanceCampaign[]; total: number; page: number; page_size: number }>> {
+  if (isMockEnabled()) {
+    const list = Array.from(mockCampaigns.values()).filter((item) => item.is_active);
+    return mockApi(paginate(list, page, page_size));
   }
 
   const { get } = await import("../utils/request");
@@ -113,25 +124,19 @@ export async function getPerformanceCampaigns(
   });
 }
 
-// ============ 载体端 — 提交考核申报 ============
-
-/**
- * 载体提交考核申报
- */
 export async function submitPerformance(
   campaignId: number,
   formData: Record<string, unknown>,
 ): Promise<ApiResponse<PerformanceSubmission>> {
-  if (USE_MOCK) {
-    const id = ++submissionIdCounter;
+  if (isMockEnabled()) {
     const submission: PerformanceSubmission = {
-      id,
+      id: ++submissionIdCounter,
       campaign_id: campaignId,
       carrier_id: 1,
       form_data: formData,
       status: "pending",
     };
-    mockSubmissions.set(id, submission);
+    mockSubmissions.set(submission.id, submission);
     return mockApi(submission);
   }
 
@@ -139,21 +144,12 @@ export async function submitPerformance(
   return post(`/carrier/performances/${campaignId}/submit`, { form_data: formData });
 }
 
-// ============ 政务端 — 考核申报列表 ============
-
-/**
- * 政务端查看考核申报列表
- */
 export async function getPerformanceSubmissions(
   page = 1,
   page_size = 20,
-): Promise<
-  ApiResponse<{ list: PerformanceSubmission[]; total: number; page: number; page_size: number }>
-> {
-  if (USE_MOCK) {
-    const all = Array.from(mockSubmissions.values());
-    const list = all.slice((page - 1) * page_size, page * page_size);
-    return mockApi({ list, total: all.length, page, page_size }, 300);
+): Promise<ApiResponse<{ list: PerformanceSubmission[]; total: number; page: number; page_size: number }>> {
+  if (isMockEnabled()) {
+    return mockApi(paginate(Array.from(mockSubmissions.values()), page, page_size), 300);
   }
 
   const { get } = await import("../utils/request");
@@ -163,18 +159,13 @@ export async function getPerformanceSubmissions(
   });
 }
 
-// ============ 政务端 — 评分审核 ============
-
-/**
- * 政务端评分审核
- */
 export async function scorePerformance(
   id: number,
   score: number,
   status: "approved" | "rejected",
   comment: string,
 ): Promise<ApiResponse<null>> {
-  if (USE_MOCK) {
+  if (isMockEnabled()) {
     const submission = mockSubmissions.get(id);
     if (!submission) {
       await mockApiFail(10002, "考核申报不存在");

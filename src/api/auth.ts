@@ -4,18 +4,25 @@
  * 对应后端接口：
  * - POST /auth/login    登录
  * - POST /auth/register  注册
- * - GET  /auth/me        获取当前用户信息
+ * - GET  /users/me       获取当前用户信息
  *
  * 切换模式：
- * - USE_MOCK = true  → 前端独立运行（默认）
- * - USE_MOCK = false → 对接真实后端 Gin 服务
+ * - VITE_USE_MOCK 未设置或不为 false → 前端独立运行（默认）
+ * - VITE_USE_MOCK=false              → 对接真实后端 Gin 服务
  */
 
 import { mockApi, mockApiFail } from "./mock";
-import type { ApiResponse, AuthData, UserInfo } from "../types";
+import { isMockEnabled } from "./config";
+import type { ApiResponse, AuthData, RegisterRequest, UserInfo } from "../types";
 
-/** Mock 开关 */
-const USE_MOCK = true;
+type BackendUserInfo = Omit<UserInfo, "id"> & { id?: number; user_id?: number };
+
+function normalizeUser(user: BackendUserInfo): UserInfo {
+  return {
+    ...user,
+    id: user.id ?? user.user_id ?? 0,
+  };
+}
 
 // ============ Mock 用户数据 ============
 
@@ -46,7 +53,7 @@ export async function loginAuth(
   password: string,
   role: string,
 ): Promise<ApiResponse<AuthData>> {
-  if (USE_MOCK) {
+  if (isMockEnabled()) {
     // 基本参数校验
     if (!credential) {
       await mockApiFail(10001, "参数错误：凭据不能为空");
@@ -70,23 +77,22 @@ export async function loginAuth(
   }
 
   const { post } = await import("../utils/request");
-  return post<AuthData>("/auth/login", { credential, password, role });
+  const res = await post<{ token: string; user: BackendUserInfo }>("/auth/login", { credential, password, role });
+  return {
+    ...res,
+    data: {
+      token: res.data.token,
+      user: normalizeUser(res.data.user),
+    },
+  };
 }
 
 /**
  * 注册
  * @param params 注册表单数据（角色区分企业/载体字段）
  */
-export async function registerAuth(params: {
-  password: string;
-  role: "enterprise" | "carrier";
-  phone: string;
-  email?: string;
-  enterprise_name?: string;
-  enterprise_credit_code?: string;
-  carrier_name?: string;
-}): Promise<ApiResponse<AuthData>> {
-  if (USE_MOCK) {
+export async function registerAuth(params: RegisterRequest): Promise<ApiResponse<UserInfo>> {
+  if (isMockEnabled()) {
     if (!params.phone || !params.password) {
       await mockApiFail(10001, "参数错误：手机号和密码不能为空");
       throw new Error("unreachable");
@@ -97,21 +103,21 @@ export async function registerAuth(params: {
     }
     // 持久化角色
     localStorage.setItem("mock_role", params.role);
-    return mockApi<AuthData>({
-      token: "mock-jwt-token-" + Date.now(),
-      user: {
+    return mockApi<UserInfo>(
+      normalizeUser({
         id: 2,
         role: params.role,
         phone: params.phone,
         email: params.email,
         credit_code: params.enterprise_credit_code || undefined,
-        name: params.enterprise_name || params.carrier_name || "新用户",
-      },
-    });
+        name: params.enterprise_name || params.carrier_name || "New User",
+      }),
+    );
   }
 
   const { post } = await import("../utils/request");
-  return post<AuthData>("/auth/register", params);
+  const res = await post<BackendUserInfo>("/auth/register", params);
+  return { ...res, data: normalizeUser(res.data) };
 }
 
 /**
@@ -121,7 +127,7 @@ export async function registerAuth(params: {
  * 避免 AuthGuard::initAuth() 调用时把角色覆盖为默认 enterprise。
  */
 export async function getMe(): Promise<ApiResponse<UserInfo>> {
-  if (USE_MOCK) {
+  if (isMockEnabled()) {
     const storedRole = localStorage.getItem("mock_role") || "enterprise";
     const roleInfo = roleUserMap[storedRole] || roleUserMap.enterprise;
     return mockApi<UserInfo>({
@@ -132,5 +138,6 @@ export async function getMe(): Promise<ApiResponse<UserInfo>> {
   }
 
   const { get } = await import("../utils/request");
-  return get<UserInfo>("/auth/me");
+  const res = await get<BackendUserInfo>("/users/me");
+  return { ...res, data: normalizeUser(res.data) };
 }

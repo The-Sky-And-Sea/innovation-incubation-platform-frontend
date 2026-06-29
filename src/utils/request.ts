@@ -11,15 +11,14 @@
  *
  * 用法：
  *   import { get, post, put, patch, del, uploadFile } from "../utils/request";
- *   const res = await get<UserInfo>("/auth/me");
+ *   const res = await get<UserInfo>("/users/me");
  *   const res = await post<AuthData>("/auth/login", { credential, password, role });
  */
 
+import { API_BASE_URL } from "../api/config";
 import { ApiResponse, ERROR_CODE_MAP } from "../types";
 
 /** 后端基础地址，后续通过环境变量或配置文件管理 */
-const BASE_URL = "http://localhost:8080/api/v1";
-
 /** 从 localStorage 获取 JWT Token */
 function getToken(): string | null {
   return localStorage.getItem("token");
@@ -52,7 +51,7 @@ export async function request<T = unknown>(
   const { body, params, timeout = 15000, ...restOptions } = options;
 
   // --- 拼接查询参数 ---
-  let fullUrl = `${BASE_URL}${url}`;
+  let fullUrl = `${API_BASE_URL}${url}`;
   if (params) {
     const searchParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {

@@ -8,7 +8,7 @@
  * - 退出登录
  *
  * 登录后自动存储 token 到 localStorage，
- * 页面刷新时自动调用 /auth/me 校验 token 有效性，
+ * 页面刷新时自动调用 /users/me 校验 token 有效性，
  * 校验失败则清除 token 并跳转登录页。
  */
 
@@ -76,7 +76,12 @@ export const useAuthStore = create<AuthState>((set) => ({
    * 2. 自动登录（存储 token）
    */
   register: async (params) => {
-    const res = await registerAuth(params);
+    await registerAuth(params);
+    const credential =
+      params.role === "enterprise"
+        ? params.enterprise_credit_code || params.phone
+        : params.phone;
+    const res = await loginAuth(credential, params.password, params.role);
     const { token, user } = res.data;
     localStorage.setItem("token", token);
     set({ token, user });
@@ -85,7 +90,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   /**
    * 页面刷新时恢复登录态
    * 1. 检查 localStorage 中是否有 token
-   * 2. 有 token → 调 /auth/me 验证有效性
+   * 2. 有 token → 调 /users/me 验证有效性
    * 3. 验证失败 → 清除 token，用户需重新登录
    */
   initAuth: async () => {

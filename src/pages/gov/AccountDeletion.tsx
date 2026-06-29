@@ -28,76 +28,37 @@ import {
   CloseCircleOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
+import { getGovAccountDeletions, reviewGovAccountDeletion } from "../../api/account";
+import type { AccountDeletion, AccountDeletionStatus } from "../../types";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 
-/** 模拟注销申请数据 */
-interface DeletionRequest {
-  id: number;
-  applicant_name: string;
-  applicant_type: "enterprise" | "carrier";
-  reason: string;
-  status: "pending" | "approved" | "rejected";
-  created_at: string;
-}
-
-const mockDeletions: DeletionRequest[] = [
-  {
-    id: 1,
-    applicant_name: "测试科技有限公司",
-    applicant_type: "enterprise",
-    reason: "企业已停止运营",
-    status: "pending",
-    created_at: new Date(Date.now() - 3600000).toISOString(),
-  },
-  {
-    id: 2,
-    applicant_name: "深圳湾创业广场",
-    applicant_type: "carrier",
-    reason: "载体已停止运营",
-    status: "pending",
-    created_at: new Date(Date.now() - 7200000).toISOString(),
-  },
-  {
-    id: 3,
-    applicant_name: "某企业已注销",
-    applicant_type: "enterprise",
-    reason: "经营已满5年",
-    status: "approved",
-    created_at: new Date(Date.now() - 259200000).toISOString(),
-  },
-];
-
 export default function GovAccountDeletion() {
-  const [deletions, setDeletions] = useState<DeletionRequest[]>(mockDeletions);
+  const [deletions, setDeletions] = useState<AccountDeletion[]>([]);
   const [loading, setLoading] = useState(false);
-  const [filter, setFilter] = useState<string>("pending");
+  const [filter, setFilter] = useState<AccountDeletionStatus | "">("pending");
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
 
   // 审核弹窗
   const [reviewModal, setReviewModal] = useState<{
     open: boolean;
-    record: DeletionRequest | null;
+    record: AccountDeletion | null;
     action: "approve" | "reject" | null;
   }>({ open: false, record: null, action: null });
   const [reviewComment, setReviewComment] = useState("");
   const [reviewing, setReviewing] = useState(false);
 
   const fetchList = useCallback(
-    (page = 1, pageSize = 10, statusFilter = filter) => {
+    async (page = 1, pageSize = 10, statusFilter = filter) => {
       setLoading(true);
       try {
-        const filtered = statusFilter
-          ? mockDeletions.filter((d) => d.status === statusFilter)
-          : mockDeletions;
-        const list = filtered.slice((page - 1) * pageSize, page * pageSize);
-        setDeletions(list);
-        setPagination({ current: page, pageSize, total: filtered.length });
-        // mock 延迟
-        setTimeout(() => setLoading(false), 300);
+        const res = await getGovAccountDeletions(statusFilter, page, pageSize);
+        setDeletions(res.data.list);
+        setPagination({ current: res.data.page, pageSize: res.data.page_size, total: res.data.total });
       } catch {
         message.error("加载注销申请失败");
+      } finally {
         setLoading(false);
       }
     },
@@ -108,28 +69,30 @@ export default function GovAccountDeletion() {
     fetchList(1, 10, filter);
   }, [fetchList, filter]);
 
-  const openReview = (record: DeletionRequest, action: "approve" | "reject") => {
+  const openReview = (record: AccountDeletion, action: "approve" | "reject") => {
     setReviewModal({ open: true, record, action });
     setReviewComment("");
   };
 
-  const handleReview = () => {
+  const handleReview = async () => {
     if (!reviewModal.record || !reviewModal.action) return;
     setReviewing(true);
-    // Mock 审核逻辑
-    setTimeout(() => {
-      const idx = mockDeletions.findIndex((d) => d.id === reviewModal.record!.id);
-      if (idx !== -1) {
-        mockDeletions[idx].status = reviewModal.action as "approved" | "rejected";
-      }
+    try {
+      await reviewGovAccountDeletion(reviewModal.record.id, {
+        action: reviewModal.action,
+        comment: reviewComment,
+      });
       message.success(reviewModal.action === "approve" ? "已批准注销，账号已删除" : "已拒绝注销申请");
-      setReviewing(false);
       setReviewModal({ open: false, record: null, action: null });
       fetchList(1, pagination.pageSize, filter);
-    }, 600);
+    } catch (err) {
+      message.error((err as Error).message || "审核失败");
+    } finally {
+      setReviewing(false);
+    }
   };
 
-  const columns: ColumnsType<DeletionRequest> = [
+  const columns: ColumnsType<AccountDeletion> = [
     { title: "编号", dataIndex: "id", key: "id", width: 60 },
     { title: "申请人", dataIndex: "applicant_name", key: "applicant_name", width: 180, render: (n: string) => <Text strong>{n}</Text> },
     {

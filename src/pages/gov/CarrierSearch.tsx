@@ -1,8 +1,8 @@
 import { useState, useCallback } from "react";
-import { Card, Typography, Space, Tag, Table, Button, Input, message, Drawer, Descriptions, Skeleton } from "antd";
-import { BankOutlined, SearchOutlined, EyeOutlined, EnvironmentOutlined, UserOutlined, PhoneOutlined, FileTextOutlined, ReloadOutlined } from "@ant-design/icons";
+import { Card, Typography, Space, Tag, Table, Button, Input, message, Drawer, Descriptions, Skeleton, Modal } from "antd";
+import { BankOutlined, SearchOutlined, EyeOutlined, EnvironmentOutlined, UserOutlined, PhoneOutlined, FileTextOutlined, ReloadOutlined, DeleteOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import { searchCarriers } from "../../api/gov";
+import { deleteCarrier, searchCarriers } from "../../api/gov";
 import type { CarrierInfo } from "../../types";
 
 const { Title, Text } = Typography;
@@ -30,12 +30,32 @@ export default function GovCarrierSearch() {
 
   const viewDetail = (c: CarrierInfo) => { setSelected(c); setDrawerOpen(true); };
 
+  const handleDelete = (record: CarrierInfo) => {
+    Modal.confirm({
+      title: "确认删除载体？",
+      content: `将删除「${record.name}」，该操作会调用政务端删除接口。`,
+      okText: "删除",
+      okButtonProps: { danger: true },
+      cancelText: "取消",
+      onOk: async () => {
+        await deleteCarrier(record.id);
+        message.success("载体已删除");
+        fetchList(keyword, pagination.current, pagination.pageSize);
+      },
+    });
+  };
+
   const columns: ColumnsType<CarrierInfo> = [
     { title: "载体名称", dataIndex: "name", key: "name", width: 200, render: (n: string) => <Space><BankOutlined /><Text strong>{n}</Text></Space> },
     { title: "类型", dataIndex: "type", key: "type", width: 130, render: (t: string) => <Tag color="blue">{t}</Tag> },
     { title: "区域", dataIndex: "area", key: "area", width: 100, render: (a: string) => <Tag>{a}</Tag> },
     { title: "联系人", dataIndex: "manager_name", key: "manager", width: 100 },
-    { title: "操作", key: "action", width: 80, render: (_, r) => <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => viewDetail(r)}>详情</Button> },
+    { title: "操作", key: "action", width: 130, render: (_, r) => (
+      <Space>
+        <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => viewDetail(r)}>详情</Button>
+        <Button type="link" size="small" danger icon={<DeleteOutlined />} onClick={() => handleDelete(r)}>删除</Button>
+      </Space>
+    ) },
   ];
 
   return (

@@ -7,9 +7,10 @@
  */
 
 import { mockApi } from "./mock";
+import { isMockEnabled } from "./config";
 import type { ApiResponse, CarrierInfo } from "../types";
 
-const USE_MOCK = true;
+
 
 // ============ Mock 数据 ============
 
@@ -55,7 +56,7 @@ export async function getCarrierList(
   page = 1,
   page_size = 20,
 ): Promise<ApiResponse<{ list: CarrierInfo[]; total: number; page: number; page_size: number }>> {
-  if (USE_MOCK) {
+  if (isMockEnabled()) {
     const list = mockCarriers.slice((page - 1) * page_size, page * page_size);
     return mockApi({ list, total: mockCarriers.length, page, page_size });
   }
@@ -71,7 +72,7 @@ export async function getCarrierList(
 export async function getCarrierDetail(
   id: number,
 ): Promise<ApiResponse<CarrierInfo>> {
-  if (USE_MOCK) {
+  if (isMockEnabled()) {
     const carrier = mockCarriers.find((c) => c.id === id);
     if (!carrier) {
       const { mockApiFail } = await import("./mock");
