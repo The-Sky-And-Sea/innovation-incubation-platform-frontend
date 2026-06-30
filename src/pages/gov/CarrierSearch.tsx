@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Card, Typography, Space, Tag, Table, Button, Input, message, Drawer, Descriptions, Skeleton, Modal } from "antd";
 import { BankOutlined, SearchOutlined, EyeOutlined, EnvironmentOutlined, UserOutlined, PhoneOutlined, FileTextOutlined, ReloadOutlined, DeleteOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
@@ -27,6 +27,11 @@ export default function GovCarrierSearch() {
       setLoading(false);
     }
   }, [keyword]);
+
+  // 首次打开时自动加载数据
+  useEffect(() => {
+    fetchList("", 1, 10);
+  }, []);
 
   const viewDetail = (c: CarrierInfo) => { setSelected(c); setDrawerOpen(true); };
 

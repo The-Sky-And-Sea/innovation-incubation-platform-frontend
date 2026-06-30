@@ -1,3 +1,12 @@
+/**
+ * 应用入口文件
+ *
+ * 使用 React 18 + React Router v6 + Ant Design v5
+ * - React.StrictMode: 开启开发模式严格检查
+ * - ConfigProvider: 全局主题配置（颜色、字体、圆角等）
+ * - RouterProvider: 注入路由配置
+ */
+
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { ConfigProvider } from "antd";
@@ -6,6 +15,7 @@ import { RouterProvider } from "react-router-dom";
 import router from "./router";
 import "./App.css";
 
+/** Antd 主题 tokens：统一视觉风格 */
 const themeTokens = {
   colorPrimary: "#14508c",
   colorInfo: "#14508c",

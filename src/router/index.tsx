@@ -1,3 +1,20 @@
+/**
+ * 路由配置模块
+ *
+ * 使用 react-router-dom v6 的 createBrowserRouter 方式
+ * 采用 Guard（守卫）模式进行权限控制：
+ * - GuestGuard: 仅未登录用户可访问（如登录页、注册页）
+ * - AuthGuard: 需要登录才能访问
+ * - RoleGuard: 需要特定角色才能访问
+ *
+ * 路由结构：
+ * - /login, /register         → 公开路由（GuestGuard）
+ * - /dashboard               → 登录后跳转（AuthGuard）
+ * - /enterprise/*            → 企业端路由（RoleGuard: enterprise）
+ * - /carrier/*              → 载体端路由（RoleGuard: carrier）
+ * - /gov/*                 → 政务端路由（RoleGuard: government）
+ */
+
 import { useEffect, useState } from "react";
 import { createBrowserRouter, Navigate, Outlet } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
@@ -32,6 +49,7 @@ import GovPolicyManagement from "../pages/gov/PolicyManagement";
 import { useAuthStore } from "../store/authStore";
 import type { UserRole } from "../types";
 
+/** 路由加载中组件（Auth 初始化时显示） */
 function RouteLoading() {
   return (
     <div className="route-loading" role="status" aria-live="polite">
@@ -45,6 +63,7 @@ function RouteLoading() {
   );
 }
 
+/** 游客守卫：未登录用户可访问登录/注册页，登录后跳转到仪表盘 */
 function GuestGuard() {
   const { token, loading, initAuth } = useAuthStore();
   const [initialized, setInitialized] = useState(false);
@@ -60,6 +79,7 @@ function GuestGuard() {
   return <Outlet />;
 }
 
+/** 登录守卫：需要 token 才能访问，受保护路由 */
 function AuthGuard() {
   const { token, user, loading, initAuth } = useAuthStore();
   const [initialized, setInitialized] = useState(false);
@@ -76,6 +96,7 @@ function AuthGuard() {
   return <Outlet />;
 }
 
+/** 角色守卫：检查用户角色是否符合要求 */
 function RoleGuard({ roles }: { roles: UserRole[] }) {
   const { user } = useAuthStore();
 
@@ -84,6 +105,7 @@ function RoleGuard({ roles }: { roles: UserRole[] }) {
   return <Outlet />;
 }
 
+/** 仪表盘跳转：根据用户角色跳转到对应的仪表盘 */
 function DashboardRedirect() {
   const { user } = useAuthStore();
 
@@ -98,6 +120,7 @@ function DashboardRedirect() {
   return <Navigate to={roleDashboardMap[user.role] || "/login"} replace />;
 }
 
+// 路由配置数组：按「守卫 → 角色 → 布局 → 页面」层次组织
 const router = createBrowserRouter([
   {
     element: <GuestGuard />,

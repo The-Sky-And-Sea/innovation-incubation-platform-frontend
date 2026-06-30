@@ -69,8 +69,8 @@ export default function LoginPage() {
     try {
       await login(values.credential, values.password, selectedRole);
       message.success("登录成功");
-      setRouteTransitioning(true);
-      routeTimerRef.current = window.setTimeout(() => navigate("/dashboard"), 520);
+      // 延迟跳转，让用户看到成功提示
+      setTimeout(() => navigate("/dashboard"), 300);
     } catch (err) {
       const errorMessage = (err as Error).message || "";
       setAuthError(

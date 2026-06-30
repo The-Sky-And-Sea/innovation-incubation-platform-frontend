@@ -4,7 +4,7 @@
  * 对应后端接口：
  * - POST /auth/login    登录
  * - POST /auth/register  注册
- * - GET  /users/me       获取当前用户信息
+ * - GET  /auth/me        获取当前用户信息
  *
  * 切换模式：
  * - VITE_USE_MOCK 未设置或不为 false → 前端独立运行（默认）
@@ -138,6 +138,6 @@ export async function getMe(): Promise<ApiResponse<UserInfo>> {
   }
 
   const { get } = await import("../utils/request");
-  const res = await get<BackendUserInfo>("/users/me");
+  const res = await get<BackendUserInfo>("/auth/me");
   return { ...res, data: normalizeUser(res.data) };
 }
