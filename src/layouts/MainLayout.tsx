@@ -1,12 +1,25 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Avatar, Badge, Button, Dropdown, Input, Layout, Menu, Modal, Space, Tag, Typography, message } from "antd";
+import {
+  Avatar,
+  Badge,
+  Button,
+  Dropdown,
+  Input,
+  Layout,
+  Menu,
+  Modal,
+  Space,
+  Tag,
+  Typography,
+} from "antd";
 import {
   AuditOutlined,
   BankOutlined,
   BellOutlined,
   BulbOutlined,
   ClockCircleOutlined,
+  CustomerServiceOutlined,
   DashboardOutlined,
   FileProtectOutlined,
   FileTextOutlined,
@@ -49,36 +62,9 @@ interface CommandAction {
   tag?: string;
 }
 
-const IMPLEMENTED_ROUTES = new Set([
-  "/enterprise/dashboard",
-  "/enterprise/info",
-  "/enterprise/files",
-  "/enterprise/carriers",
-  "/enterprise/incubation",
-  "/enterprise/changes",
-  "/enterprise/policies",
-  "/enterprise/ai-assist",
-  "/enterprise/notifications",
-  "/carrier/dashboard",
-  "/carrier/incubation",
-  "/carrier/changes",
-  "/carrier/policies",
-  "/carrier/performances",
-  "/carrier/info",
-  "/carrier/notifications",
-  "/gov/dashboard",
-  "/gov/enterprises",
-  "/gov/carriers",
-  "/gov/policies",
-  "/gov/applications",
-  "/gov/performances",
-  "/gov/account",
-  "/gov/notifications",
-]);
-
 const roleMenuMap: Record<UserRole, MenuItem[]> = {
   enterprise: [
-    { key: "/enterprise/dashboard", icon: <DashboardOutlined />, label: "工作台" },
+    { key: "/enterprise/dashboard", icon: <DashboardOutlined />, label: "企业工作台" },
     { key: "/enterprise/info", icon: <IdcardOutlined />, label: "企业信息" },
     { key: "/enterprise/files", icon: <UploadOutlined />, label: "文件管理" },
     { key: "/enterprise/carriers", icon: <BankOutlined />, label: "载体浏览" },
@@ -86,25 +72,32 @@ const roleMenuMap: Record<UserRole, MenuItem[]> = {
     { key: "/enterprise/changes", icon: <FormOutlined />, label: "重大事项变更" },
     { key: "/enterprise/policies", icon: <FileTextOutlined />, label: "政策申报" },
     { key: "/enterprise/ai-assist", icon: <BulbOutlined />, label: "智能辅助申报" },
+    { key: "/enterprise/appeals", icon: <CustomerServiceOutlined />, label: "政策诉求" },
+    { key: "/enterprise/account-deletion", icon: <UserDeleteOutlined />, label: "账号注销申请" },
     { key: "/enterprise/notifications", icon: <BellOutlined />, label: "通知中心" },
   ],
   carrier: [
-    { key: "/carrier/dashboard", icon: <DashboardOutlined />, label: "工作台" },
+    { key: "/carrier/dashboard", icon: <DashboardOutlined />, label: "载体工作台" },
     { key: "/carrier/incubation", icon: <AuditOutlined />, label: "入驻审核" },
     { key: "/carrier/info", icon: <SettingOutlined />, label: "基础信息" },
     { key: "/carrier/changes", icon: <FormOutlined />, label: "变更审核" },
-    { key: "/carrier/policies", icon: <FileTextOutlined />, label: "政策申报审核" },
+    { key: "/carrier/policies", icon: <FileTextOutlined />, label: "政策申报" },
+    { key: "/carrier/applications", icon: <InboxOutlined />, label: "企业申报审核" },
     { key: "/carrier/performances", icon: <TrophyOutlined />, label: "绩效考核" },
+    { key: "/carrier/appeals", icon: <CustomerServiceOutlined />, label: "政策诉求" },
+    { key: "/carrier/account-deletion", icon: <UserDeleteOutlined />, label: "账号注销申请" },
     { key: "/carrier/notifications", icon: <BellOutlined />, label: "通知中心" },
   ],
   government: [
     { key: "/gov/dashboard", icon: <DashboardOutlined />, label: "政务工作台" },
     { key: "/gov/enterprises", icon: <TeamOutlined />, label: "企业查询" },
     { key: "/gov/carriers", icon: <BankOutlined />, label: "载体查询" },
+    { key: "/gov/incubation", icon: <HomeOutlined />, label: "孵化毕业" },
     { key: "/gov/policies", icon: <FileProtectOutlined />, label: "政策管理" },
     { key: "/gov/applications", icon: <InboxOutlined />, label: "申报终审" },
     { key: "/gov/performances", icon: <TrophyOutlined />, label: "绩效考核" },
     { key: "/gov/account", icon: <UserDeleteOutlined />, label: "账号注销管理" },
+    { key: "/gov/appeals", icon: <CustomerServiceOutlined />, label: "政策诉求" },
     { key: "/gov/notifications", icon: <BellOutlined />, label: "通知中心" },
   ],
 };
@@ -118,16 +111,16 @@ const ROLE_META: Record<UserRole, { label: string; scope: string; primary: strin
 const GOV_COMMANDS: CommandAction[] = [
   {
     key: "gov-dashboard",
-    title: "政务驾驶舱",
-    description: "查看待办、风险预警、流转态势",
+    title: "政务工作台",
+    description: "查看待办、风险提醒和流程态势",
     path: "/gov/dashboard",
     icon: <DashboardOutlined />,
     tag: "总览",
   },
   {
     key: "gov-policy",
-    title: "发布政策",
-    description: "进入政策管理，创建模板并发布政策",
+    title: "政策管理",
+    description: "发布和维护政策申报入口",
     path: "/gov/policies",
     icon: <FileProtectOutlined />,
     tag: "常用",
@@ -141,9 +134,16 @@ const GOV_COMMANDS: CommandAction[] = [
     tag: "待办",
   },
   {
+    key: "gov-incubation",
+    title: "孵化毕业",
+    description: "确认已完成孵化周期的入孵记录",
+    path: "/gov/incubation",
+    icon: <HomeOutlined />,
+  },
+  {
     key: "gov-performance",
     title: "绩效考核",
-    description: "启动考核、查看提交、完成评分",
+    description: "配置考核、查看提交并完成评分",
     path: "/gov/performances",
     icon: <TrophyOutlined />,
   },
@@ -161,6 +161,14 @@ const GOV_COMMANDS: CommandAction[] = [
     path: "/gov/notifications",
     icon: <BellOutlined />,
   },
+  {
+    key: "gov-appeals",
+    title: "政策诉求",
+    description: "处理企业、载体提交的政策诉求",
+    path: "/gov/appeals",
+    icon: <CustomerServiceOutlined />,
+    tag: "协同",
+  },
 ];
 
 export default function MainLayout() {
@@ -173,11 +181,11 @@ export default function MainLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuthStore();
-  const unreadCount = useNotificationStore((s) => s.unreadCount);
+  const unreadCount = useNotificationStore((state) => state.unreadCount);
 
   const role = (user?.role || "enterprise") as UserRole;
   const roleMeta = ROLE_META[role];
-  const menus = roleMenuMap[role] || [];
+  const menus = roleMenuMap[role];
   const selectedKey = location.pathname;
   const activeMenu = menus.find((item) => item.key === selectedKey);
   const siderCollapsed = collapsed && !hoverExpanded && !hoverClosing;
@@ -220,26 +228,24 @@ export default function MainLayout() {
   });
 
   const goRoute = (path: string) => {
-    if (IMPLEMENTED_ROUTES.has(path)) {
-      navigate(path);
-      setCommandOpen(false);
-      setCommandQuery("");
-    } else {
-      message.info("功能开发中，敬请期待");
-    }
+    navigate(path);
+    setCommandOpen(false);
+    setCommandQuery("");
   };
 
-  const userMenuItems = [
-    { key: "role", label: `当前角色：${roleMeta.label}`, disabled: true },
-    { type: "divider" as const },
-    { key: "logout", icon: <LogoutOutlined />, label: "退出登录", danger: true },
-  ];
+  const notificationPath =
+    role === "enterprise"
+      ? "/enterprise/notifications"
+      : role === "carrier"
+        ? "/carrier/notifications"
+        : "/gov/notifications";
 
   return (
     <Layout className="app-shell">
       <a className="skip-link" href="#main-content">
         跳到主内容
       </a>
+
       <Sider
         className={`app-sider ${collapsed ? "is-collapse-locked" : ""} ${hoverExpanded ? "is-hover-expanded" : ""} ${hoverClosing ? "is-hover-closing" : ""}`}
         trigger={null}
@@ -248,22 +254,20 @@ export default function MainLayout() {
         breakpoint="lg"
         width={238}
         onMouseEnter={() => {
-          if (collapsed) {
-            clearHoverCloseTimer();
-            setHoverClosing(false);
-            setHoverExpanded(true);
-          }
+          if (!collapsed) return;
+          clearHoverCloseTimer();
+          setHoverClosing(false);
+          setHoverExpanded(true);
         }}
         onMouseLeave={() => {
-          if (collapsed) {
-            clearHoverCloseTimer();
-            setHoverExpanded(false);
-            setHoverClosing(true);
-            hoverCloseTimer.current = window.setTimeout(() => {
-              setHoverClosing(false);
-              hoverCloseTimer.current = null;
-            }, 220);
-          }
+          if (!collapsed) return;
+          clearHoverCloseTimer();
+          setHoverExpanded(false);
+          setHoverClosing(true);
+          hoverCloseTimer.current = window.setTimeout(() => {
+            setHoverClosing(false);
+            hoverCloseTimer.current = null;
+          }, 220);
         }}
       >
         <div className="layout-brand">
@@ -282,8 +286,13 @@ export default function MainLayout() {
           selectedKeys={[selectedKey]}
           aria-label={`${roleMeta.label}导航`}
           onClick={({ key }) => goRoute(key)}
-          items={menus.map((item) => ({ key: item.key, icon: item.icon, label: item.label }))}
+          items={menus.map((item) => ({
+            key: item.key,
+            icon: item.icon,
+            label: item.label,
+          }))}
         />
+
         {!siderCollapsed && (
           <div className="sider-status-card">
             <span>今日工作状态</span>
@@ -330,15 +339,16 @@ export default function MainLayout() {
                 shape="circle"
                 aria-label="通知中心"
                 icon={<BellOutlined style={{ color: "#334155" }} />}
-                onClick={() => {
-                  const prefix = role === "enterprise" ? "/enterprise" : role === "carrier" ? "/carrier" : "/gov";
-                  navigate(`${prefix}/notifications`);
-                }}
+                onClick={() => navigate(notificationPath)}
               />
             </Badge>
             <Dropdown
               menu={{
-                items: userMenuItems,
+                items: [
+                  { key: "role", label: `当前角色：${roleMeta.label}`, disabled: true },
+                  { type: "divider" as const },
+                  { key: "logout", icon: <LogoutOutlined />, label: "退出登录", danger: true },
+                ],
                 onClick: ({ key }) => {
                   if (key === "logout") {
                     logout();

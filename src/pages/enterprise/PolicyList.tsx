@@ -8,8 +8,15 @@ import { useState, useEffect, useCallback } from "react";
 import { Card, Typography, Space, Tag, Table, Button, message, Modal, Form, Input, Alert, Empty, Tabs } from "antd";
 import { FileTextOutlined, StarOutlined, ReloadOutlined, SendOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import { getEnterprisePolicies, applyPolicy, getMyApplications } from "../../api/policies";
-import type { Policy, PolicyApplication, MatchLevel } from "../../types";
+import {
+  applyPolicy,
+  followPolicy,
+  getEnterprisePolicies,
+  getFollowedPolicies,
+  getMyApplications,
+  unfollowPolicy,
+} from "../../api/policies";
+import type { Policy, PolicyApplication, MatchLevel, PolicyMaterial } from "../../types";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -32,6 +39,8 @@ export default function EnterprisePolicyList() {
   // 我的申报
   const [myApps, setMyApps] = useState<PolicyApplication[]>([]);
   const [myAppsLoading, setMyAppsLoading] = useState(false);
+  const [followedPolicies, setFollowedPolicies] = useState<Policy[]>([]);
+  const [followedLoading, setFollowedLoading] = useState(false);
 
   const fetchPolicies = useCallback(async (page = 1, pageSize = 10) => {
     setLoading(true);
@@ -52,7 +61,16 @@ export default function EnterprisePolicyList() {
     finally { setMyAppsLoading(false); }
   }, []);
 
-  useEffect(() => { fetchPolicies(1, 10); fetchMyApps(); }, [fetchPolicies, fetchMyApps]);
+  const fetchFollowed = useCallback(async () => {
+    setFollowedLoading(true);
+    try {
+      const res = await getFollowedPolicies(1, 20);
+      setFollowedPolicies(res.data.list);
+    } catch { message.error("加载关注政策失败"); }
+    finally { setFollowedLoading(false); }
+  }, []);
+
+  useEffect(() => { fetchPolicies(1, 10); fetchMyApps(); fetchFollowed(); }, [fetchPolicies, fetchMyApps, fetchFollowed]);
 
   const openApply = (policy: Policy) => {
     setSelectedPolicy(policy);
@@ -65,7 +83,13 @@ export default function EnterprisePolicyList() {
     try {
       const values = await applyForm.validateFields();
       setApplying(true);
-      const formData: Record<string, unknown> = values.form_json ? JSON.parse(values.form_json) : {};
+      const parsed = values.form_json ? JSON.parse(values.form_json) : {};
+      const materials: PolicyMaterial[] = Array.isArray(parsed)
+        ? parsed
+        : Array.isArray(parsed.materials)
+          ? parsed.materials
+          : [];
+      const formData: Record<string, unknown> = { materials };
       await applyPolicy(selectedPolicy.id, formData);
       message.success("申报已提交");
       setApplyOpen(false);
@@ -74,6 +98,22 @@ export default function EnterprisePolicyList() {
       if (err && typeof err === "object" && "errorFields" in err) return;
       message.error((err as Error).message || "申报失败");
     } finally { setApplying(false); }
+  };
+
+  const handleToggleFollow = async (policy: Policy) => {
+    try {
+      if (policy.followed) {
+        await unfollowPolicy(policy.id);
+        message.success("已取消关注");
+      } else {
+        await followPolicy(policy.id);
+        message.success("已关注政策");
+      }
+      fetchPolicies(pagination.current, pagination.pageSize);
+      fetchFollowed();
+    } catch (err) {
+      message.error((err as Error).message || "关注操作失败");
+    }
   };
 
   const policyColumns: ColumnsType<Policy> = [
@@ -87,7 +127,9 @@ export default function EnterprisePolicyList() {
     { title: "操作", key: "action", width: 160, render: (_, r) => (
       <Space>
         <Button type="primary" size="small" icon={<SendOutlined />} onClick={() => openApply(r)}>申报</Button>
-        <Button size="small" icon={<StarOutlined />}>关注</Button>
+        <Button size="small" icon={<StarOutlined />} onClick={() => handleToggleFollow(r)}>
+          {r.followed ? "取消关注" : "关注"}
+        </Button>
       </Space>
     )},
   ];
@@ -129,13 +171,22 @@ export default function EnterprisePolicyList() {
             </Card>
           ),
         },
+        {
+          key: "followed",
+          label: "我的关注",
+          children: (
+            <Card extra={<Button icon={<ReloadOutlined />} onClick={fetchFollowed} loading={followedLoading}>刷新</Button>}>
+              <Table columns={policyColumns} dataSource={followedPolicies} rowKey="id" loading={followedLoading} pagination={false} size="middle" locale={{ emptyText: <Empty description="暂无关注政策" /> }} />
+            </Card>
+          ),
+        },
       ]} />
 
       {/* 申报弹窗 */}
       <Modal title={<><SendOutlined /> 申报政策 — {selectedPolicy?.title}</>} open={applyOpen} onCancel={() => setApplyOpen(false)} onOk={handleApply} confirmLoading={applying} width={500} destroyOnClose>
         <Form form={applyForm} layout="vertical" style={{ marginTop: 16 }}>
-          <Form.Item name="form_json" label="申报表单数据 (JSON)" tooltip="根据政策模板的 form_schema 填写，如 { 'project_name': 'XX项目', 'budget': '500万元' }">
-            <TextArea rows={4} placeholder='{"project_name": "示例项目", "budget": "500万元"}' />
+          <Form.Item name="form_json" label="申报材料 (JSON)" tooltip="按接口文档发送 materials 数组">
+            <TextArea rows={4} placeholder='{"materials":[{"name":"营业执照","file_id":12,"necessity":"necessary"}]}' />
           </Form.Item>
         </Form>
       </Modal>

@@ -3,7 +3,7 @@
  *
  * 对应后端接口：
  * - GET  /enterprise/policies/:id/recommend  AI 政策匹配度分析
- * - POST /enterprise/policies/prefill        AI 表单预填充
+ * - POST /enterprise/policies/:id/prefill        AI 表单预填充
  *
  * 降级机制：
  * - LLM 不可用时 → 字段级规则匹配（FieldMatchRule）
@@ -11,9 +11,10 @@
  */
 
 import { mockApi, mockApiFail } from "./mock";
-import type { ApiResponse, MatchLevel, EnterpriseInfo } from "../types";
+import { isMockEnabled } from "./config";
+import type { ApiResponse, MatchLevel, EnterpriseInfo, Policy } from "../types";
 
-const USE_MOCK = true;
+
 
 // ============ 企业画像 ============
 
@@ -28,6 +29,46 @@ const mockProfile: EnterpriseInfo & { field_match_rules?: Record<string, unknown
   contact_name: "李四",
   contact_phone: "13800138000",
 };
+
+function mockPolicySearch(query: string): ApiResponse<{ list: Policy[]; total: number }>["data"] {
+  const list: Policy[] = [
+    {
+      id: 601,
+      title: query.includes("AI") ? "AI 行业创新创业补贴" : "创新创业载体发展扶持政策",
+      department: "科技局",
+      requirements: {
+        application_condition: "符合产业方向且材料完整",
+      },
+      start_date: "2026-01-01",
+      end_date: "2026-12-31",
+      target_role: "both",
+      match_level: "partial",
+    },
+  ];
+  return { list, total: list.length };
+}
+
+export async function searchEnterprisePolicies(
+  query: string,
+): Promise<ApiResponse<{ list: Policy[]; total: number }>> {
+  if (isMockEnabled()) {
+    return mockApi(mockPolicySearch(query), 800);
+  }
+
+  const { post } = await import("../utils/request");
+  return post("/enterprise/policies/search", { query });
+}
+
+export async function searchCarrierPolicies(
+  query: string,
+): Promise<ApiResponse<{ list: Policy[]; total: number }>> {
+  if (isMockEnabled()) {
+    return mockApi(mockPolicySearch(query), 800);
+  }
+
+  const { post } = await import("../utils/request");
+  return post("/carrier/policies/search", { query });
+}
 
 /** 字段级规则匹配器（LLM 不可用时的降级方案） */
 function fieldMatchRule(policyConditions: Record<string, unknown>): {
@@ -92,7 +133,7 @@ export async function getAiPolicyMatch(
     subsidy_amount: string;
   }>
 > {
-  if (USE_MOCK) {
+  if (isMockEnabled()) {
     // 尝试 LLM 分析（mock 中不可用，降级为规则匹配）
     try {
       await mockApiFail(10301, "AI服务暂不可用，正在使用规则匹配...");
@@ -125,7 +166,7 @@ export async function getAiPrefill(
   policyId: number,
   _formSchema?: Record<string, unknown>,
 ): Promise<ApiResponse<Record<string, unknown>>> {
-  if (USE_MOCK) {
+  if (isMockEnabled()) {
     // 降级为基于企业画像和历史数据的规则填充
     const prefillData: Record<string, unknown> = {
       enterprise_name: mockProfile.name,
@@ -143,5 +184,5 @@ export async function getAiPrefill(
   }
 
   const { post } = await import("../utils/request");
-  return post("/enterprise/policies/prefill", { policy_id: policyId });
+  return post(`/enterprise/policies/${policyId}/prefill`);
 }

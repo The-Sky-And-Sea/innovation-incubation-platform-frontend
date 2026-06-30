@@ -1,37 +1,30 @@
-/**
- * 通知状态管理（zustand）
- *
- * 功能：
- * - 定时轮询拉取通知（模拟 SSE 推送）
- * - 未读数量统计（用于顶部铃铛角标）
- * - 标记已读
- * - 心跳保活（控制轮询间隔）
- */
-
 import { create } from "zustand";
+import {
+  fetchNotifications,
+  markNotificationsRead,
+  subscribeNotificationStream,
+} from "../api/notifications";
 import type { Notification } from "../types";
-import { fetchNotifications, markNotificationsRead } from "../api/notifications";
 
 interface NotificationState {
-  /** 通知列表 */
   list: Notification[];
-  /** 未读数量 */
   unreadCount: number;
-  /** 是否正在加载 */
   loading: boolean;
-  /** 轮询定时器 ID */
   _intervalId: ReturnType<typeof setInterval> | null;
-
-  /** 启动轮询（进入通知页时调用） */
+  _unsubscribeStream: (() => void) | null;
   startPolling: (userId?: number) => void;
-  /** 停止轮询（离开通知页时调用） */
   stopPolling: () => void;
-  /** 手动刷新 */
   refresh: (userId?: number) => Promise<void>;
-  /** 标记已读（支持批量） */
   markAsRead: (ids: number[]) => Promise<void>;
-  /** 标记全部已读 */
   markAllAsRead: () => Promise<void>;
+}
+
+function mergeNotification(list: Notification[], item: Notification) {
+  const exists = list.some((current) => current.id === item.id);
+  if (exists) {
+    return list.map((current) => (current.id === item.id ? item : current));
+  }
+  return [item, ...list];
 }
 
 export const useNotificationStore = create<NotificationState>((set, get) => ({
@@ -39,40 +32,51 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   unreadCount: 0,
   loading: false,
   _intervalId: null,
+  _unsubscribeStream: null,
 
-  /** 开始定时轮询（每 30 秒检查一次，模拟 SSE） */
-  startPolling: (userId?: number) => {
-    // 从 authStore 获取当前用户 ID（如果未传入）
-    const resolveUserId = userId ?? 1;
+  startPolling: (userId = 1) => {
+    get().stopPolling();
+    get().refresh(userId);
 
-    // 先停止旧的
-    const prev = get()._intervalId;
-    if (prev) clearInterval(prev);
+    const unsubscribe = subscribeNotificationStream(
+      (notification) => {
+        if (notification.user_id !== userId) return;
+        set((state) => {
+          const nextList = mergeNotification(state.list, notification);
+          return {
+            list: nextList,
+            unreadCount: nextList.filter((item) => !item.is_read).length,
+          };
+        });
+      },
+      () => {
+        // SSE 失败时保持轮询兜底，不在 UI 中打断用户。
+      },
+    );
 
-    // 立即拉取一次
-    get().refresh(resolveUserId);
-
-    // 每 30 秒拉取一次（模拟 SSE heartbeat）
-    const id = setInterval(() => {
-      get().refresh(resolveUserId);
+    const intervalId = setInterval(() => {
+      get().refresh(userId);
     }, 30000);
 
-    set({ _intervalId: id });
+    set({ _intervalId: intervalId, _unsubscribeStream: unsubscribe });
   },
 
   stopPolling: () => {
-    const id = get()._intervalId;
-    if (id) {
-      clearInterval(id);
-      set({ _intervalId: null });
-    }
+    const { _intervalId, _unsubscribeStream } = get();
+    if (_intervalId) clearInterval(_intervalId);
+    if (_unsubscribeStream) _unsubscribeStream();
+    set({ _intervalId: null, _unsubscribeStream: null });
   },
 
   refresh: async (userId = 1) => {
     set({ loading: true });
     try {
       const res = await fetchNotifications(userId);
-      set({ list: res.data.list, unreadCount: res.data.unread_count, loading: false });
+      set({
+        list: res.data.list,
+        unreadCount: res.data.unread_count,
+        loading: false,
+      });
     } catch {
       set({ loading: false });
     }
@@ -81,20 +85,22 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   markAsRead: async (ids) => {
     try {
       await markNotificationsRead(ids);
-      // 更新本地状态
-      set((state) => ({
-        list: state.list.map((n) =>
-          ids.includes(n.id) ? { ...n, is_read: true } : n,
-        ),
-        unreadCount: Math.max(0, state.unreadCount - ids.length),
-      }));
+      set((state) => {
+        const nextList = state.list.map((item) =>
+          ids.includes(item.id) ? { ...item, is_read: true } : item,
+        );
+        return {
+          list: nextList,
+          unreadCount: nextList.filter((item) => !item.is_read).length,
+        };
+      });
     } catch {
-      // ignore
+      // 页面保留当前状态，下一次刷新会恢复真实数据。
     }
   },
 
   markAllAsRead: async () => {
-    const unreadIds = get().list.filter((n) => !n.is_read).map((n) => n.id);
+    const unreadIds = get().list.filter((item) => !item.is_read).map((item) => item.id);
     if (unreadIds.length > 0) {
       await get().markAsRead(unreadIds);
     }

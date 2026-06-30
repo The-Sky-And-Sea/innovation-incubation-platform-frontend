@@ -9,10 +9,11 @@
  * 后续扩展：政策管理、申报审核、绩效考核、账号注销管理
  */
 
-import { mockApi } from "./mock";
+import { mockApi, mockApiFail } from "./mock";
+import { isMockEnabled } from "./config";
 import type { ApiResponse, EnterpriseInfo, CarrierInfo } from "../types";
 
-const USE_MOCK = true;
+
 
 // ============ Mock 数据 ============
 
@@ -88,7 +89,7 @@ export async function searchEnterprises(
   page = 1,
   page_size = 20,
 ): Promise<ApiResponse<{ list: EnterpriseInfo[]; total: number; page: number; page_size: number }>> {
-  if (USE_MOCK) {
+  if (isMockEnabled()) {
     const filtered = keyword
       ? mockEnterprises.filter(
           (e) =>
@@ -112,7 +113,7 @@ export async function searchEnterprises(
 export async function getEnterpriseDetail(
   id: number,
 ): Promise<ApiResponse<EnterpriseInfo>> {
-  if (USE_MOCK) {
+  if (isMockEnabled()) {
     const ent = mockEnterprises.find((e) => e.id === id);
     if (!ent) {
       const { mockApiFail } = await import("./mock");
@@ -124,6 +125,39 @@ export async function getEnterpriseDetail(
 
   const { get } = await import("../utils/request");
   return get(`/gov/enterprises/${id}`);
+}
+
+export async function updateEnterpriseInfo(
+  id: number,
+  data: Partial<EnterpriseInfo>,
+): Promise<ApiResponse<EnterpriseInfo>> {
+  if (isMockEnabled()) {
+    const index = mockEnterprises.findIndex((item) => item.id === id);
+    if (index === -1) {
+      await mockApiFail(10002, "企业不存在");
+      throw new Error("unreachable");
+    }
+    mockEnterprises[index] = { ...mockEnterprises[index], ...data, id };
+    return mockApi(mockEnterprises[index]);
+  }
+
+  const { put } = await import("../utils/request");
+  return put(`/gov/enterprises/${id}`, data);
+}
+
+export async function deleteEnterprise(id: number): Promise<ApiResponse<null>> {
+  if (isMockEnabled()) {
+    const index = mockEnterprises.findIndex((item) => item.id === id);
+    if (index === -1) {
+      await mockApiFail(10002, "企业不存在");
+      throw new Error("unreachable");
+    }
+    mockEnterprises.splice(index, 1);
+    return mockApi(null);
+  }
+
+  const { del } = await import("../utils/request");
+  return del(`/gov/enterprises/${id}`);
 }
 
 // ============ 载体检索 ============
@@ -139,7 +173,7 @@ export async function searchCarriers(
   page = 1,
   page_size = 20,
 ): Promise<ApiResponse<{ list: CarrierInfo[]; total: number; page: number; page_size: number }>> {
-  if (USE_MOCK) {
+  if (isMockEnabled()) {
     const filtered = keyword
       ? mockCarriers.filter(
           (c) => c.name.includes(keyword) || c.address.includes(keyword),
@@ -151,4 +185,28 @@ export async function searchCarriers(
 
   const { get } = await import("../utils/request");
   return get("/gov/carriers", { keyword, page: String(page), page_size: String(page_size) });
+}
+
+export async function deleteCarrier(id: number): Promise<ApiResponse<null>> {
+  if (isMockEnabled()) {
+    const index = mockCarriers.findIndex((item) => item.id === id);
+    if (index === -1) {
+      await mockApiFail(10002, "载体不存在");
+      throw new Error("unreachable");
+    }
+    mockCarriers.splice(index, 1);
+    return mockApi(null);
+  }
+
+  const { del } = await import("../utils/request");
+  return del(`/gov/carriers/${id}`);
+}
+
+export async function govCompleteIncubation(id: number): Promise<ApiResponse<null>> {
+  if (isMockEnabled()) {
+    return mockApi(null);
+  }
+
+  const { post } = await import("../utils/request");
+  return post(`/gov/incubations/${id}/complete`);
 }

@@ -2,15 +2,16 @@
  * 企业端 API 层
  *
  * 对应后端接口：
- * - GET /enterprise/my-info  获取当前企业信息
+ * - GET /enterprise/profile  获取当前企业信息
  *
  * 后续扩展：企业入驻、重大事项变更、政策申报等
  */
 
 import { mockApi } from "./mock";
+import { isMockEnabled } from "./config";
 import type { ApiResponse, EnterpriseInfo } from "../types";
 
-const USE_MOCK = true;
+
 
 // ============ Mock 数据 ============
 
@@ -32,10 +33,10 @@ const mockEnterprise: EnterpriseInfo = {
 export async function getMyEnterpriseInfo(): Promise<
   ApiResponse<EnterpriseInfo>
 > {
-  if (USE_MOCK) {
+  if (isMockEnabled()) {
     return mockApi<EnterpriseInfo>(mockEnterprise);
   }
 
   const { get } = await import("../utils/request");
-  return get<EnterpriseInfo>("/enterprise/my-info");
+  return get<EnterpriseInfo>("/enterprise/profile");
 }

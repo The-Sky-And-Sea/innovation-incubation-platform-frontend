@@ -2,19 +2,20 @@
  * 入驻申请 API 层
  *
  * 对应后端接口：
- * - POST  /enterprise/incubation       企业提交入驻申请
- * - GET   /enterprise/incubation/list  我的入驻记录（分页）
- * - GET   /enterprise/incubation/:id   入驻详情
+ * - POST  /enterprise/incubations       企业提交入驻申请
+ * - GET   /enterprise/incubations  我的入驻记录（分页）
+ * - GET   /enterprise/incubations/:id   入驻详情
  */
 
 import { mockApi, mockApiFail } from "./mock";
+import { isMockEnabled } from "./config";
 import type {
   ApiResponse,
   IncubationRecord,
   IncubationApplyRequest,
 } from "../types";
 
-const USE_MOCK = true;
+
 
 // ============ Mock 数据 ============
 
@@ -44,7 +45,7 @@ mockIncubationIdCounter = 202;
 export async function submitIncubation(
   data: IncubationApplyRequest,
 ): Promise<ApiResponse<IncubationRecord>> {
-  if (USE_MOCK) {
+  if (isMockEnabled()) {
     // 校验必填字段
     if (!data.carrier_id) {
       await mockApiFail(10001, "请选择入驻载体");
@@ -72,7 +73,7 @@ export async function submitIncubation(
   }
 
   const { post } = await import("../utils/request");
-  return post<IncubationRecord>("/enterprise/incubation", data);
+  return post<IncubationRecord>("/enterprise/incubations", data);
 }
 
 /**
@@ -84,14 +85,14 @@ export async function getIncubationList(
 ): Promise<
   ApiResponse<{ list: IncubationRecord[]; total: number; page: number; page_size: number }>
 > {
-  if (USE_MOCK) {
+  if (isMockEnabled()) {
     const all = Array.from(mockIncubations.values());
     const list = all.slice((page - 1) * page_size, page * page_size);
     return mockApi({ list, total: all.length, page, page_size });
   }
 
   const { get } = await import("../utils/request");
-  return get("/enterprise/incubation/list", {
+  return get("/enterprise/incubations", {
     page: String(page),
     page_size: String(page_size),
   });
@@ -103,7 +104,7 @@ export async function getIncubationList(
 export async function getIncubationDetail(
   id: number,
 ): Promise<ApiResponse<IncubationRecord>> {
-  if (USE_MOCK) {
+  if (isMockEnabled()) {
     const record = mockIncubations.get(id);
     if (!record) {
       await mockApiFail(10002, "入驻记录不存在");
@@ -113,5 +114,5 @@ export async function getIncubationDetail(
   }
 
   const { get } = await import("../utils/request");
-  return get(`/enterprise/incubation/${id}`);
+  return get(`/enterprise/incubations/${id}`);
 }

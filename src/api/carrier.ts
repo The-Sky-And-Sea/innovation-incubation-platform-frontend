@@ -2,14 +2,13 @@
  * 载体端 API 层
  *
  * 对应后端接口：
- * - GET   /carrier/incubation/list           待审核入驻列表（分页）
- * - POST  /carrier/incubation/:id/approve    审核通过
- * - POST  /carrier/incubation/:id/reject     审核拒绝
- * - POST  /carrier/incubation/:id/return     审核退回
- * - POST  /carrier/incubation/:id/complete   孵化毕业
+ * - GET   /carrier/incubations/pending       待审核入驻列表（分页）
+ * - POST  /carrier/incubations/:id/review    审核通过/拒绝/退回
+ * - POST  /carrier/incubations/:id/complete  孵化毕业
  */
 
 import { mockApi, mockApiFail } from "./mock";
+import { isMockEnabled } from "./config";
 import type {
   ApiResponse,
   IncubationRecord,
@@ -18,7 +17,7 @@ import type {
   CarrierInfo,
 } from "../types";
 
-const USE_MOCK = true;
+
 
 // ============ Mock 数据（与 incubation.ts 共享 demo 数据） ============
 
@@ -66,14 +65,14 @@ export async function getPendingIncubationList(
   page = 1,
   page_size = 20,
 ): Promise<ApiResponse<{ list: IncubationRecord[]; total: number; page: number; page_size: number }>> {
-  if (USE_MOCK) {
+  if (isMockEnabled()) {
     const all = pendingRecords.filter(r => r.status === "pending");
     const list = all.slice((page - 1) * page_size, page * page_size);
     return mockApi({ list, total: all.length, page, page_size }, 300);
   }
 
   const { get } = await import("../utils/request");
-  return get("/carrier/incubation/list", {
+  return get("/carrier/incubations/pending", {
     page: String(page),
     page_size: String(page_size),
   });
@@ -86,7 +85,7 @@ export async function reviewIncubation(
   id: number,
   body: AuditRequestBody,
 ): Promise<ApiResponse<null>> {
-  if (USE_MOCK) {
+  if (isMockEnabled()) {
     const validActions: AuditRequestBody["action"][] = ["approve", "reject", "return"];
     if (!validActions.includes(body.action)) {
       await mockApiFail(10001, "无效的审核操作");
@@ -108,7 +107,7 @@ export async function reviewIncubation(
   }
 
   const { post } = await import("../utils/request");
-  return post(`/carrier/incubation/${id}/${body.action}`, body);
+  return post(`/carrier/incubations/${id}/review`, body);
 }
 
 /**
@@ -117,7 +116,7 @@ export async function reviewIncubation(
 export async function completeIncubation(
   id: number,
 ): Promise<ApiResponse<null>> {
-  if (USE_MOCK) {
+  if (isMockEnabled()) {
     const updated = updateRecordStatus(id, "approved", "孵化毕业");
     if (!updated) {
       await mockApiFail(10002, "入驻记录不存在");
@@ -127,7 +126,7 @@ export async function completeIncubation(
   }
 
   const { post } = await import("../utils/request");
-  return post(`/carrier/incubation/${id}/complete`);
+  return post(`/carrier/incubations/${id}/complete`);
 }
 
 // ============ 载体基础信息 ============
@@ -147,7 +146,7 @@ const mockCarrierInfo: CarrierInfo = {
  * 获取载体自身信息
  */
 export async function getCarrierInfo(): Promise<ApiResponse<CarrierInfo>> {
-  if (USE_MOCK) {
+  if (isMockEnabled()) {
     return mockApi<CarrierInfo>(mockCarrierInfo);
   }
   const { get } = await import("../utils/request");
@@ -160,7 +159,7 @@ export async function getCarrierInfo(): Promise<ApiResponse<CarrierInfo>> {
 export async function updateCarrierInfo(
   data: Partial<CarrierInfo>,
 ): Promise<ApiResponse<CarrierInfo>> {
-  if (USE_MOCK) {
+  if (isMockEnabled()) {
     Object.assign(mockCarrierInfo, data);
     return mockApi({ ...mockCarrierInfo });
   }

@@ -4,7 +4,7 @@
  * 对应后端接口：
  * - GET    /files/limit       获取上传限制
  * - POST   /files/upload      上传文件（multipart/form-data）
- * - GET    /files/list        文件列表（分页 + user_id 过滤）
+ * - GET    /files        文件列表（分页 + user_id 过滤）
  * - GET    /files/:id/download 下载文件（支持 Range 断点续传）
  * - DELETE /files/:id          删除文件（仅政务端）
  *
@@ -12,9 +12,10 @@
  */
 
 import { mockApi, mockApiFail } from "./mock";
+import { API_BASE_URL, isMockEnabled } from "./config";
 import type { ApiResponse, FileInfo, FileLimit } from "../types";
 
-const USE_MOCK = true;
+
 
 // ============ Mock 数据存储 ============
 
@@ -25,7 +26,7 @@ const mockFiles: Map<number, FileInfo> = new Map();
  * 获取文件上传限制（允许的扩展名和最大大小）
  */
 export async function getFileLimit(): Promise<ApiResponse<FileLimit>> {
-  if (USE_MOCK) {
+  if (isMockEnabled()) {
     return mockApi<FileLimit>({
       max_size_mb: 20,
       allowed_extensions: [
@@ -46,7 +47,7 @@ export async function getFileLimit(): Promise<ApiResponse<FileLimit>> {
 export async function uploadFileAction(
   file: File,
 ): Promise<ApiResponse<FileInfo>> {
-  if (USE_MOCK) {
+  if (isMockEnabled()) {
     const maxSize = 20 * 1024 * 1024;
     if (file.size > maxSize) {
       await mockApiFail(10001, "文件大小超过限制（最大 20MB）");
@@ -87,7 +88,7 @@ export async function getFileList(
   page_size = 20,
   userId?: number,
 ): Promise<ApiResponse<{ list: FileInfo[]; total: number; page: number; page_size: number }>> {
-  if (USE_MOCK) {
+  if (isMockEnabled()) {
     const all = Array.from(mockFiles.values());
     const list = all.slice((page - 1) * page_size, page * page_size);
     return mockApi({ list, total: all.length, page, page_size }, 300);
@@ -99,7 +100,7 @@ export async function getFileList(
     page_size: String(page_size),
   };
   if (userId) params.user_id = String(userId);
-  return get("/files/list", params);
+  return get("/files", params);
 }
 
 /**
@@ -108,7 +109,7 @@ export async function getFileList(
  * @returns Blob URL（浏览器可直接下载或预览）
  */
 export async function downloadFile(fileId: number): Promise<string> {
-  if (USE_MOCK) {
+  if (isMockEnabled()) {
     const info = mockFiles.get(fileId);
     if (!info) {
       await mockApiFail(10002, "文件不存在");
@@ -127,7 +128,7 @@ export async function downloadFile(fileId: number): Promise<string> {
   // 真实后端：fetch 二进制文件并创建 Blob URL
   const token = localStorage.getItem("token");
   const res = await fetch(
-    `http://localhost:8080/api/v1/files/${fileId}/download`,
+    `${API_BASE_URL}/files/${fileId}/download`,
     { headers: { Authorization: `Bearer ${token}` } },
   );
   if (!res.ok) throw new Error("下载失败");
@@ -140,7 +141,7 @@ export async function downloadFile(fileId: number): Promise<string> {
  * @param fileId 文件 ID
  */
 export async function deleteFileAction(fileId: number): Promise<ApiResponse<null>> {
-  if (USE_MOCK) {
+  if (isMockEnabled()) {
     if (!mockFiles.has(fileId)) {
       await mockApiFail(10002, "文件不存在");
       throw new Error("unreachable");

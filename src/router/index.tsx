@@ -1,36 +1,36 @@
-import { createBrowserRouter, Navigate, Outlet } from "react-router-dom";
-import { useAuthStore } from "../store/authStore";
-import type { UserRole } from "../types";
 import { useEffect, useState } from "react";
-
-// 布局
+import { createBrowserRouter, Navigate, Outlet } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
-
-// 页面（目前先占位，后续逐步实现）
 import LoginPage from "../pages/auth/LoginPage";
 import RegisterPage from "../pages/auth/RegisterPage";
+import AccountDeletionRequestPage from "../pages/AccountDeletionRequest";
+import AppealsPage from "../pages/Appeals";
+import NotificationCenter from "../pages/Notifications";
+import CarrierApplicationReview from "../pages/carrier/ApplicationReview";
+import CarrierChangeReview from "../pages/carrier/ChangeReview";
+import CarrierDashboard from "../pages/carrier/Dashboard";
+import CarrierInfoPage from "../pages/carrier/CarrierInfo";
+import CarrierIncubationReview from "../pages/carrier/IncubationReview";
+import CarrierPerformanceSubmit from "../pages/carrier/PerformanceSubmit";
+import CarrierPolicyList from "../pages/carrier/PolicyList";
+import EnterpriseAiAssist from "../pages/enterprise/AiAssist";
+import EnterpriseCarrierList from "../pages/enterprise/CarrierList";
+import EnterpriseChangeManagement from "../pages/enterprise/ChangeManagement";
 import EnterpriseDashboard from "../pages/enterprise/Dashboard";
 import EnterpriseFileManagement from "../pages/enterprise/FileManagement";
-import EnterpriseMyInfo from "../pages/enterprise/MyInfo";
-import EnterpriseCarrierList from "../pages/enterprise/CarrierList";
 import EnterpriseIncubationManagement from "../pages/enterprise/IncubationManagement";
-import EnterpriseChangeManagement from "../pages/enterprise/ChangeManagement";
+import EnterpriseMyInfo from "../pages/enterprise/MyInfo";
 import EnterprisePolicyList from "../pages/enterprise/PolicyList";
-import EnterpriseAiAssist from "../pages/enterprise/AiAssist";
-import CarrierDashboard from "../pages/carrier/Dashboard";
-import CarrierIncubationReview from "../pages/carrier/IncubationReview";
-import CarrierChangeReview from "../pages/carrier/ChangeReview";
-import CarrierApplicationReview from "../pages/carrier/ApplicationReview";
-import CarrierPerformanceSubmit from "../pages/carrier/PerformanceSubmit";
-import CarrierInfoPage from "../pages/carrier/CarrierInfo";
+import GovAccountDeletion from "../pages/gov/AccountDeletion";
+import GovApplicationReview from "../pages/gov/ApplicationReview";
+import GovCarrierSearch from "../pages/gov/CarrierSearch";
 import GovDashboard from "../pages/gov/Dashboard";
 import GovEnterpriseSearch from "../pages/gov/EnterpriseSearch";
-import GovCarrierSearch from "../pages/gov/CarrierSearch";
-import GovPolicyManagement from "../pages/gov/PolicyManagement";
-import GovApplicationReview from "../pages/gov/ApplicationReview";
+import GovIncubationCompletion from "../pages/gov/IncubationCompletion";
 import GovPerformanceManagement from "../pages/gov/PerformanceManagement";
-import GovAccountDeletion from "../pages/gov/AccountDeletion";
-import NotificationCenter from "../pages/Notifications";
+import GovPolicyManagement from "../pages/gov/PolicyManagement";
+import { useAuthStore } from "../store/authStore";
+import type { UserRole } from "../types";
 
 function RouteLoading() {
   return (
@@ -45,7 +45,6 @@ function RouteLoading() {
   );
 }
 
-/** 未登录 → 跳转登录 */
 function GuestGuard() {
   const { token, loading, initAuth } = useAuthStore();
   const [initialized, setInitialized] = useState(false);
@@ -56,20 +55,13 @@ function GuestGuard() {
     }
   }, [initAuth, initialized]);
 
-  if (!initialized || loading) {
-    return <RouteLoading />;
-  }
-
-  if (token) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
+  if (!initialized || loading) return null;
+  if (token) return <Navigate to="/dashboard" replace />;
   return <Outlet />;
 }
 
-/** 已登录 → 允许访问，未登录 → 跳转登录 */
 function AuthGuard() {
-  const { token, loading, initAuth } = useAuthStore();
+  const { token, user, loading, initAuth } = useAuthStore();
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
@@ -78,39 +70,24 @@ function AuthGuard() {
     }
   }, [initAuth, initialized]);
 
-  if (!initialized || loading) {
-    return <RouteLoading />;
-  }
-
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
-
+  if (token && user && !loading) return <Outlet />;
+  if (!initialized || loading) return <RouteLoading />;
+  if (!token) return <Navigate to="/login" replace />;
   return <Outlet />;
 }
 
-/** 角色守卫 - 限制特定角色访问 */
 function RoleGuard({ roles }: { roles: UserRole[] }) {
   const { user } = useAuthStore();
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (!roles.includes(user.role as UserRole)) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
+  if (!user) return <Navigate to="/login" replace />;
+  if (!roles.includes(user.role as UserRole)) return <Navigate to="/dashboard" replace />;
   return <Outlet />;
 }
 
-/** 登录后根据角色自动跳转 */
 function DashboardRedirect() {
   const { user } = useAuthStore();
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
+  if (!user) return <Navigate to="/login" replace />;
 
   const roleDashboardMap: Record<UserRole, string> = {
     enterprise: "/enterprise/dashboard",
@@ -122,33 +99,17 @@ function DashboardRedirect() {
 }
 
 const router = createBrowserRouter([
-  // 公开路由（未登录可访问）
   {
     element: <GuestGuard />,
     children: [
-      {
-        path: "/login",
-        element: <LoginPage />,
-      },
-      {
-        path: "/register",
-        element: <RegisterPage />,
-      },
+      { path: "/login", element: <LoginPage /> },
+      { path: "/register", element: <RegisterPage /> },
     ],
   },
-
-  // 通用受保护路由
   {
     element: <AuthGuard />,
-    children: [
-      {
-        path: "/dashboard",
-        element: <DashboardRedirect />,
-      },
-    ],
+    children: [{ path: "/dashboard", element: <DashboardRedirect /> }],
   },
-
-  // 企业端受保护路由
   {
     element: <AuthGuard />,
     children: [
@@ -158,52 +119,23 @@ const router = createBrowserRouter([
           {
             element: <MainLayout />,
             children: [
-              {
-                path: "/enterprise/dashboard",
-                element: <EnterpriseDashboard />,
-              },
-              {
-                path: "/enterprise/info",
-                element: <EnterpriseMyInfo />,
-              },
-              {
-                path: "/enterprise/files",
-                element: <EnterpriseFileManagement />,
-              },
-              {
-                path: "/enterprise/carriers",
-                element: <EnterpriseCarrierList />,
-              },
-              {
-                path: "/enterprise/incubation",
-                element: <EnterpriseIncubationManagement />,
-              },
-              {
-                path: "/enterprise/changes",
-                element: <EnterpriseChangeManagement />,
-              },
-              {
-                path: "/enterprise/policies",
-                element: <EnterprisePolicyList />,
-              },
-              {
-                path: "/enterprise/ai-assist",
-                element: <EnterpriseAiAssist />,
-              },
-              {
-                path: "/enterprise/notifications",
-                element: <NotificationCenter />,
-              },
-              // TODO: 后续按层级逐步添加
-              // /enterprise/applications/*
+              { path: "/enterprise/dashboard", element: <EnterpriseDashboard /> },
+              { path: "/enterprise/info", element: <EnterpriseMyInfo /> },
+              { path: "/enterprise/files", element: <EnterpriseFileManagement /> },
+              { path: "/enterprise/carriers", element: <EnterpriseCarrierList /> },
+              { path: "/enterprise/incubation", element: <EnterpriseIncubationManagement /> },
+              { path: "/enterprise/changes", element: <EnterpriseChangeManagement /> },
+              { path: "/enterprise/policies", element: <EnterprisePolicyList /> },
+              { path: "/enterprise/ai-assist", element: <EnterpriseAiAssist /> },
+              { path: "/enterprise/appeals", element: <AppealsPage /> },
+              { path: "/enterprise/account-deletion", element: <AccountDeletionRequestPage /> },
+              { path: "/enterprise/notifications", element: <NotificationCenter /> },
             ],
           },
         ],
       },
     ],
   },
-
-  // 载体端受保护路由
   {
     element: <AuthGuard />,
     children: [
@@ -213,43 +145,22 @@ const router = createBrowserRouter([
           {
             element: <MainLayout />,
             children: [
-              {
-                path: "/carrier/dashboard",
-                element: <CarrierDashboard />,
-              },
-              {
-                path: "/carrier/incubation",
-                element: <CarrierIncubationReview />,
-              },
-              {
-                path: "/carrier/changes",
-                element: <CarrierChangeReview />,
-              },
-              {
-                path: "/carrier/policies",
-                element: <CarrierApplicationReview />,
-              },
-              {
-                path: "/carrier/performances",
-                element: <CarrierPerformanceSubmit />,
-              },
-              {
-                path: "/carrier/info",
-                element: <CarrierInfoPage />,
-              },
-              {
-                path: "/carrier/notifications",
-                element: <NotificationCenter />,
-              },
-              // TODO: 后续按层级逐步添加
+              { path: "/carrier/dashboard", element: <CarrierDashboard /> },
+              { path: "/carrier/incubation", element: <CarrierIncubationReview /> },
+              { path: "/carrier/changes", element: <CarrierChangeReview /> },
+              { path: "/carrier/policies", element: <CarrierPolicyList /> },
+              { path: "/carrier/applications", element: <CarrierApplicationReview /> },
+              { path: "/carrier/performances", element: <CarrierPerformanceSubmit /> },
+              { path: "/carrier/info", element: <CarrierInfoPage /> },
+              { path: "/carrier/appeals", element: <AppealsPage /> },
+              { path: "/carrier/account-deletion", element: <AccountDeletionRequestPage /> },
+              { path: "/carrier/notifications", element: <NotificationCenter /> },
             ],
           },
         ],
       },
     ],
   },
-
-  // 政务端受保护路由
   {
     element: <AuthGuard />,
     children: [
@@ -259,52 +170,23 @@ const router = createBrowserRouter([
           {
             element: <MainLayout />,
             children: [
-              {
-                path: "/gov/dashboard",
-                element: <GovDashboard />,
-              },
-              {
-                path: "/gov/enterprises",
-                element: <GovEnterpriseSearch />,
-              },
-              {
-                path: "/gov/carriers",
-                element: <GovCarrierSearch />,
-              },
-              {
-                path: "/gov/policies",
-                element: <GovPolicyManagement />,
-              },
-              {
-                path: "/gov/applications",
-                element: <GovApplicationReview />,
-              },
-              {
-                path: "/gov/performances",
-                element: <GovPerformanceManagement />,
-              },
-              {
-                path: "/gov/account",
-                element: <GovAccountDeletion />,
-              },
-              {
-                path: "/gov/notifications",
-                element: <NotificationCenter />,
-              },
-              // TODO: 后续按层级逐步添加
-              // /gov/incubation/*
+              { path: "/gov/dashboard", element: <GovDashboard /> },
+              { path: "/gov/enterprises", element: <GovEnterpriseSearch /> },
+              { path: "/gov/carriers", element: <GovCarrierSearch /> },
+              { path: "/gov/incubation", element: <GovIncubationCompletion /> },
+              { path: "/gov/policies", element: <GovPolicyManagement /> },
+              { path: "/gov/applications", element: <GovApplicationReview /> },
+              { path: "/gov/performances", element: <GovPerformanceManagement /> },
+              { path: "/gov/account", element: <GovAccountDeletion /> },
+              { path: "/gov/appeals", element: <AppealsPage /> },
+              { path: "/gov/notifications", element: <NotificationCenter /> },
             ],
           },
         ],
       },
     ],
   },
-
-  // 兜底：未匹配路由 → 登录
-  {
-    path: "*",
-    element: <Navigate to="/login" replace />,
-  },
+  { path: "*", element: <Navigate to="/login" replace /> },
 ]);
 
 export default router;

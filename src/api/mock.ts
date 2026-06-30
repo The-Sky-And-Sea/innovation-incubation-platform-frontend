@@ -7,7 +7,7 @@
  * - mockSuccess() / mockFail() 同步版
  *
  * 所有 mock 函数默认 600ms 延迟，模拟真实网络环境。
- * 后续对接后端时，各 API 文件将 USE_MOCK 改为 false 即可切换。
+ * 后续对接后端时，将 VITE_USE_MOCK 设为 false 即可切换。
  */
 
 import type { ApiResponse } from "../types";

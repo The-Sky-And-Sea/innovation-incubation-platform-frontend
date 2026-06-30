@@ -19,6 +19,8 @@ import {
   Col,
   Descriptions,
   Select,
+  Input,
+  Table,
 } from "antd";
 import {
   BulbOutlined,
@@ -30,8 +32,9 @@ import {
   FormOutlined,
   CopyOutlined,
 } from "@ant-design/icons";
-import { getAiPolicyMatch, getAiPrefill } from "../../api/ai";
-import type { MatchLevel } from "../../types";
+import { getAiPolicyMatch, getAiPrefill, searchEnterprisePolicies } from "../../api/ai";
+import type { MatchLevel, Policy } from "../../types";
+import type { ColumnsType } from "antd/es/table";
 
 const { Title, Text } = Typography;
 
@@ -56,6 +59,9 @@ export default function EnterpriseAiAssist() {
   // 预填充
   const [prefilling, setPrefilling] = useState(false);
   const [prefillData, setPrefillData] = useState<Record<string, unknown> | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<Policy[]>([]);
 
   /** AI 政策匹配 */
   const handleAiMatch = async () => {
@@ -90,6 +96,30 @@ export default function EnterpriseAiAssist() {
     }
   };
 
+  const handleSemanticSearch = async () => {
+    if (!searchQuery.trim()) {
+      message.warning("请输入政策诉求或申报意图");
+      return;
+    }
+    setSearching(true);
+    try {
+      const res = await searchEnterprisePolicies(searchQuery.trim());
+      setSearchResults(res.data.list);
+      message.success("语义搜索完成");
+    } catch (err) {
+      message.error((err as Error).message || "语义搜索失败");
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const searchColumns: ColumnsType<Policy> = [
+    { title: "政策", dataIndex: "title", key: "title", render: (value: string) => <Text strong>{value}</Text> },
+    { title: "部门", dataIndex: "department", key: "department", width: 110, render: (value?: string) => value || "-" },
+    { title: "有效期", key: "date", width: 190, render: (_, record) => `${record.start_date} ~ ${record.end_date}` },
+    { title: "匹配度", dataIndex: "match_level", key: "match", width: 100, render: (value: MatchLevel) => <Tag color={matchConfig[value]?.color}>{matchConfig[value]?.label || value}</Tag> },
+  ];
+
   return (
     <div>
       <Title level={3}>
@@ -106,6 +136,36 @@ export default function EnterpriseAiAssist() {
       />
 
       <Row gutter={[24, 24]}>
+        <Col xs={24}>
+          <Card
+            title={
+              <Space>
+                <ThunderboltOutlined style={{ color: "#1677ff" }} />
+                政策语义搜索
+              </Space>
+            }
+          >
+            <Space direction="vertical" style={{ width: "100%" }} size="middle">
+              <Input.Search
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                onSearch={handleSemanticSearch}
+                enterButton="搜索"
+                loading={searching}
+                placeholder="例如：我想申请 AI 行业的创业补贴"
+              />
+              <Table
+                columns={searchColumns}
+                dataSource={searchResults}
+                rowKey="id"
+                loading={searching}
+                pagination={false}
+                size="small"
+              />
+            </Space>
+          </Card>
+        </Col>
+
         {/* 左栏：AI 政策匹配 */}
         <Col xs={24} lg={12}>
           <Card

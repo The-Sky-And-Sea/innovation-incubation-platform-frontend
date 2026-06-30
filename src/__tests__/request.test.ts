@@ -27,7 +27,7 @@ describe("request 工具层", () => {
       }),
     );
 
-    await expect(get("/auth/me")).rejects.toThrow("未登录或Token已过期");
+    await expect(get("/users/me")).rejects.toThrow("未登录或Token已过期");
   });
 
   it("应自动注入 JWT Token", async () => {
@@ -36,7 +36,7 @@ describe("request 工具层", () => {
       new Response(JSON.stringify({ code: 0, message: "ok", data: {} }), { status: 200 }),
     );
 
-    await get("/auth/me");
+    await get("/users/me");
     const headers = fetchSpy.mock.calls[0][1]?.headers as Record<string, string>;
     expect(headers["Authorization"]).toBe("Bearer test.jwt.token");
   });
