@@ -14,6 +14,9 @@ import zhCN from "antd/locale/zh_CN";
 import { RouterProvider } from "react-router-dom";
 import router from "./router";
 import "./App.css";
+import ClickSpark from "./components/ClickSpark";
+import { useAuthStore } from "./store/authStore";
+import type { UserRole } from "./types";
 
 /** Antd 主题 tokens：统一视觉风格 */
 const themeTokens = {
@@ -38,6 +41,22 @@ const themeTokens = {
   fontFamily:
     "'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
 };
+
+const roleSparkColor: Record<UserRole, string> = {
+  enterprise: "#64a8ef",
+  carrier: "#47d8c2",
+  government: "#ff8fa3",
+};
+
+function AppChrome() {
+  const role = (useAuthStore((state) => state.user?.role) || "enterprise") as UserRole;
+
+  return (
+    <ClickSpark sparkColor={roleSparkColor[role]} sparkSize={10} sparkRadius={17} sparkCount={8} duration={420}>
+      <RouterProvider router={router} />
+    </ClickSpark>
+  );
+}
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
@@ -84,7 +103,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
         },
       }}
     >
-      <RouterProvider router={router} />
+      <AppChrome />
     </ConfigProvider>
   </React.StrictMode>,
 );

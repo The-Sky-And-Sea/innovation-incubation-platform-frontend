@@ -1,0 +1,213 @@
+.rb-folder-shell {
+  --folder-color: #14508c;
+  --folder-back-color: #10416f;
+  --paper-1: #e5e7eb;
+  --paper-2: #f3f4f6;
+  --paper-3: #ffffff;
+  --folder-scale: 1;
+  display: inline-flex;
+  width: calc(112px * var(--folder-scale));
+  height: calc(86px * var(--folder-scale));
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.rb-folder-shell .folder {
+  position: relative;
+  width: 112px;
+  height: 78px;
+  cursor: pointer;
+  outline: none;
+  transform: scale(var(--folder-scale));
+  transform-origin: bottom center;
+}
+
+.rb-folder-shell .folder:focus-visible {
+  border-radius: 10px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--folder-color) 24%, transparent);
+}
+
+.rb-folder-shell .folder__back {
+  position: absolute;
+  inset: 10px 2px 0;
+  border-radius: 8px;
+  background: var(--folder-back-color);
+  box-shadow: inset 0 -10px 18px rgba(15, 23, 42, 0.14);
+}
+
+.rb-folder-shell .folder__back::before {
+  position: absolute;
+  top: -10px;
+  left: 8px;
+  width: 44px;
+  height: 18px;
+  border-radius: 8px 8px 0 0;
+  background: var(--folder-back-color);
+  content: "";
+}
+
+.rb-folder-shell .folder__front {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 5;
+  height: 50px;
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--folder-color) 88%, #ffffff), var(--folder-color));
+  box-shadow: 0 8px 16px color-mix(in srgb, var(--folder-color) 24%, transparent);
+  transform-origin: bottom center;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.rb-folder-shell .folder__front.right {
+  right: 0;
+  left: auto;
+  width: 42%;
+  border-radius: 0 8px 8px 0;
+  opacity: 0.92;
+}
+
+.rb-folder-shell .paper {
+  position: absolute;
+  right: 16px;
+  bottom: 12px;
+  left: 16px;
+  z-index: 2;
+  min-height: 42px;
+  border: 1px solid color-mix(in srgb, var(--folder-color) 14%, #ffffff);
+  border-radius: 6px;
+  color: color-mix(in srgb, var(--folder-color) 78%, #0f172a);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  background: var(--paper-3);
+  box-shadow: 0 5px 10px rgba(15, 23, 42, 0.08);
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 8px;
+  transform:
+    translate(var(--magnet-x, 0), var(--magnet-y, 0))
+    translateY(0)
+    rotate(var(--paper-rotate, 0deg));
+  transition:
+    transform 200ms ease,
+    bottom 200ms ease;
+}
+
+.rb-folder-shell .paper-1 {
+  --paper-rotate: -5deg;
+  right: 18px;
+  left: 18px;
+  background: var(--paper-1);
+}
+
+.rb-folder-shell .paper-2 {
+  --paper-rotate: 3deg;
+  right: 14px;
+  left: 14px;
+  background: var(--paper-2);
+}
+
+.rb-folder-shell .paper-3 {
+  --paper-rotate: -1deg;
+  background: var(--paper-3);
+}
+
+.rb-folder-shell .folder.open .folder__front {
+  box-shadow: 0 12px 18px color-mix(in srgb, var(--folder-color) 18%, transparent);
+  transform: translateY(8px) rotateX(20deg);
+}
+
+.rb-folder-shell .folder.open .paper-1 {
+  bottom: 42px;
+  transform:
+    translate(var(--magnet-x, 0), var(--magnet-y, 0))
+    translateX(-22px)
+    rotate(-10deg);
+}
+
+.rb-folder-shell .folder.open .paper-2 {
+  bottom: 48px;
+  transform:
+    translate(var(--magnet-x, 0), var(--magnet-y, 0))
+    translateX(0)
+    rotate(1deg);
+}
+
+.rb-folder-shell .folder.open .paper-3 {
+  bottom: 40px;
+  transform:
+    translate(var(--magnet-x, 0), var(--magnet-y, 0))
+    translateX(22px)
+    rotate(9deg);
+}
+
+.upload-folder-visual {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.upload-folder-paper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 18px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--folder-color) 10%, #ffffff);
+}
+
+.file-upload-dropcopy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.file-upload-folder-dragger .ant-upload-drag {
+  min-height: 224px;
+  border-color: color-mix(in srgb, var(--role-primary, #14508c) 18%, #d8e2ec) !important;
+  background:
+    radial-gradient(circle at 50% 16%, color-mix(in srgb, var(--role-primary, #14508c) 8%, transparent), transparent 38%),
+    linear-gradient(180deg, #ffffff, color-mix(in srgb, var(--role-primary, #14508c) 4%, #ffffff));
+  transition:
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.file-upload-folder-dragger .ant-upload-drag:hover {
+  border-color: color-mix(in srgb, var(--role-primary, #14508c) 52%, #ffffff) !important;
+  background:
+    radial-gradient(circle at 50% 16%, color-mix(in srgb, var(--role-primary, #14508c) 12%, transparent), transparent 40%),
+    linear-gradient(180deg, #ffffff, color-mix(in srgb, var(--role-primary, #14508c) 7%, #ffffff));
+}
+
+.file-upload-folder-dragger .ant-upload.ant-upload-drag .ant-upload {
+  padding: 34px 24px 28px;
+}
+
+.file-upload-folder-dragger .ant-upload-text {
+  margin: 0;
+  color: #18263a;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.file-upload-folder-dragger .ant-upload-hint {
+  margin: 0;
+  color: #708099;
+  font-size: 13px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rb-folder-shell .folder__front,
+  .rb-folder-shell .paper {
+    transition: none;
+  }
+}

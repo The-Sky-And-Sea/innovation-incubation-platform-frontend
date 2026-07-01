@@ -18,6 +18,7 @@
 import { useEffect, useState } from "react";
 import { createBrowserRouter, Navigate, Outlet } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
+import HomePage from "../pages/HomePage";
 import LoginPage from "../pages/auth/LoginPage";
 import RegisterPage from "../pages/auth/RegisterPage";
 import AccountDeletionRequestPage from "../pages/AccountDeletionRequest";
@@ -48,12 +49,15 @@ import GovPerformanceManagement from "../pages/gov/PerformanceManagement";
 import GovPolicyManagement from "../pages/gov/PolicyManagement";
 import { useAuthStore } from "../store/authStore";
 import type { UserRole } from "../types";
+import BrandLogo from "../components/BrandLogo";
 
 /** 路由加载中组件（Auth 初始化时显示） */
 function RouteLoading() {
   return (
     <div className="route-loading" role="status" aria-live="polite">
-      <div className="route-loading-mark">孵</div>
+      <div className="route-loading-mark">
+        <BrandLogo />
+      </div>
       <div>
         <strong>正在恢复工作空间</strong>
         <span>正在校验登录状态与角色权限</span>
@@ -122,6 +126,7 @@ function DashboardRedirect() {
 
 // 路由配置数组：按「守卫 → 角色 → 布局 → 页面」层次组织
 const router = createBrowserRouter([
+  { path: "/", element: <HomePage /> },
   {
     element: <GuestGuard />,
     children: [

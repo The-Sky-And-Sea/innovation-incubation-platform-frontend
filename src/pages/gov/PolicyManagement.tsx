@@ -312,7 +312,7 @@ export default function GovPolicyManagement() {
             <TextArea rows={4} placeholder={"营业执照\n研发投入说明\n项目申报书"} />
           </Form.Item>
           <Form.Item label="政策原文附件">
-            <FileUpload onUploaded={(info: FileInfo) => setFileId(info.file_id)} />
+            <FileUpload onUploaded={(info: FileInfo) => setFileId(info.file_id)} folderColor="#b83246" />
             {fileId && <Text type="secondary">已关联文件 ID：{fileId}</Text>}
           </Form.Item>
         </Form>

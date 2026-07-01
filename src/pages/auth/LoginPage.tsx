@@ -13,6 +13,7 @@ import {
 import { useAuthStore } from "../../store/authStore";
 import type { LoginRequest, UserRole } from "../../types";
 import AuthRouteTransition from "../../components/AuthRouteTransition";
+import BrandLogo from "../../components/BrandLogo";
 
 const { Title, Text } = Typography;
 
@@ -40,6 +41,13 @@ const ROLE_CONFIG: Record<
     icon: <SafetyCertificateOutlined />,
     color: "#b83246",
     bgColor: "#fdebed",
+  },
+};
+
+const DEMO_LOGIN: Partial<Record<UserRole, Pick<LoginRequest, "credential" | "password">>> = {
+  government: {
+    credential: "1",
+    password: "111111",
   },
 };
 
@@ -93,10 +101,18 @@ export default function LoginPage() {
 
   return (
     <div className="gov-login-page" data-selected-role={selectedRole}>
+      <div className="gov-login-floaters" aria-hidden="true">
+        <span className="login-floater login-floater-panel login-floater-panel-top" />
+        <span className="login-floater login-floater-disk login-floater-disk-large" />
+        <span className="login-floater login-floater-disk login-floater-disk-mid" />
+        <span className="login-floater login-floater-disk login-floater-disk-small" />
+      </div>
       <AuthRouteTransition active={routeTransitioning} />
       <section className="gov-login-visual" aria-label="平台介绍">
         <div className="gov-login-brand">
-          <span className="gov-login-brand-mark">孵</span>
+          <span className="gov-login-brand-mark">
+            <BrandLogo />
+          </span>
           <span>创新创业孵化载体管理平台</span>
         </div>
 
@@ -138,7 +154,7 @@ export default function LoginPage() {
                     onClick={() => {
                       setSelectedRole(key);
                       setAuthError("");
-                      form.setFieldsValue({ credential: "", password: "" });
+                      form.setFieldsValue(DEMO_LOGIN[key] || { credential: "", password: "" });
                     }}
                   >
                     {cfg.icon}
