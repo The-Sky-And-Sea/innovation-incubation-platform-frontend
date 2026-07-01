@@ -66,7 +66,7 @@ export async function loginAuth(
   };
 }
 
-export async function registerAuth(params: RegisterRequest): Promise<ApiResponse<UserInfo>> {
+export async function registerAuth(params: RegisterRequest): Promise<ApiResponse<AuthData>> {
   if (isMockEnabled()) {
     if (!params.phone || !params.password) {
       await mockApiFail(10001, "参数错误：手机号和密码不能为空");
@@ -78,22 +78,30 @@ export async function registerAuth(params: RegisterRequest): Promise<ApiResponse
     }
 
     localStorage.setItem("mock_role", params.role);
-    return mockApi<UserInfo>(
-      normalizeUser({
-        id: params.role === "enterprise" ? 1 : params.role === "carrier" ? 2 : 3,
-        role: params.role,
-        phone: params.phone,
-        email: params.email,
-        credit_code: params.enterprise_credit_code || undefined,
-        name: params.enterprise_name || params.carrier_name || params.gov_name || "New User",
-        department: params.gov_department,
-      }),
-    );
+    const user = normalizeUser({
+      id: params.role === "enterprise" ? 1 : params.role === "carrier" ? 2 : 3,
+      role: params.role,
+      phone: params.phone,
+      email: params.email,
+      credit_code: params.enterprise_credit_code || undefined,
+      name: params.enterprise_name || params.carrier_name || params.gov_name || "New User",
+      department: params.gov_department,
+    });
+    return mockApi<AuthData>({
+      token: "mock-jwt-token-" + Date.now(),
+      user,
+    });
   }
 
   const { post } = await import("../utils/request");
-  const res = await post<BackendUserInfo>("/auth/register", params);
-  return { ...res, data: normalizeUser(res.data) };
+  const res = await post<{ token: string; user: BackendUserInfo }>("/auth/register", params);
+  return {
+    ...res,
+    data: {
+      token: res.data.token,
+      user: normalizeUser(res.data.user),
+    },
+  };
 }
 
 export async function getMe(): Promise<ApiResponse<UserInfo>> {

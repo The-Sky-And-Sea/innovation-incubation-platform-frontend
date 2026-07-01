@@ -63,11 +63,7 @@ export const useAuthStore = create<AuthState>((set) => ({
    * 2. 自动登录（存储 token）
    */
   register: async (params) => {
-    await registerAuth(params);
-    const credential = params.role === "enterprise"
-      ? params.enterprise_credit_code || params.phone
-      : params.phone;
-    const res = await loginAuth(credential, params.password, params.role);
+    const res = await registerAuth(params);
     const { token, user } = res.data;
     localStorage.setItem("token", token);
     set({ token, user });

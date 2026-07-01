@@ -157,7 +157,10 @@ describe("API documentation alignment - real request paths", () => {
         });
       }
       if (url.endsWith("/auth/register")) {
-        return okResponse({ user_id: 89, role: "carrier", name: "Carrier" });
+        return okResponse({
+          token: "registered-token",
+          user: { user_id: 89, role: "carrier", name: "Carrier" },
+        });
       }
       if (url.endsWith("/users/me")) {
         return okResponse({ user_id: 88, role: "enterprise", name: "Enterprise" });
@@ -191,7 +194,7 @@ describe("API documentation alignment - real request paths", () => {
       phone: "13800138000",
       password: "password123",
     });
-    expect(registered.data.id).toBe(89);
+    expect(registered.data.user.id).toBe(89);
     expect(fetchSpy.mock.calls[2][0]).toBe("http://api.test/api/v1/auth/register");
 
     const me = await getMe();
