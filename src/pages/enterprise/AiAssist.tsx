@@ -62,6 +62,8 @@ export default function EnterpriseAiAssist() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searching, setSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<Policy[]>([]);
+  const [searchAnalysis, setSearchAnalysis] = useState("");
+  const [highlightedPolicyIndex, setHighlightedPolicyIndex] = useState<number | null>(null);
 
   /** AI 政策匹配 */
   const handleAiMatch = async () => {
@@ -105,6 +107,8 @@ export default function EnterpriseAiAssist() {
     try {
       const res = await searchEnterprisePolicies(searchQuery.trim());
       setSearchResults(res.data.list);
+      setSearchAnalysis(res.data.ai_analysis || res.data.analysis || res.data.summary || "");
+      setHighlightedPolicyIndex(null);
       message.success("语义搜索完成");
     } catch (err) {
       message.error((err as Error).message || "语义搜索失败");
@@ -114,11 +118,66 @@ export default function EnterpriseAiAssist() {
   };
 
   const searchColumns: ColumnsType<Policy> = [
+    {
+      title: "序号",
+      key: "rank",
+      width: 70,
+      render: (_, _record, index) => <span className="policy-result-rank">{index + 1}</span>,
+    },
     { title: "政策", dataIndex: "title", key: "title", render: (value: string) => <Text strong>{value}</Text> },
     { title: "部门", dataIndex: "department", key: "department", width: 110, render: (value?: string) => value || "-" },
     { title: "有效期", key: "date", width: 190, render: (_, record) => `${record.start_date} ~ ${record.end_date}` },
     { title: "匹配度", dataIndex: "match_level", key: "match", width: 100, render: (value: MatchLevel) => <Tag color={matchConfig[value]?.color}>{matchConfig[value]?.label || value}</Tag> },
   ];
+
+  const jumpToPolicyResult = (index: number) => {
+    if (index < 1 || index > searchResults.length) {
+      message.warning(`当前结果中没有第 ${index} 条政策`);
+      return;
+    }
+
+    setHighlightedPolicyIndex(index);
+    document.getElementById(`policy-search-result-${index}`)?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+    window.setTimeout(() => {
+      setHighlightedPolicyIndex((current) => (current === index ? null : current));
+    }, 1800);
+  };
+
+  const renderAnalysisWithRefs = (text: string) => {
+    const nodes: React.ReactNode[] = [];
+    const pattern = /\[(\d+)\]/g;
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = pattern.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        nodes.push(text.slice(lastIndex, match.index));
+      }
+
+      const policyIndex = Number(match[1]);
+      nodes.push(
+        <button
+          type="button"
+          key={`${match[0]}-${match.index}`}
+          className="policy-ref-jump"
+          onClick={() => jumpToPolicyResult(policyIndex)}
+          aria-label={`跳到第 ${policyIndex} 条政策`}
+        >
+          {match[0]}
+        </button>,
+      );
+      lastIndex = pattern.lastIndex;
+    }
+
+    if (lastIndex < text.length) {
+      nodes.push(text.slice(lastIndex));
+    }
+
+    return nodes;
+  };
 
   return (
     <div>
@@ -154,10 +213,22 @@ export default function EnterpriseAiAssist() {
                 loading={searching}
                 placeholder="例如：我想申请 AI 行业的创业补贴"
               />
+              {searchAnalysis ? (
+                <div className="policy-search-analysis">
+                  <Text strong>AI 分析</Text>
+                  <p>{renderAnalysisWithRefs(searchAnalysis)}</p>
+                </div>
+              ) : null}
               <Table
                 columns={searchColumns}
                 dataSource={searchResults}
                 rowKey="id"
+                rowClassName={(_, index) =>
+                  highlightedPolicyIndex === index + 1 ? "policy-search-row-highlight" : ""
+                }
+                onRow={(_, index) => ({
+                  id: `policy-search-result-${(index ?? 0) + 1}`,
+                })}
                 loading={searching}
                 pagination={false}
                 size="small"

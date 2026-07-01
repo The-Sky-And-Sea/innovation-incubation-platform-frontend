@@ -153,7 +153,7 @@ describe("API documentation alignment - real request paths", () => {
       if (url.endsWith("/auth/login")) {
         return okResponse({
           token: "server-token",
-          user: { user_id: 88, role: "enterprise", name: "Enterprise" },
+          user: { user_id: 88, role: url.includes("noop") ? "carrier" : "enterprise", name: "Enterprise" },
         });
       }
       if (url.endsWith("/auth/register")) {
@@ -172,6 +172,19 @@ describe("API documentation alignment - real request paths", () => {
     const login = await loginAuth("credential", "password123", "enterprise");
     expect(login.data.user.id).toBe(88);
     expect(fetchSpy.mock.calls[0][0]).toBe("http://api.test/api/v1/auth/login");
+    expect(fetchSpy.mock.calls[0][1]?.body).toBe(JSON.stringify({
+      credit_code: "credential",
+      password: "password123",
+      role: "enterprise",
+    }));
+
+    await loginAuth("13800138000", "password123", "carrier");
+    expect(fetchSpy.mock.calls[1][0]).toBe("http://api.test/api/v1/auth/login");
+    expect(fetchSpy.mock.calls[1][1]?.body).toBe(JSON.stringify({
+      phone: "13800138000",
+      password: "password123",
+      role: "carrier",
+    }));
 
     const registered = await registerAuth({
       role: "carrier",
@@ -179,14 +192,14 @@ describe("API documentation alignment - real request paths", () => {
       password: "password123",
     });
     expect(registered.data.id).toBe(89);
-    expect(fetchSpy.mock.calls[1][0]).toBe("http://api.test/api/v1/auth/register");
+    expect(fetchSpy.mock.calls[2][0]).toBe("http://api.test/api/v1/auth/register");
 
     const me = await getMe();
     expect(me.data.id).toBe(88);
-    expect(fetchSpy.mock.calls[2][0]).toBe("http://api.test/api/v1/users/me");
+    expect(fetchSpy.mock.calls[3][0]).toBe("http://api.test/api/v1/users/me");
 
     await getHealth();
-    expect(fetchSpy.mock.calls[3][0]).toBe("http://api.test/api/v1/health");
+    expect(fetchSpy.mock.calls[4][0]).toBe("http://api.test/api/v1/health");
 
     await testLlm({ system: "assistant", user: "hello" });
     expect(lastFetchCall(fetchSpy).url).toBe("http://api.test/api/v1/test/llm");
@@ -293,5 +306,61 @@ describe("API documentation alignment - real request paths", () => {
     });
     expect(lastFetchCall(fetchSpy).url).toBe("http://api.test/api/v1/enterprise/changes/8");
     expect(lastFetchCall(fetchSpy).init.method).toBe("PUT");
+  });
+
+  it("uses documented file endpoints and normalizes backend metadata names", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = String(input);
+      if (url.includes("/files?")) {
+        return okResponse({
+          list: [
+            {
+              file_id: 12,
+              name: "business-license.pdf",
+              mime_type: "application/pdf",
+              size: 2048,
+              uploaded_at: "2026-01-01T00:00:00Z",
+            },
+          ],
+          total: 1,
+          page: 1,
+          page_size: 20,
+        });
+      }
+      if (url.endsWith("/files/12/download")) {
+        return Promise.resolve(new Response(new Blob(["file"]), { status: 200 }));
+      }
+      return okResponse(null);
+    });
+
+    const { getFileList, downloadFile } = await import("../api/files");
+
+    const files = await getFileList(1, 20);
+    expect(lastFetchCall(fetchSpy).url).toBe("http://api.test/api/v1/files?page=1&page_size=20");
+    expect(files.data.list[0].filename).toBe("business-license.pdf");
+    expect(files.data.list[0].created_at).toBe("2026-01-01T00:00:00Z");
+
+    await downloadFile(12);
+    expect(lastFetchCall(fetchSpy).url).toBe("http://api.test/api/v1/files/12/download");
+  });
+
+  it("uses documented notification pagination and read endpoints", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = String(input);
+      if (url.includes("/notifications?")) {
+        return okResponse({ list: [], total: 0, page: 2, page_size: 10 });
+      }
+      return okResponse(null);
+    });
+
+    const { fetchNotifications, markNotificationsRead } = await import("../api/notifications");
+
+    await fetchNotifications({ page: 2, page_size: 10 });
+    expect(lastFetchCall(fetchSpy).url).toBe("http://api.test/api/v1/notifications?page=2&page_size=10");
+
+    await markNotificationsRead([1, 2, 3]);
+    expect(lastFetchCall(fetchSpy).url).toBe("http://api.test/api/v1/notifications/read");
+    expect(lastFetchCall(fetchSpy).init.method).toBe("PATCH");
+    expect(lastFetchCall(fetchSpy).init.body).toBe(JSON.stringify({ ids: [1, 2, 3] }));
   });
 });

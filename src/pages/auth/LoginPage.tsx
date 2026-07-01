@@ -38,8 +38,8 @@ const ROLE_CONFIG: Record<
     label: "政务端",
     description: "政策发布与监督审核",
     icon: <SafetyCertificateOutlined />,
-    color: "#9a5b12",
-    bgColor: "#fff1dc",
+    color: "#b83246",
+    bgColor: "#fdebed",
   },
 };
 
@@ -70,7 +70,8 @@ export default function LoginPage() {
       await login(values.credential, values.password, selectedRole);
       message.success("登录成功");
       // 延迟跳转，让用户看到成功提示
-      setTimeout(() => navigate("/dashboard"), 300);
+      setRouteTransitioning(true);
+      routeTimerRef.current = window.setTimeout(() => navigate("/dashboard"), 300);
     } catch (err) {
       const errorMessage = (err as Error).message || "";
       setAuthError(
@@ -91,7 +92,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="gov-login-page">
+    <div className="gov-login-page" data-selected-role={selectedRole}>
       <AuthRouteTransition active={routeTransitioning} />
       <section className="gov-login-visual" aria-label="平台介绍">
         <div className="gov-login-brand">
@@ -127,6 +128,7 @@ export default function LoginPage() {
                   <Button
                     key={key}
                     className="login-role-button"
+                    data-role={key}
                     aria-pressed={isActive}
                     style={{
                       borderColor: isActive ? cfg.color : "#dbe4ee",

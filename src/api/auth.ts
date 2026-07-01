@@ -1,19 +1,6 @@
-/**
- * 认证模块 API 层
- *
- * 对应后端接口：
- * - POST /auth/login    登录
- * - POST /auth/register  注册
- * - GET  /auth/me        获取当前用户信息
- *
- * 切换模式：
- * - VITE_USE_MOCK 未设置或不为 false → 前端独立运行（默认）
- * - VITE_USE_MOCK=false              → 对接真实后端 Gin 服务
- */
-
 import { mockApi, mockApiFail } from "./mock";
 import { isMockEnabled } from "./config";
-import type { ApiResponse, AuthData, RegisterRequest, UserInfo } from "../types";
+import type { ApiResponse, AuthData, RegisterRequest, UserInfo, UserRole } from "../types";
 
 type BackendUserInfo = Omit<UserInfo, "id"> & { id?: number; user_id?: number };
 
@@ -24,7 +11,11 @@ function normalizeUser(user: BackendUserInfo): UserInfo {
   };
 }
 
-// ============ Mock 用户数据 ============
+function buildLoginPayload(credential: string, password: string, role: string) {
+  return role === "enterprise"
+    ? { credit_code: credential, password, role }
+    : { phone: credential, password, role };
+}
 
 const mockUser: UserInfo = {
   id: 1,
@@ -32,38 +23,26 @@ const mockUser: UserInfo = {
   phone: "13800138000",
   email: "company@example.com",
   credit_code: "91440101MA5XXXX",
-  name: "测试企业",
+  name: "Mock Enterprise",
 };
 
-/** 按角色区分用户名 */
-const roleUserMap: Record<string, Partial<UserInfo>> = {
-  enterprise: { id: 1, name: "测试企业", credit_code: "91440101MA5XXXX" },
-  carrier: { id: 2, name: "天河软件园孵化器", phone: "020-88880001", email: "carrier@example.com", credit_code: undefined },
-  government: { id: 3, name: "政务管理员", phone: "010-88880000", email: "gov@example.com", credit_code: undefined },
+const roleUserMap: Record<UserRole, Partial<UserInfo>> = {
+  enterprise: { id: 1, name: "Mock Enterprise", credit_code: "91440101MA5XXXX" },
+  carrier: { id: 2, name: "Mock Carrier", phone: "020-88880001", email: "carrier@example.com", credit_code: undefined },
+  government: { id: 3, name: "Mock Government", phone: "010-88880000", email: "gov@example.com", department: "Industry Bureau" },
 };
 
-/**
- * 登录
- * @param credential 企业填信用代码，载体/政务填手机号
- * @param password 密码（≥6 位）
- * @param role 角色 enterprise | carrier | government
- */
 export async function loginAuth(
   credential: string,
   password: string,
-  role: string,
+  role: UserRole,
 ): Promise<ApiResponse<AuthData>> {
   if (isMockEnabled()) {
-    // 基本参数校验
-    if (!credential) {
-      await mockApiFail(10001, "参数错误：凭据不能为空");
-      throw new Error("unreachable");
-    }
-    if (!password || password.length < 6) {
-      await mockApiFail(10001, "参数错误：密码至少 6 位");
-      throw new Error("unreachable");
-    }
-    // 模拟成功登录，并将角色持久化到 localStorage，避免 AuthGuard::initAuth() 覆盖
+    const mockCredential = credential || "mock-user";
+    const mockPassword = password && password.length >= 6 ? password : "mock-password";
+    void mockCredential;
+    void mockPassword;
+
     localStorage.setItem("mock_role", role);
     const roleInfo = roleUserMap[role] || roleUserMap.enterprise;
     return mockApi<AuthData>({
@@ -71,13 +50,13 @@ export async function loginAuth(
       user: {
         ...mockUser,
         ...roleInfo,
-        role: role as UserInfo["role"],
+        role,
       },
     });
   }
 
   const { post } = await import("../utils/request");
-  const res = await post<{ token: string; user: BackendUserInfo }>("/auth/login", { credential, password, role });
+  const res = await post<{ token: string; user: BackendUserInfo }>("/auth/login", buildLoginPayload(credential, password, role));
   return {
     ...res,
     data: {
@@ -87,10 +66,6 @@ export async function loginAuth(
   };
 }
 
-/**
- * 注册
- * @param params 注册表单数据（角色区分企业/载体字段）
- */
 export async function registerAuth(params: RegisterRequest): Promise<ApiResponse<UserInfo>> {
   if (isMockEnabled()) {
     if (!params.phone || !params.password) {
@@ -101,16 +76,17 @@ export async function registerAuth(params: RegisterRequest): Promise<ApiResponse
       await mockApiFail(10001, "参数错误：密码至少 6 位");
       throw new Error("unreachable");
     }
-    // 持久化角色
+
     localStorage.setItem("mock_role", params.role);
     return mockApi<UserInfo>(
       normalizeUser({
-        id: 2,
+        id: params.role === "enterprise" ? 1 : params.role === "carrier" ? 2 : 3,
         role: params.role,
         phone: params.phone,
         email: params.email,
         credit_code: params.enterprise_credit_code || undefined,
-        name: params.enterprise_name || params.carrier_name || "New User",
+        name: params.enterprise_name || params.carrier_name || params.gov_name || "New User",
+        department: params.gov_department,
       }),
     );
   }
@@ -120,24 +96,18 @@ export async function registerAuth(params: RegisterRequest): Promise<ApiResponse
   return { ...res, data: normalizeUser(res.data) };
 }
 
-/**
- * 获取当前登录用户信息（用于 token 有效性校验和页面恢复登录态）
- *
- * Mock 模式下从 localStorage 读取登录时存储的角色，
- * 避免 AuthGuard::initAuth() 调用时把角色覆盖为默认 enterprise。
- */
 export async function getMe(): Promise<ApiResponse<UserInfo>> {
   if (isMockEnabled()) {
-    const storedRole = localStorage.getItem("mock_role") || "enterprise";
+    const storedRole = (localStorage.getItem("mock_role") || "enterprise") as UserRole;
     const roleInfo = roleUserMap[storedRole] || roleUserMap.enterprise;
     return mockApi<UserInfo>({
       ...mockUser,
       ...roleInfo,
-      role: storedRole as UserInfo["role"],
+      role: storedRole,
     });
   }
 
   const { get } = await import("../utils/request");
-  const res = await get<BackendUserInfo>("/auth/me");
+  const res = await get<BackendUserInfo>("/users/me");
   return { ...res, data: normalizeUser(res.data) };
 }

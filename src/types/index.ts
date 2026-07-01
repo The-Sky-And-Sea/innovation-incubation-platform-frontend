@@ -54,6 +54,7 @@ export interface UserInfo {
   email?: string;
   credit_code?: string;
   name?: string;
+  department?: string;
 }
 
 /** 登录请求：企业用信用代码，载体/政务用手机号 */
@@ -66,7 +67,7 @@ export interface LoginRequest {
 /** 注册请求：区分企业/载体，字段不同 */
 export interface RegisterRequest {
   password: string;
-  role: "enterprise" | "carrier";
+  role: UserRole;
   phone: string;
   email?: string;
   enterprise_name?: string;
@@ -77,6 +78,8 @@ export interface RegisterRequest {
   carrier_name?: string;
   carrier_type?: string;
   carrier_area?: string;
+  gov_name?: string;
+  gov_department?: string;
 }
 
 /** 认证数据：登录成功后返回的 token 和用户信息 */
@@ -318,9 +321,11 @@ export interface AccountDeletion {
 /** 文件信息：上传后的文件元数据 */
 export interface FileInfo {
   file_id: number;
+  name?: string;
   filename: string;
   mime_type: string;
   size: number;
+  uploaded_at?: string;
   created_at?: string;
 }
 

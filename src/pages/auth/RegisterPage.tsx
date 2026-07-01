@@ -12,14 +12,14 @@ import {
   TeamOutlined,
 } from "@ant-design/icons";
 import { useAuthStore } from "../../store/authStore";
-import type { RegisterRequest } from "../../types";
+import type { RegisterRequest, UserRole } from "../../types";
 import AuthRouteTransition from "../../components/AuthRouteTransition";
 
 const { Title, Text } = Typography;
 
 export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
-  const [role, setRole] = useState<"enterprise" | "carrier">("enterprise");
+  const [role, setRole] = useState<UserRole>("enterprise");
   const [routeTransitioning, setRouteTransitioning] = useState(false);
   const navigate = useNavigate();
   const register = useAuthStore((s) => s.register);
@@ -54,7 +54,7 @@ export default function RegisterPage() {
         </div>
         <div className="auth-register-copy">
           <Title level={1}>建立可信主体档案，接入全流程协同服务</Title>
-          <p>企业和载体通过统一入口完成注册，后续可进入入驻、政策、文件、审核与绩效等业务流程。</p>
+          <p>企业、载体和政务人员通过统一入口完成注册，后续进入入驻、政策、文件、审核与绩效等业务流程。</p>
         </div>
       </section>
 
@@ -91,6 +91,16 @@ export default function RegisterPage() {
             >
               载体注册
             </Button>
+            <Button
+              type={role === "government" ? "primary" : "default"}
+              icon={<SafetyCertificateOutlined />}
+              onClick={() => {
+                setRole("government");
+                form.resetFields();
+              }}
+            >
+              政务注册
+            </Button>
           </div>
 
           <Form form={form} layout="vertical" onFinish={onFinish} requiredMark={false}>
@@ -114,7 +124,7 @@ export default function RegisterPage() {
             </Form.Item>
 
             <Divider plain>
-              <SafetyCertificateOutlined /> {role === "enterprise" ? "企业信息" : "载体信息"}
+              <SafetyCertificateOutlined /> {role === "enterprise" ? "企业信息" : role === "carrier" ? "载体信息" : "政务信息"}
             </Divider>
 
             {role === "enterprise" ? (
@@ -129,7 +139,7 @@ export default function RegisterPage() {
                 >
                   <Input prefix={<IdcardOutlined />} placeholder="请输入统一社会信用代码" size="large" />
                 </Form.Item>
-                <Form.Item name="enterprise_industry" label="所属行业">
+                <Form.Item name="enterprise_industry" label="所属行业" rules={[{ required: true, message: "请输入所属行业" }]}>
                   <Input prefix={<TeamOutlined />} placeholder="如：信息技术、生物医药" size="large" />
                 </Form.Item>
                 <Form.Item name="enterprise_scale" label="企业规模">
@@ -143,12 +153,12 @@ export default function RegisterPage() {
                   <Input prefix={<EnvironmentOutlined />} placeholder="请输入企业地址" size="large" />
                 </Form.Item>
               </>
-            ) : (
+            ) : role === "carrier" ? (
               <>
                 <Form.Item name="carrier_name" label="载体名称" rules={[{ required: true, message: "请输入载体名称" }]}>
                   <Input prefix={<BankOutlined />} placeholder="请输入载体名称" size="large" />
                 </Form.Item>
-                <Form.Item name="carrier_type" label="载体类型">
+                <Form.Item name="carrier_type" label="载体类型" rules={[{ required: true, message: "请选择载体类型" }]}>
                   <Select
                     size="large"
                     placeholder="请选择载体类型"
@@ -158,8 +168,17 @@ export default function RegisterPage() {
                     }))}
                   />
                 </Form.Item>
-                <Form.Item name="carrier_area" label="所在区域">
+                <Form.Item name="carrier_area" label="所在区域" rules={[{ required: true, message: "请输入所在区域" }]}>
                   <Input prefix={<EnvironmentOutlined />} placeholder="请输入所在区域" size="large" />
+                </Form.Item>
+              </>
+            ) : (
+              <>
+                <Form.Item name="gov_name" label="政务人员姓名" rules={[{ required: true, message: "请输入政务人员姓名" }]}>
+                  <Input prefix={<SafetyCertificateOutlined />} placeholder="请输入政务人员姓名" size="large" />
+                </Form.Item>
+                <Form.Item name="gov_department" label="所属部门" rules={[{ required: true, message: "请输入所属部门" }]}>
+                  <Input prefix={<BankOutlined />} placeholder="如：工信科、科技局" size="large" />
                 </Form.Item>
               </>
             )}
