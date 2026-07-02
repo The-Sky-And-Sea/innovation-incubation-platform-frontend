@@ -59,7 +59,13 @@ export default function CarrierChangeReview() {
 
   const columns: ColumnsType<ChangeRecord> = [
     { title: "编号", dataIndex: "id", key: "id", width: 70 },
-    { title: "企业ID", dataIndex: "enterprise_id", key: "enterprise_id", width: 80 },
+    {
+      title: "企业名称",
+      key: "enterprise_name",
+      width: 180,
+      ellipsis: true,
+      render: (_, record) => (record as ChangeRecord & { enterprise?: { name?: string } }).enterprise?.name || "-",
+    },
     {
       title: "变更类型",
       dataIndex: "change_type",

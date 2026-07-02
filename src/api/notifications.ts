@@ -18,12 +18,11 @@ export async function fetchNotifications(
   const pageSize = options.page_size ?? 50;
 
   const { get } = await import("../utils/request");
-  const res = await get<{ list: Notification[]; unread_count?: number }>("/notifications", {
+  const res = await get<{ list: Notification[]; unread_count: number }>("/notifications", {
     page,
     page_size: pageSize,
   });
-  const unreadCount = res.data.unread_count ?? res.data.list.filter((item) => !item.is_read).length;
-  return { ...res, data: { list: res.data.list, unread_count: unreadCount } };
+  return res;
 }
 
 export async function markNotificationsRead(ids: number[]): Promise<ApiResponse<null>> {

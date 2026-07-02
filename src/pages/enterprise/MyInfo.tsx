@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Card, Typography, Descriptions, message, Skeleton, Tag } from "antd";
+import { Card, Typography, Descriptions, message, Skeleton, Tag, Button, Modal, Form, Input, Select, Space, Alert } from "antd";
 import {
   IdcardOutlined,
   BankOutlined,
@@ -8,22 +8,123 @@ import {
   UserOutlined,
   PhoneOutlined,
   InfoCircleOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
-import { getMyEnterpriseInfo } from "../../api/enterprise";
-import type { EnterpriseInfo } from "../../types";
+import { getMyEnterpriseInfo, getMyIncubation } from "../../api/enterprise";
+import { submitChange } from "../../api/changes";
+import type { EnterpriseInfo, ChangeType } from "../../types";
 
 const { Title } = Typography;
+
+const CHANGE_TYPE_MAP: Record<string, ChangeType> = {
+  name: "企业名称",
+  credit_code: "统一社会信用代码",
+  industry: "所属行业",
+  scale: "企业规模",
+  address: "企业地址",
+  legal_person: "法定代表人",
+};
+
+const ENTERPRISE_SCALES = ["微型", "小型", "中型", "大型"];
 
 export default function EnterpriseMyInfo() {
   const [enterprise, setEnterprise] = useState<EnterpriseInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [hasActiveIncubation, setHasActiveIncubation] = useState(false);
+  const [form] = Form.useForm<EnterpriseInfo>();
 
   useEffect(() => {
-    getMyEnterpriseInfo()
-      .then((res) => setEnterprise(res.data))
+    Promise.all([
+      getMyEnterpriseInfo(),
+      getMyIncubation(1, 1),
+    ])
+      .then(([entRes, incRes]) => {
+        setEnterprise(entRes.data);
+        form.setFieldsValue(entRes.data);
+        const active = incRes.data.list.some(
+          (item: any) => item.status === "approved" && item.incubate_status === "in_incubation",
+        );
+        setHasActiveIncubation(active);
+      })
       .catch(() => message.error("加载企业信息失败"))
       .finally(() => setLoading(false));
-  }, []);
+  }, [form]);
+
+  const handleEdit = () => {
+    if (!hasActiveIncubation) {
+      message.warning("请先申请入驻并通过载体审核后，再进行信息变更");
+      return;
+    }
+    if (enterprise) {
+      form.setFieldsValue(enterprise);
+      setEditModalOpen(true);
+    }
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const values = await form.validateFields();
+      setSubmitting(true);
+
+      const changedFields: Array<{ field: string; oldValue: string; newValue: string }> = [];
+      if (!enterprise) return;
+
+      if (values.name !== enterprise.name) {
+        changedFields.push({ field: "name", oldValue: enterprise.name, newValue: values.name });
+      }
+      if (values.credit_code !== enterprise.credit_code) {
+        changedFields.push({ field: "credit_code", oldValue: enterprise.credit_code, newValue: values.credit_code });
+      }
+      if (values.industry !== enterprise.industry) {
+        changedFields.push({ field: "industry", oldValue: enterprise.industry, newValue: values.industry });
+      }
+      if (values.scale !== enterprise.scale) {
+        changedFields.push({ field: "scale", oldValue: enterprise.scale, newValue: values.scale });
+      }
+      if (values.address !== enterprise.address) {
+        changedFields.push({ field: "address", oldValue: enterprise.address, newValue: values.address });
+      }
+      if (values.legal_person !== enterprise.legal_person) {
+        changedFields.push({ field: "legal_person", oldValue: enterprise.legal_person, newValue: values.legal_person });
+      }
+
+      if (changedFields.length === 0) {
+        message.info("未修改任何信息");
+        setEditModalOpen(false);
+        setSubmitting(false);
+        return;
+      }
+
+      let successCount = 0;
+      for (const item of changedFields) {
+        const changeType = CHANGE_TYPE_MAP[item.field];
+        try {
+          await submitChange(changeType, `${changeType}由"${item.oldValue}"变更为"${item.newValue}"`, { value: item.newValue });
+          successCount++;
+        } catch {
+          message.error(`${changeType}提交失败`);
+        }
+      }
+
+      if (successCount > 0) {
+        message.success(`成功提交 ${successCount} 项变更申请，请等待载体审核`);
+        setEditModalOpen(false);
+        getMyEnterpriseInfo()
+          .then((res) => {
+            setEnterprise(res.data);
+            form.setFieldsValue(res.data);
+          })
+          .catch(() => message.error("刷新企业信息失败"));
+      }
+    } catch (err) {
+      if (err && typeof err === "object" && "errorFields" in err) return;
+      message.error((err as Error).message || "提交失败");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -57,6 +158,16 @@ export default function EnterpriseMyInfo() {
         我的企业信息
       </Title>
 
+      {!hasActiveIncubation && (
+        <Alert
+          message="温馨提示"
+          description="请先申请入驻并通过载体审核后，才能进行信息变更等操作"
+          type="info"
+          showIcon
+          style={{ marginBottom: 16, maxWidth: 800 }}
+        />
+      )}
+
       <Card
         style={{ maxWidth: 800 }}
         title={
@@ -65,7 +176,20 @@ export default function EnterpriseMyInfo() {
             {enterprise.name}
           </>
         }
-        extra={<Tag color="blue">{enterprise.scale}</Tag>}
+        extra={
+          <Space>
+            <Tag color={hasActiveIncubation ? "green" : "orange"}>
+              {hasActiveIncubation ? "已入驻" : "未入驻"}
+            </Tag>
+            <Button
+              icon={<EditOutlined />}
+              onClick={handleEdit}
+              disabled={!hasActiveIncubation}
+            >
+              修改信息
+            </Button>
+          </Space>
+        }
       >
         <Descriptions
           column={{ xs: 1, sm: 2 }}
@@ -116,6 +240,50 @@ export default function EnterpriseMyInfo() {
           </Descriptions.Item>
         </Descriptions>
       </Card>
+
+      <Modal
+        title="修改企业信息"
+        open={editModalOpen}
+        onCancel={() => setEditModalOpen(false)}
+        onOk={handleSubmit}
+        confirmLoading={submitting}
+        okText="提交变更申请"
+        width={600}
+      >
+        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
+          <Form.Item name="name" label="企业名称" rules={[{ required: true, message: "请输入企业名称" }]}>
+            <Input placeholder="请输入企业名称" />
+          </Form.Item>
+
+          <Form.Item name="credit_code" label="统一社会信用代码" rules={[{ required: true, message: "请输入统一社会信用代码" }]}>
+            <Input placeholder="请输入统一社会信用代码" />
+          </Form.Item>
+
+          <Form.Item name="industry" label="所属行业">
+            <Input placeholder="请输入所属行业" />
+          </Form.Item>
+
+          <Form.Item name="scale" label="企业规模">
+            <Select placeholder="请选择企业规模" options={ENTERPRISE_SCALES.map((s) => ({ label: s, value: s }))} />
+          </Form.Item>
+
+          <Form.Item name="address" label="企业地址">
+            <Input placeholder="请输入企业地址" />
+          </Form.Item>
+
+          <Form.Item name="legal_person" label="法定代表人">
+            <Input placeholder="请输入法定代表人" />
+          </Form.Item>
+
+          <Form.Item name="contact_name" label="联系人">
+            <Input placeholder="请输入联系人" />
+          </Form.Item>
+
+          <Form.Item name="contact_phone" label="联系电话">
+            <Input placeholder="请输入联系电话" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }
