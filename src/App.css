@@ -6001,6 +6001,36 @@ select {
     fixed 0 / cover;
 }
 
+/* 半透明遮罩让背景图变淡 */
+.mobbin-hero::before,
+.mobbin-product-stage::before,
+.mobbin-stats::before,
+.mobbin-patterns-showcase::before,
+.mobbin-flow-duo::before,
+.mobbin-creation::before,
+.mobbin-comments::before,
+.mobbin-final-cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.65);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 确保内容在遮罩层之上（排除 absolute 定位的浮动元素） */
+.mobbin-hero > :not(.mobbin-floating-icon),
+.mobbin-product-stage > :not(.mobbin-floating-icon),
+.mobbin-stats > :not(.mobbin-floating-icon),
+.mobbin-patterns-showcase > :not(.mobbin-floating-icon),
+.mobbin-flow-duo > :not(.mobbin-floating-icon),
+.mobbin-creation > :not(.mobbin-floating-icon),
+.mobbin-comments > :not(.mobbin-floating-icon),
+.mobbin-final-cta > :not(.mobbin-floating-icon) {
+  position: relative;
+  z-index: 1;
+}
+
 @media (max-width: 720px) {
   .mobbin-hero,
   .mobbin-product-stage,
