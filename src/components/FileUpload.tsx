@@ -9,12 +9,12 @@ import {
   Card,
 } from "antd";
 import {
-  InboxOutlined,
   FileOutlined,
   CheckCircleOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
 import type { UploadProps, UploadFile } from "antd";
+import Folder from "./Folder";
 import { getFileLimit, uploadFileAction } from "../api/files";
 import { formatFileSize } from "../utils/format";
 import type { FileInfo, FileLimit } from "../types";
@@ -45,6 +45,8 @@ interface FileUploadProps {
   currentFile?: FileInfo | null;
   /** 移除文件的回调 */
   onRemove?: () => void;
+  /** 文件夹视觉的主题色 */
+  folderColor?: string;
 }
 
 export default function FileUpload({
@@ -52,6 +54,7 @@ export default function FileUpload({
   disabled = false,
   currentFile,
   onRemove,
+  folderColor = "#14508c",
 }: FileUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [fileLimit, setFileLimit] = useState<FileLimit | null>(null);
@@ -169,6 +172,7 @@ export default function FileUpload({
   return (
     <div>
       <Dragger
+        className="file-upload-folder-dragger"
         name="file"
         multiple={false}
         maxCount={1}
@@ -182,19 +186,30 @@ export default function FileUpload({
           showDownloadIcon: false,
         }}
       >
-        <p className="ant-upload-drag-icon">
-          <InboxOutlined />
-        </p>
-        <p className="ant-upload-text">
-          {uploading ? "上传中..." : "点击或拖拽文件到此区域上传"}
-        </p>
-        {fileLimit && (
-          <p className="ant-upload-hint">
-            支持格式: {fileLimit.allowed_extensions.join(", ")}
-            {" | "}
-            最大 {fileLimit.max_size_mb}MB
+        <div className="file-upload-dropcopy">
+          <div className="upload-folder-visual" aria-hidden="true">
+            <Folder
+              color={folderColor}
+              interactive={false}
+              size={1.08}
+              items={[
+                <span key="pdf" className="upload-folder-paper">PDF</span>,
+                <span key="doc" className="upload-folder-paper">DOC</span>,
+                <span key="xls" className="upload-folder-paper">XLS</span>,
+              ]}
+            />
+          </div>
+          <p className="ant-upload-text">
+            {uploading ? "上传中..." : "点击或拖拽文件到此区域上传"}
           </p>
-        )}
+          {fileLimit && (
+            <p className="ant-upload-hint">
+              支持格式: {fileLimit.allowed_extensions.join(", ")}
+              {" | "}
+              最大 {fileLimit.max_size_mb}MB
+            </p>
+          )}
+        </div>
       </Dragger>
     </div>
   );

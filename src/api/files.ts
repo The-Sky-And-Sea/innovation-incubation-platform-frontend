@@ -22,6 +22,14 @@ import type { ApiResponse, FileInfo, FileLimit } from "../types";
 let mockFileIdCounter = 100;
 const mockFiles: Map<number, FileInfo> = new Map();
 
+function normalizeFileInfo(file: FileInfo): FileInfo {
+  return {
+    ...file,
+    filename: file.filename || file.name || `file-${file.file_id}`,
+    created_at: file.created_at || file.uploaded_at,
+  };
+}
+
 /**
  * 获取文件上传限制（允许的扩展名和最大大小）
  */
@@ -74,7 +82,8 @@ export async function uploadFileAction(
   }
 
   const { uploadFile } = await import("../utils/request");
-  return uploadFile<FileInfo>(file);
+  const res = await uploadFile<FileInfo>(file);
+  return { ...res, data: normalizeFileInfo(res.data) };
 }
 
 /**
@@ -100,7 +109,14 @@ export async function getFileList(
     page_size: String(page_size),
   };
   if (userId) params.user_id = String(userId);
-  return get("/files", params);
+  const res = await get<{ list: FileInfo[]; total: number; page: number; page_size: number }>("/files", params);
+  return {
+    ...res,
+    data: {
+      ...res.data,
+      list: res.data.list.map(normalizeFileInfo),
+    },
+  };
 }
 
 /**

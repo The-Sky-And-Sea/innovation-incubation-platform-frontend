@@ -3,6 +3,7 @@ import {
   Alert,
   Button,
   Card,
+  Checkbox,
   Empty,
   Form,
   Input,
@@ -25,6 +26,7 @@ import {
   scorePerformance,
 } from "../../api/performances";
 import type { AuditStatus, PerformanceSubmission, PerformanceTemplate } from "../../types";
+import { describeBusinessData } from "../../utils/businessDisplay";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -42,6 +44,15 @@ const initialTemplates: PerformanceTemplate[] = [
   },
 ];
 
+interface TemplateFormValues {
+  name: string;
+  year: number;
+  include_service_enterprises?: boolean;
+  include_incubation_results?: boolean;
+  include_events?: boolean;
+  custom_metric?: string;
+}
+
 export default function GovPerformanceManagement() {
   const [templates, setTemplates] = useState<PerformanceTemplate[]>(initialTemplates);
   const [submissions, setSubmissions] = useState<PerformanceSubmission[]>([]);
@@ -51,7 +62,7 @@ export default function GovPerformanceManagement() {
   const [launchOpen, setLaunchOpen] = useState(false);
   const [scoreOpen, setScoreOpen] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<PerformanceSubmission | null>(null);
-  const [templateForm] = Form.useForm<{ name: string; year: number; form_schema_json: string }>();
+  const [templateForm] = Form.useForm<TemplateFormValues>();
   const [launchForm] = Form.useForm<{
     template_id: number;
     name: string;
@@ -87,14 +98,19 @@ export default function GovPerformanceManagement() {
     try {
       const values = await templateForm.validateFields();
       setSubmitting(true);
-      const formSchema = JSON.parse(values.form_schema_json || "{}") as Record<string, unknown>;
+      const formSchema: Record<string, unknown> = {};
+      if (values.include_service_enterprises) formSchema.service_enterprises = "服务企业数量";
+      if (values.include_incubation_results) formSchema.incubation_results = "孵化成果说明";
+      if (values.include_events) formSchema.events = "创业活动数量";
+      if (values.custom_metric?.trim()) formSchema.custom_metric = values.custom_metric.trim();
+
       const res = await createPerformanceTemplate(values.name, values.year, formSchema);
       setTemplates((prev) => [res.data, ...prev]);
       message.success("考核模板已创建");
       setTemplateOpen(false);
     } catch (err) {
       if (err && typeof err === "object" && "errorFields" in err) return;
-      message.error((err as Error).message || "创建失败，请检查 JSON 格式");
+      message.error((err as Error).message || "创建失败");
     } finally {
       setSubmitting(false);
     }
@@ -143,11 +159,11 @@ export default function GovPerformanceManagement() {
     { title: "考核活动", dataIndex: "campaign_id", key: "campaign_id", width: 110 },
     { title: "载体", dataIndex: "carrier_id", key: "carrier_id", width: 90, render: (value: number) => `载体 #${value}` },
     {
-      title: "申报数据",
+      title: "申报摘要",
       dataIndex: "form_data",
       key: "form_data",
       ellipsis: true,
-      render: (value: unknown) => JSON.stringify(value),
+      render: (value: Record<string, unknown>) => describeBusinessData(value),
     },
     { title: "分数", dataIndex: "score", key: "score", width: 90, render: (value?: number) => (value !== undefined ? <Tag color="blue">{value}</Tag> : "-") },
     {
@@ -181,7 +197,7 @@ export default function GovPerformanceManagement() {
       </Title>
       <Alert
         message="模板配置 - 启动考核 - 载体提交 - 政务评分"
-        description="联调前 Mock 模式已预置一个年度模板和一条待评分申报，也支持新建模板、启动考核和评分审核。"
+        description="模板按业务指标勾选配置，不需要填写技术格式。Mock 模式已预置一个年度模板和一条待评分申报。"
         type="info"
         showIcon
         style={{ marginBottom: 16 }}
@@ -199,7 +215,9 @@ export default function GovPerformanceManagement() {
                 templateForm.setFieldsValue({
                   name: `孵化服务绩效模板 ${dayjs().year()}`,
                   year: dayjs().year(),
-                  form_schema_json: JSON.stringify(initialTemplates[0].form_schema, null, 2),
+                  include_service_enterprises: true,
+                  include_incubation_results: true,
+                  include_events: true,
                 });
                 setTemplateOpen(true);
               }}
@@ -261,8 +279,17 @@ export default function GovPerformanceManagement() {
           <Form.Item name="year" label="适用年度" rules={[{ required: true, type: "number" }]}>
             <InputNumber min={2020} max={2035} style={{ width: "100%" }} />
           </Form.Item>
-          <Form.Item name="form_schema_json" label="表单结构 JSON" rules={[{ required: true, message: "请输入表单结构" }]}>
-            <TextArea rows={6} />
+          <Form.Item name="include_service_enterprises" valuePropName="checked">
+            <Checkbox>服务企业数量</Checkbox>
+          </Form.Item>
+          <Form.Item name="include_incubation_results" valuePropName="checked">
+            <Checkbox>孵化成果说明</Checkbox>
+          </Form.Item>
+          <Form.Item name="include_events" valuePropName="checked">
+            <Checkbox>创业活动数量</Checkbox>
+          </Form.Item>
+          <Form.Item name="custom_metric" label="补充指标">
+            <Input placeholder="例如：投融资服务成效" />
           </Form.Item>
         </Form>
       </Modal>
@@ -311,12 +338,7 @@ export default function GovPerformanceManagement() {
             <InputNumber min={0} max={100} step={0.5} style={{ width: "100%" }} />
           </Form.Item>
           <Form.Item name="status" label="审核结果" rules={[{ required: true, message: "请选择审核结果" }]}>
-            <Select
-              options={[
-                { label: "通过", value: "approved" },
-                { label: "拒绝", value: "rejected" },
-              ]}
-            />
+            <Select options={[{ label: "通过", value: "approved" }, { label: "拒绝", value: "rejected" }]} />
           </Form.Item>
           <Form.Item name="comment" label="评语">
             <TextArea rows={2} placeholder="请输入评语" />

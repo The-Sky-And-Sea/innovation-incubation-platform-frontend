@@ -1,119 +1,226 @@
+# 创新创业孵化载体管理平台前端
 
-## 创新创业孵化载体管理平台前端
-使用 React + Tauri 构建的创新创业孵化载体管理平台的前端
+使用 React + TypeScript + Vite + Tauri 构建的创新创业孵化载体管理平台前端。平台面向企业端、载体端、政务端三类用户，覆盖入驻、文件、政策申报、审核流转、绩效考核、通知和账号治理等业务流程。
 
-### 技术栈
+## 技术栈
+
 - React 19 + TypeScript
-- Tauri 2（桌面端）
-- Ant Design 6（UI 组件）
-- react-router-dom v6（路由）
-- zustand（状态管理）
-- vitest + testing-library（测试）
+- Vite
+- Tauri 2
+- Ant Design 6
+- react-router-dom v6
+- zustand
+- Vitest + Testing Library
 
-### 开发进度
+## 当前分支
 
-| 层级 | 功能 | 状态 |
-|------|------|------|
-| 第 0 层 | 前端工程基础（目录结构、类型定义、API 封装、路由、布局、zustand、测试框架） | ✅ |
-| 第 1 层 | 认证模块（登录/注册页面、Mock API、authStore） | ✅ |
-| 第 2 层 | 基础信息展示（企业信息、载体浏览、政务综合查询：企业/载体实时搜索过滤） | ✅ |
-| 第 3 层 | 文件管理（上传限制查询、拖拽上传、下载、删除、列表分页） | ✅ |
-| 第 4 层 | 企业入驻（企业提交入驻申请表单弹窗 → 载体审核：通过/退回/拒绝 → 退回可重编） | ✅ |
-| 第 5 层 | 审批组件抽象 + 重大事项变更（复用审批组件，自动更新企业字段） | ✅ |
-| 第 6 层 | 政策兑现管理（政务创建模板/发布政策，企业/载体申报，AI 匹配度标注，载体审核，政务终审） | ✅ |
-| 第 7 层 | 智能辅助申报（AI 分析动画 + 表单预填充，LLM 不可用时降级规则匹配） | ✅ |
-| 第 8 层 | 绩效考核管理（政务创建模板/启动考核，载体提交，政务评分） | ✅ |
-| 基础支撑 | SSE 通知机制（实时推送 16 种事件，心跳保活，已读标记） | ✅ |
-| 基础支撑 | 载体端基础信息管理（可编辑名称/类型/地址/联系人） | ⬜ |
+当前开发分支：`fix/test-harmony`
 
-### 运行命令
+## 环境说明
 
-```bash
-npm install      # 安装依赖
-npm run dev      # 启动开发服务器 (http://localhost:1420)
-npm run build    # 构建
-npm test         # 运行测试
-npm run test:watch  # watch 模式
+项目已支持 Mock 环境和真实接口环境切换。
+
+```env
+VITE_USE_MOCK=true
 ```
 
-### 手动测试方法
+Mock 环境下：
 
-> 当前所有 API 使用前端 Mock 数据，无需后端服务即可完整运行。
+- 登录页任意账号、任意密码都可以登录。
+- 企业端、载体端、政务端都可以完整演示主要业务流。
+- 不需要后端服务即可预览前端效果。
 
-#### 1. 启动项目
+真实联调时：
+
+- 将 `VITE_USE_MOCK=false`
+- 配置真实 API 地址
+- 前端接口形状已按最新 API 文档补齐
+
+## 运行命令
+
 ```bash
+npm install
 npm run dev
+npm test
+npm run build
 ```
-浏览器打开 `http://localhost:1420`
 
-#### 2. 测试登录/注册
-- 打开页面后自动跳转 `/login`
-- 选择角色「企业端」，输入**任意凭据+6位以上密码**即可登录（Mock 100% 成功）
-- 点击「立即注册」切换到注册页，填写信息完成注册
+如果 `1420` 端口被系统占用或拒绝绑定，可以使用 Vite 默认端口：
 
-#### 3. 测试企业端功能（以 enterprise 角色登录后）
-| 菜单 | 路径 | 测试内容 |
-|------|------|----------|
-| 工作台 | `/enterprise/dashboard` | 统计卡片展示 |
-| 企业信息 | `/enterprise/info` | 查看 Descriptions 信息卡片（为入驻申请提供企业数据） |
-| 文件管理 | `/enterprise/files` | 拖拽上传 → 列表分页 → 下载 → 删除（为入驻协议上传做准备） |
-| 载体浏览 | `/enterprise/carriers` | 载体列表分页 → 点击查看详情 Drawer（入驻前选择目标载体） |
-| 企业入驻 | `/enterprise/incubation` | 新建入驻申请弹窗（选载体+上传协议+选时间）→ 查看记录列表 → 状态标签 |
-| 重大事项变更 | `/enterprise/changes` | 新建变更申请弹窗（选变更类型 + 填新值 + 上传文件[可选]）→ 记录列表 → 状态标签 |
-| 政策申报 | `/enterprise/policies` | 可申报政策列表（AI 匹配度标签）+ Tabs 我的申报记录 → 点击申报填写 JSON → 提交 |
-| 智能辅助申报 | `/enterprise/ai-assist` | AI 匹配度分析（Spin 动画 + Result）+ AI 表单预填充（Descriptions 展示） |
-
-#### 4. 测试载体端功能（需以 carrier 角色重新登录）
-| 菜单 | 路径 | 测试内容 |
-|------|------|----------|
-| 工作台 | `/carrier/dashboard` | 统计卡片展示 |
-| 入驻审核 | `/carrier/incubation` | 待审核列表（预置 2 条 demo）→ 点击通过/拒绝/退回 → 输入审核意见 → 确认 |
-| 变更审核 | `/carrier/changes` | 待审核变更列表（预置 1 条 demo）→ 点击通过/拒绝/退回 → 确认 |
-| 企业申报审核 | `/carrier/policies` | 待审核企业申报列表 → AuditReview 审核 → 通过后流转政务 |
-| 基础信息 | `/carrier/info` | 功能开发中 |
-| 绩效考核 | `/carrier/performances` | 考核活动列表 → 提交申报（JSON 表单） |
-
-#### 5. 测试政务端功能（需以 government 角色重新登录）
-| 菜单 | 路径 | 测试内容 |
-|------|------|----------|
-| 工作台 | `/gov/dashboard` | 统计卡片展示 |
-| 企业查询 | `/gov/enterprises` | 关键词实时搜索 → 查看企业详情 Drawer |
-| 载体查询 | `/gov/carriers` | 关键词实时搜索 → 查看载体详情 Drawer |
-| 政策管理 | `/gov/policies` | 发布政策弹窗（选模板+标题+额度+有效期+条件JSON+附件）→ 政策列表 |
-| 申报终审 | `/gov/applications` | 载体已审的申报列表 → AuditReview 终审（通过/拒绝/退回） |
-| 绩效考核 | `/gov/performances` | 启动考核弹窗 + 申报列表 + 评分审核（分数+通过/拒绝+评语） |
-
-#### 6. 运行自动化测试
 ```bash
-npm test                 # 一次性运行 43 个测试（4 组）
-npm run test:watch       # watch 模式，修改文件自动重跑
+npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
-### 项目结构
+## 已完成功能
 
+### 认证与角色
+
+- 企业端、载体端、政务端三角色登录
+- Mock 模式任意账号密码登录
+- 企业、载体、政务三类注册表单
+- 登录成功跳转过渡状态
+- `/users/me` 用户信息接口对齐
+
+### 企业端
+
+- 企业工作台
+- 企业基础信息
+- 文件上传、下载、删除、分页列表
+- 载体浏览
+- 企业入驻申请
+- 重大事项变更申请
+- 政策申报
+- 智能辅助申报
+- 政策诉求
+- 账号注销申请
+- 通知中心
+
+### 载体端
+
+- 载体工作台
+- 入驻审核
+- 变更审核
+- 基础信息维护
+- 政策申报
+- 企业申报审核
+- 绩效考核提交
+- 政策诉求
+- 账号注销申请
+
+### 政务端
+
+- 政务工作台
+- 企业查询
+- 载体查询
+- 孵化毕业备案
+- 政策管理
+- 申报终审
+- 绩效考核管理
+- 账号注销管理
+- 政策诉求处理
+- 通知中心
+
+## 最新调整说明
+
+### API 对齐
+
+已根据最新 API 文档补齐前端接口，包括：
+
+- 认证登录、注册、当前用户
+- 企业、载体、政务三端业务接口
+- 文件接口字段兼容
+- 通知分页与已读接口
+- 政策搜索、申报、关注、审核接口
+- AI 政策匹配与表单预填充接口
+
+### 智能政策检索
+
+企业端智能辅助申报页面支持：
+
+- 政策语义搜索
+- 显示后端返回的 AI 分析
+- 将 AI 分析中的 `[1]`、`[6]` 等政策编号渲染为可点击标记
+- 点击编号后自动跳转并高亮对应政策结果
+- Mock 模式内置 10 条政策结果用于演示
+
+### 业务化表单
+
+所有面向用户的申报、审核和配置页面已去除 JSON 填写或 JSON 展示。
+
+现在用户看到的是业务字段：
+
+- 政策发布：申报条件、兑现标准、办理流程、材料清单
+- 企业政策申报：项目名称、联系人、申请金额、材料勾选、补充说明
+- 载体政策申报：联系人、材料勾选、服务情况说明
+- 绩效申报：服务企业数量、创业活动数量、年度营收、孵化成果说明
+- 绩效模板：通过勾选配置考核指标
+- 审核列表：展示材料名或业务摘要，不展示对象字符串
+- 变更详情：展示可读的新旧值说明
+
+底层请求仍然会在提交时整理成后端需要的结构化数据。
+
+### 视觉与交互
+
+- 企业端主色：深蓝
+- 载体端主色：绿色
+- 政务端主色：红色
+- 登录页角色选中态与登录按钮跟随角色色
+- 三端工作台主操作按钮与背景同色系但保留明显色差
+- 载体端、政务端 hero 区域配色与右侧指标面板已协调
+- 统计卡片、任务列表 hover 状态按角色色统一
+
+## 页面路径
+
+### 企业端
+
+| 功能 | 路径 |
+| --- | --- |
+| 工作台 | `/enterprise/dashboard` |
+| 企业信息 | `/enterprise/info` |
+| 文件管理 | `/enterprise/files` |
+| 载体浏览 | `/enterprise/carriers` |
+| 企业入驻 | `/enterprise/incubation` |
+| 重大事项变更 | `/enterprise/changes` |
+| 政策申报 | `/enterprise/policies` |
+| 智能辅助申报 | `/enterprise/ai-assist` |
+| 政策诉求 | `/enterprise/appeals` |
+| 账号注销申请 | `/enterprise/account-deletion` |
+| 通知中心 | `/enterprise/notifications` |
+
+### 载体端
+
+| 功能 | 路径 |
+| --- | --- |
+| 工作台 | `/carrier/dashboard` |
+| 入驻审核 | `/carrier/incubation` |
+| 变更审核 | `/carrier/changes` |
+| 基础信息 | `/carrier/info` |
+| 政策申报 | `/carrier/policies` |
+| 企业申报审核 | `/carrier/applications` |
+| 绩效考核 | `/carrier/performances` |
+| 政策诉求 | `/carrier/appeals` |
+| 账号注销申请 | `/carrier/account-deletion` |
+
+### 政务端
+
+| 功能 | 路径 |
+| --- | --- |
+| 工作台 | `/gov/dashboard` |
+| 企业查询 | `/gov/enterprises` |
+| 载体查询 | `/gov/carriers` |
+| 孵化毕业 | `/gov/incubation` |
+| 政策管理 | `/gov/policies` |
+| 申报终审 | `/gov/applications` |
+| 绩效考核 | `/gov/performances` |
+| 账号注销管理 | `/gov/account` |
+| 政策诉求 | `/gov/appeals` |
+
+## 验证命令
+
+本轮提交前已通过：
+
+```bash
+npx vitest run src/__tests__/comprehensive.test.ts src/__tests__/api-documentation-alignment.test.ts
+npm run build
 ```
+
+完整测试可执行：
+
+```bash
+npm test
+```
+
+## 目录结构
+
+```text
 src/
-├── api/           # API 层（mock 数据 + 后端对接，USE_MOCK=true 切换）
-│   ├── mock.ts    # Mock 工具（mockApi / mockApiFail）
-│   ├── auth.ts    # 认证 API（登录/注册/me）
-│   ├── enterprise.ts  # 企业端 API（企业信息）
-│   ├── carriers.ts    # 载体 API（列表/详情）
-│   ├── files.ts       # 文件 API（上传限制/上传/列表/下载/删除）
-│   └── gov.ts         # 政务端 API（企业搜索/载体搜索）
-├── components/    # 公共组件
-│   └── FileUpload.tsx  # 拖拽文件上传组件（校验/回显/移除）
-├── hooks/         # 自定义 hooks
-├── layouts/       # 布局
-│   └── MainLayout.tsx  # 主布局（左右侧边栏 + 三角色动态菜单）
-├── pages/         # 页面
-│   ├── auth/      # 登录/注册
-│   ├── enterprise/  # 企业端（Dashboard, 企业信息, 文件管理, 载体浏览）
-│   ├── carrier/   # 载体端（Dashboard）
-│   └── gov/       # 政务端（Dashboard, 企业检索, 载体检索）
-├── router/        # 路由配置（GuestGuard/AuthGuard/RoleGuard 三层守卫）
-├── store/         # zustand 状态管理（authStore）
-├── types/         # TypeScript 类型定义（全平台请求/响应/枚举）
-├── utils/         # 工具函数（request 封装：JWT 注入/错误码映射/超时）
-└── __tests__/     # 测试（request 工具层 4 + LoginPage 组件 3）
+  api/            API 封装与 Mock 数据
+  components/     公共组件
+  layouts/        主布局和角色菜单
+  pages/          企业端、载体端、政务端页面
+  router/         路由与权限守卫
+  store/          zustand 状态管理
+  types/          TypeScript 类型定义
+  utils/          请求封装与业务展示工具
+  __tests__/      自动化测试
 ```
-

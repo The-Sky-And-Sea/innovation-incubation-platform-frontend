@@ -13,7 +13,7 @@
  */
 
 import { create } from "zustand";
-import type { UserInfo, UserRole } from "../types";
+import type { RegisterRequest, UserInfo, UserRole } from "../types";
 import { loginAuth, registerAuth, getMe } from "../api/auth";
 
 /**
@@ -30,20 +30,7 @@ interface AuthState {
   /** 登录 */
   login: (credential: string, password: string, role: UserRole) => Promise<void>;
   /** 注册 */
-  register: (params: {
-    password: string;
-    role: "enterprise" | "carrier";
-    phone: string;
-    email?: string;
-    enterprise_name?: string;
-    enterprise_credit_code?: string;
-    enterprise_industry?: string;
-    enterprise_scale?: string;
-    enterprise_address?: string;
-    carrier_name?: string;
-    carrier_type?: string;
-    carrier_area?: string;
-  }) => Promise<void>;
+  register: (params: RegisterRequest) => Promise<void>;
   /** 初始化 - 从 localStorage 恢复登录态（页面刷新时调用） */
   initAuth: () => Promise<void>;
   /** 退出登录 */
@@ -76,12 +63,7 @@ export const useAuthStore = create<AuthState>((set) => ({
    * 2. 自动登录（存储 token）
    */
   register: async (params) => {
-    await registerAuth(params);
-    const credential =
-      params.role === "enterprise"
-        ? params.enterprise_credit_code || params.phone
-        : params.phone;
-    const res = await loginAuth(credential, params.password, params.role);
+    const res = await registerAuth(params);
     const { token, user } = res.data;
     localStorage.setItem("token", token);
     set({ token, user });

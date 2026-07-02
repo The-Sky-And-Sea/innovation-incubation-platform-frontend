@@ -13,6 +13,7 @@ import CountUp from "../../components/react-bits/CountUp";
 import SpotlightCard from "../../components/react-bits/SpotlightCard";
 
 const { Text } = Typography;
+const statSpotlightColor = "rgba(11, 117, 104, 0.16)";
 
 const stats = [
   { title: "入驻审核", value: 6, suffix: "条", label: "2 条今日到期", icon: <HomeOutlined />, tone: "warning" },
@@ -61,7 +62,11 @@ export default function CarrierDashboard() {
       <Row gutter={[16, 16]}>
         {stats.map((item, index) => (
           <Col xs={24} sm={12} lg={6} key={item.title}>
-            <SpotlightCard className={`role-stat-card role-stat-${item.tone}`} style={{ animationDelay: `${index * 70}ms` }}>
+            <SpotlightCard
+              className={`role-stat-card role-stat-${item.tone}`}
+              spotlightColor={statSpotlightColor}
+              style={{ animationDelay: `${index * 70}ms` }}
+            >
               <span className="role-stat-icon">{item.icon}</span>
               <Text>{item.title}</Text>
               <strong>

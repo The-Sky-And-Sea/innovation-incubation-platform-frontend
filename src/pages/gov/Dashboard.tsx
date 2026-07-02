@@ -24,6 +24,7 @@ import CountUp from "../../components/react-bits/CountUp";
 import SpotlightCard from "../../components/react-bits/SpotlightCard";
 
 const { Text } = Typography;
+const govStatSpotlightColor = "rgba(176, 42, 55, 0.16)";
 
 interface QueueItem {
   id: string;
@@ -117,7 +118,7 @@ export default function GovDashboard() {
       <section className="gov-command-hero">
         <div className="hero-main-copy">
           <Space size={10} wrap>
-            <Tag color="gold" icon={<SafetyCertificateOutlined />}>
+            <Tag color="red" icon={<SafetyCertificateOutlined />}>
               政务端
             </Tag>
             <Text>今天有 7 件待终审、3 项绩效任务、2 条风险提醒</Text>
@@ -139,7 +140,7 @@ export default function GovDashboard() {
 
         <div className="hero-pulse-panel">
           <div className="pulse-ring">
-            <Progress type="circle" percent={86} size={118} strokeColor="#c8913a" />
+            <Progress type="circle" percent={86} size={118} strokeColor="#c92e43" />
           </div>
           <strong>业务健康度</strong>
           <span>审核时效、退回率、通知响应综合计算</span>
@@ -151,7 +152,7 @@ export default function GovDashboard() {
           <div key={item.title}>
             <SpotlightCard
               className="gov-stat-card gov-animate-card"
-              spotlightColor="rgba(20, 80, 140, 0.14)"
+              spotlightColor={govStatSpotlightColor}
               style={{ animationDelay: `${index * 70}ms` }}
             >
               <span className="gov-stat-icon">{item.icon}</span>

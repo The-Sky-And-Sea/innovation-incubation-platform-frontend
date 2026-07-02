@@ -107,8 +107,8 @@ export async function request<T = unknown>(
       error.code = json.code;
       error.response = json;
 
-      // 认证过期 → 清除 token → 跳转登录
-      if (json.code === 10101) {
+      // 认证过期 → 清除 token → 跳转登录（仅当有 token 且返回 10101 时才跳转）
+      if (json.code === 10101 && getToken()) {
         localStorage.removeItem("token");
         window.location.href = "/login";
       }

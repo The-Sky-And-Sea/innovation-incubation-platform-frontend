@@ -14,6 +14,7 @@ import CountUp from "../../components/react-bits/CountUp";
 import SpotlightCard from "../../components/react-bits/SpotlightCard";
 
 const { Text } = Typography;
+const statSpotlightColor = "rgba(20, 80, 140, 0.16)";
 
 const stats = [
   { title: "入驻状态", value: 1, suffix: "项", label: "待提交材料", icon: <HomeOutlined />, tone: "warning" },
@@ -62,7 +63,11 @@ export default function EnterpriseDashboard() {
       <Row gutter={[16, 16]}>
         {stats.map((item, index) => (
           <Col xs={24} sm={12} lg={6} key={item.title}>
-            <SpotlightCard className={`role-stat-card role-stat-${item.tone}`} style={{ animationDelay: `${index * 70}ms` }}>
+            <SpotlightCard
+              className={`role-stat-card role-stat-${item.tone}`}
+              spotlightColor={statSpotlightColor}
+              style={{ animationDelay: `${index * 70}ms` }}
+            >
               <span className="role-stat-icon">{item.icon}</span>
               <Text>{item.title}</Text>
               <strong>
