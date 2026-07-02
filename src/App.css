@@ -269,7 +269,7 @@ select {
 /* 三端背景色区分 */
 .gov-login-page[data-selected-role="enterprise"] {
   background:
-    linear-gradient(120deg, rgba(8, 34, 70, 0.92), rgba(18, 88, 126, 0.84)),
+    linear-gradient(120deg, rgba(8, 34, 70, 0.55), rgba(18, 88, 126, 0.45)),
     url("https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1800&q=80");
   background-size: cover;
   background-position: center;
@@ -277,7 +277,7 @@ select {
 
 .gov-login-page[data-selected-role="carrier"] {
   background:
-    linear-gradient(120deg, rgba(0, 52, 44, 0.94), rgba(8, 108, 90, 0.78)),
+    linear-gradient(120deg, rgba(0, 52, 44, 0.55), rgba(8, 108, 90, 0.42)),
     url("https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1800&q=80");
   background-size: cover;
   background-position: center;
@@ -285,7 +285,7 @@ select {
 
 .gov-login-page[data-selected-role="government"] {
   background:
-    linear-gradient(120deg, rgba(50, 14, 18, 0.96), rgba(120, 32, 44, 0.8)),
+    linear-gradient(120deg, rgba(50, 14, 18, 0.58), rgba(120, 32, 44, 0.42)),
     url("https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1800&q=80");
   background-size: cover;
   background-position: center;
@@ -5055,7 +5055,7 @@ select {
   min-height: 620px;
   padding: 24px 28px 0;
   border-radius: 14px 14px 0 0;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.88);
   overflow: hidden;
 }
 
@@ -5131,7 +5131,7 @@ select {
   min-height: 250px;
   padding: 20px;
   border-radius: 18px 18px 0 0;
-  background: #f0f0f0;
+  background: rgba(240, 240, 240, 0.78);
   overflow: hidden;
 }
 
@@ -5286,7 +5286,7 @@ select {
   margin: 36px auto 74px;
   padding: 5px;
   border-radius: 999px;
-  background: #eeeeee;
+  background: rgba(238, 238, 238, 0.72);
   overflow-x: auto;
 }
 
@@ -5323,9 +5323,9 @@ select {
   flex-direction: column;
   justify-content: space-between;
   padding: 20px;
-  border: 1px solid #eeeeee;
+  border: 1px solid rgba(238, 238, 238, 0.7);
   border-radius: 34px;
-  background: #fafafa;
+  background: rgba(250, 250, 250, 0.78);
   text-align: left;
   scroll-snap-align: center;
 }
@@ -5411,7 +5411,7 @@ select {
   align-items: center;
   justify-content: center;
   border-radius: 18px;
-  background: #f3f3f3;
+  background: rgba(243, 243, 243, 0.72);
 }
 
 .mobbin-video-mock span {
@@ -5489,9 +5489,9 @@ select {
 .mobbin-comment-grid article {
   min-height: 190px;
   padding: 22px;
-  border: 1px solid #eeeeee;
+  border: 1px solid rgba(238, 238, 238, 0.6);
   border-radius: 18px;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.8);
 }
 
 .mobbin-comment-grid article:nth-child(2n) {
@@ -5664,13 +5664,13 @@ select {
 }
 
 @media (max-width: 1040px) {
-  .mobbin-product-stage {
-    padding: 48px 34px 0;
-  }
-
-  .mobbin-window-bar {
-    grid-template-columns: 42px auto auto;
-  }
+.mobbin-product-stage {
+  width: min(1320px, calc(100vw - 42px));
+  margin: 0 auto;
+  padding: 86px 72px 0;
+  border-radius: 34px 34px 0 0;
+  background: rgba(242, 242, 242, 0.7);
+}
 
   .mobbin-window-search,
   .mobbin-window-bar > a {
@@ -5983,5 +5983,33 @@ select {
 
   .login-corner-title {
     font-size: 14px;
+  }
+}
+
+/* ── 首页背景图片 + 遮挡块效果 ── */
+.mobbin-hero,
+.mobbin-product-stage,
+.mobbin-stats,
+.mobbin-patterns-showcase,
+.mobbin-flow-duo,
+.mobbin-creation,
+.mobbin-comments,
+.mobbin-final-cta {
+  position: relative;
+  background:
+    url("https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1800&q=80")
+    fixed 0 / cover;
+}
+
+@media (max-width: 720px) {
+  .mobbin-hero,
+  .mobbin-product-stage,
+  .mobbin-stats,
+  .mobbin-patterns-showcase,
+  .mobbin-flow-duo,
+  .mobbin-creation,
+  .mobbin-comments,
+  .mobbin-final-cta {
+    background-attachment: scroll;
   }
 }
