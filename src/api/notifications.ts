@@ -81,23 +81,36 @@ function seedNotifications() {
 
 seedNotifications();
 
+type FetchNotificationsOptions = {
+  page?: number;
+  page_size?: number;
+  userId?: number;
+};
+
 export async function fetchNotifications(
-  userId = 1,
-  limit = 50,
+  optionsOrUserId: FetchNotificationsOptions | number = {},
+  legacyLimit = 50,
 ): Promise<ApiResponse<{ list: Notification[]; unread_count: number }>> {
+  const options = typeof optionsOrUserId === "number"
+    ? { userId: optionsOrUserId, page: 1, page_size: legacyLimit }
+    : optionsOrUserId;
+  const page = options.page ?? 1;
+  const pageSize = options.page_size ?? 50;
+  const userId = options.userId ?? 1;
+
   if (isMockEnabled()) {
     const userNotifications = mockNotifications
       .filter((item) => item.user_id === userId)
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    const list = userNotifications.slice(0, limit);
+    const list = userNotifications.slice((page - 1) * pageSize, page * pageSize);
     const unread_count = userNotifications.filter((item) => !item.is_read).length;
     return mockApi({ list, unread_count }, 300);
   }
 
   const { get } = await import("../utils/request");
   const res = await get<{ list: Notification[]; unread_count?: number }>("/notifications", {
-    page: 1,
-    page_size: limit,
+    page,
+    page_size: pageSize,
   });
   const unreadCount = res.data.unread_count ?? res.data.list.filter((item) => !item.is_read).length;
   return { ...res, data: { list: res.data.list, unread_count: unreadCount } };

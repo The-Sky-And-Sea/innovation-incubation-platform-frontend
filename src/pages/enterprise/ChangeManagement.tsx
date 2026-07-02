@@ -37,6 +37,7 @@ import {
   updateChange,
 } from "../../api/changes";
 import type { AuditStatus, ChangeRecord, ChangeType, FileInfo } from "../../types";
+import { describeBusinessData } from "../../utils/businessDisplay";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -55,10 +56,6 @@ interface ChangeFormValues {
   change_type: ChangeType;
   change_content: string;
   new_value?: string;
-}
-
-function toPrettyJson(value: Record<string, unknown>) {
-  return JSON.stringify(value, null, 2);
 }
 
 function parseNewValue(type: ChangeType, value?: string, fileId?: number | null) {
@@ -346,10 +343,10 @@ export default function EnterpriseChangeManagement() {
             </Descriptions.Item>
             <Descriptions.Item label="变更说明">{detailModal.record.change_content}</Descriptions.Item>
             <Descriptions.Item label="原值">
-              <pre className="json-preview">{toPrettyJson(detailModal.record.old_value)}</pre>
+              {describeBusinessData(detailModal.record.old_value)}
             </Descriptions.Item>
             <Descriptions.Item label="新值">
-              <pre className="json-preview">{toPrettyJson(detailModal.record.new_value)}</pre>
+              {describeBusinessData(detailModal.record.new_value)}
             </Descriptions.Item>
             <Descriptions.Item label="状态">
               <Tag color={statusMap[detailModal.record.status]?.color}>

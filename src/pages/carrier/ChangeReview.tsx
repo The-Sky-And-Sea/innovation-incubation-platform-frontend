@@ -23,6 +23,7 @@ import type { ColumnsType } from "antd/es/table";
 import AuditReview from "../../components/AuditReview";
 import { getPendingChangeList, reviewChange } from "../../api/changes";
 import type { ChangeRecord, ChangeType, AuditStatus } from "../../types";
+import { describeBusinessData } from "../../utils/businessDisplay";
 
 const { Title } = Typography;
 
@@ -79,8 +80,7 @@ export default function CarrierChangeReview() {
       key: "new_value",
       width: 150,
       ellipsis: true,
-      render: (v: Record<string, unknown>) =>
-        v ? JSON.stringify(v) : "-",
+      render: (v: Record<string, unknown>) => describeBusinessData(v),
     },
     {
       title: "提交时间",

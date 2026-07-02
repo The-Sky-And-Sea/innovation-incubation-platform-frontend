@@ -5,6 +5,7 @@ import type { ColumnsType } from "antd/es/table";
 import AuditReview from "../../components/AuditReview";
 import { getCarrierPendingApplications, reviewEnterpriseApplication } from "../../api/policies";
 import type { AuditRequestBody, PolicyApplication } from "../../types";
+import { describeBusinessData } from "../../utils/businessDisplay";
 
 const { Title } = Typography;
 
@@ -53,7 +54,10 @@ export default function CarrierApplicationReview() {
       title: "申报摘要",
       key: "summary",
       ellipsis: true,
-      render: (_, record) => JSON.stringify(record.materials || record.form_data || {}),
+      render: (_, record) =>
+        record.materials?.length
+          ? record.materials.map((item) => item.name).join("、")
+          : describeBusinessData(record.form_data),
     },
     {
       title: "提交时间",

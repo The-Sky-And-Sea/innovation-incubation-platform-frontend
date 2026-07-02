@@ -15,18 +15,13 @@ import {
   Typography,
   message,
 } from "antd";
-import {
-  EditOutlined,
-  EyeOutlined,
-  FileProtectOutlined,
-  PlusOutlined,
-  ReloadOutlined,
-} from "@ant-design/icons";
+import { EditOutlined, EyeOutlined, FileProtectOutlined, PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import FileUpload from "../../components/FileUpload";
 import { getPolicyList, publishPolicy, updatePolicy } from "../../api/policies";
 import type { FileInfo, Policy } from "../../types";
+import { toDescriptionItems } from "../../utils/businessDisplay";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -38,16 +33,38 @@ interface PolicyFormValues {
   subsidy_amount?: string;
   start_date: string;
   end_date: string;
-  requirements_json?: string;
+  application_condition: string;
+  fulfillment_criteria?: string;
+  process?: string;
+  material_names?: string;
 }
 
-function parseJson(value?: string): Record<string, unknown> {
-  if (!value?.trim()) return {};
-  return JSON.parse(value) as Record<string, unknown>;
+function splitMaterials(value?: string) {
+  return (value || "")
+    .split(/[\n,，、]/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map((name, index) => ({ name, file_id: index + 1, necessity: "necessary" }));
 }
 
-function prettyJson(value?: Record<string, unknown>) {
-  return JSON.stringify(value || {}, null, 2);
+function getRequirementText(policy: Policy, key: string) {
+  const value = (policy.requirements || policy.conditions || {})[key];
+  return typeof value === "string" ? value : "";
+}
+
+function getMaterialNames(policy: Policy) {
+  const materials = (policy.requirements || policy.conditions || {}).application_materials;
+  if (!Array.isArray(materials)) return "";
+  return materials
+    .map((item) => (item && typeof item === "object" && "name" in item ? String(item.name) : ""))
+    .filter(Boolean)
+    .join("\n");
+}
+
+function targetRoleLabel(value: string) {
+  if (value === "both") return "企业/载体";
+  if (value === "carrier") return "载体";
+  return "企业";
 }
 
 export default function GovPolicyManagement() {
@@ -90,11 +107,10 @@ export default function GovPolicyManagement() {
       target_role: "enterprise",
       start_date: dayjs().format("YYYY-MM-DD"),
       end_date: dayjs().add(6, "month").format("YYYY-MM-DD"),
-      requirements_json: prettyJson({
-        application_condition: "",
-        application_materials: [{ name: "营业执照", file_id: 12, necessity: "necessary" }],
-        process: "提交申报 - 审核流转 - 结果通知",
-      }),
+      application_condition: "",
+      fulfillment_criteria: "",
+      process: "提交申报 - 审核流转 - 结果通知",
+      material_names: "营业执照",
     });
     setModalOpen(true);
   };
@@ -109,7 +125,10 @@ export default function GovPolicyManagement() {
       subsidy_amount: policy.subsidy_amount,
       start_date: policy.start_date,
       end_date: policy.end_date,
-      requirements_json: prettyJson(policy.requirements || policy.conditions),
+      application_condition: getRequirementText(policy, "application_condition"),
+      fulfillment_criteria: getRequirementText(policy, "fulfillment_criteria"),
+      process: getRequirementText(policy, "process"),
+      material_names: getMaterialNames(policy),
     });
     setModalOpen(true);
   };
@@ -118,13 +137,17 @@ export default function GovPolicyManagement() {
     try {
       const values = await form.validateFields();
       setSubmitting(true);
-      const requirements = parseJson(values.requirements_json);
       const payload = {
         target_role: values.target_role,
         title: values.title,
         department: values.department,
         subsidy_amount: values.subsidy_amount,
-        requirements,
+        requirements: {
+          application_condition: values.application_condition,
+          fulfillment_criteria: values.fulfillment_criteria,
+          process: values.process,
+          application_materials: splitMaterials(values.material_names),
+        },
         start_date: values.start_date,
         end_date: values.end_date,
         file_id: fileId || undefined,
@@ -132,7 +155,7 @@ export default function GovPolicyManagement() {
 
       if (editingPolicy) {
         await updatePolicy(editingPolicy.id, payload);
-        message.success("政策已更新，关注用户将在真实环境收到通知");
+        message.success("政策已更新");
       } else {
         await publishPolicy(payload);
         message.success("政策发布成功");
@@ -142,7 +165,7 @@ export default function GovPolicyManagement() {
       fetchList(1, pagination.pageSize);
     } catch (err) {
       if (err && typeof err === "object" && "errorFields" in err) return;
-      message.error((err as Error).message || "保存失败，请检查 JSON 格式");
+      message.error((err as Error).message || "保存失败，请检查表单信息");
     } finally {
       setSubmitting(false);
     }
@@ -162,9 +185,7 @@ export default function GovPolicyManagement() {
       dataIndex: "target_role",
       key: "target_role",
       width: 130,
-      render: (value: string) => (
-        <Tag color="blue">{value === "both" ? "企业/载体" : value === "carrier" ? "载体" : "企业"}</Tag>
-      ),
+      render: (value: string) => <Tag color="blue">{targetRoleLabel(value)}</Tag>,
     },
     {
       title: "有效期",
@@ -204,7 +225,7 @@ export default function GovPolicyManagement() {
       </Title>
       <Alert
         message="政策发布与维护"
-        description="政务端可发布、查看和更新政策。更新政策时真实环境会通知关注用户，Mock 模式会立即更新列表数据。"
+        description="政务端可发布、查看和更新政策。表单按真实业务字段填写，系统会在提交时自动整理为后端需要的结构化数据。"
         type="info"
         showIcon
         style={{ marginBottom: 16 }}
@@ -278,15 +299,20 @@ export default function GovPolicyManagement() {
               <Input placeholder="YYYY-MM-DD" />
             </Form.Item>
           </Space>
-          <Form.Item
-            name="requirements_json"
-            label="政策要求 requirements"
-            tooltip="按接口文档发送结构化 requirements 字段。"
-          >
-            <TextArea rows={6} />
+          <Form.Item name="application_condition" label="申报条件" rules={[{ required: true, message: "请填写申报条件" }]}>
+            <TextArea rows={3} placeholder="例如：已入驻孵化载体，具备有效统一社会信用代码" />
+          </Form.Item>
+          <Form.Item name="fulfillment_criteria" label="兑现标准">
+            <TextArea rows={2} placeholder="例如：按研发投入和孵化状态综合核算补贴额度" />
+          </Form.Item>
+          <Form.Item name="process" label="办理流程">
+            <Input placeholder="例如：提交申报 - 载体初审 - 政务终审 - 结果通知" />
+          </Form.Item>
+          <Form.Item name="material_names" label="申报材料清单" tooltip="每行填写一项材料名称">
+            <TextArea rows={4} placeholder={"营业执照\n研发投入说明\n项目申报书"} />
           </Form.Item>
           <Form.Item label="政策原文附件">
-            <FileUpload onUploaded={(info: FileInfo) => setFileId(info.file_id)} />
+            <FileUpload onUploaded={(info: FileInfo) => setFileId(info.file_id)} folderColor="#b83246" />
             {fileId && <Text type="secondary">已关联文件 ID：{fileId}</Text>}
           </Form.Item>
         </Form>
@@ -302,16 +328,16 @@ export default function GovPolicyManagement() {
         {detailPolicy && (
           <Descriptions column={1} bordered size="small">
             <Descriptions.Item label="发布部门">{detailPolicy.department || "-"}</Descriptions.Item>
-            <Descriptions.Item label="适用对象">
-              {detailPolicy.target_role === "both" ? "企业/载体" : detailPolicy.target_role === "carrier" ? "载体" : "企业"}
-            </Descriptions.Item>
+            <Descriptions.Item label="适用对象">{targetRoleLabel(detailPolicy.target_role)}</Descriptions.Item>
             <Descriptions.Item label="有效期">
               {detailPolicy.start_date} ~ {detailPolicy.end_date}
             </Descriptions.Item>
             <Descriptions.Item label="金额/口径">{detailPolicy.subsidy_amount || "-"}</Descriptions.Item>
-            <Descriptions.Item label="政策要求">
-              <pre className="json-preview">{prettyJson(detailPolicy.requirements || detailPolicy.conditions)}</pre>
-            </Descriptions.Item>
+            {toDescriptionItems(detailPolicy.requirements || detailPolicy.conditions).map((item) => (
+              <Descriptions.Item key={item.label} label={item.label}>
+                {item.value}
+              </Descriptions.Item>
+            ))}
           </Descriptions>
         )}
       </Modal>

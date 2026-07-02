@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   Avatar,
@@ -7,7 +7,6 @@ import {
   Dropdown,
   Input,
   Layout,
-  Menu,
   Modal,
   Space,
   Tag,
@@ -28,8 +27,6 @@ import {
   IdcardOutlined,
   InboxOutlined,
   LogoutOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
   SafetyCertificateOutlined,
   SearchOutlined,
   SettingOutlined,
@@ -43,8 +40,9 @@ import {
 import { useAuthStore } from "../store/authStore";
 import { useNotificationStore } from "../store/notificationStore";
 import type { UserRole } from "../types";
+import Menu from "../components/StaggeredMenu";
 
-const { Header, Sider, Content } = Layout;
+const { Header, Content } = Layout;
 const { Text } = Typography;
 
 interface MenuItem {
@@ -106,6 +104,24 @@ const ROLE_META: Record<UserRole, { label: string; scope: string; primary: strin
   enterprise: { label: "企业端", scope: "申报服务", primary: "#14508c" },
   carrier: { label: "载体端", scope: "审核协同", primary: "#0b7568" },
   government: { label: "政务端", scope: "监督治理", primary: "#9a5b12" },
+};
+
+const ROLE_MENU_THEME: Record<UserRole, { accent: string; colors: string[]; spark: string }> = {
+  enterprise: {
+    accent: "#14508c",
+    colors: ["#d7eafa", "#8bbbe8", "#14508c"],
+    spark: "#64a8ef",
+  },
+  carrier: {
+    accent: "#0b7568",
+    colors: ["#d9f3ee", "#77d8c7", "#0b7568"],
+    spark: "#47d8c2",
+  },
+  government: {
+    accent: "#b83246",
+    colors: ["#fde7eb", "#ee8c9b", "#b83246"],
+    spark: "#ff8fa3",
+  },
 };
 
 const GOV_COMMANDS: CommandAction[] = [
@@ -172,12 +188,8 @@ const GOV_COMMANDS: CommandAction[] = [
 ];
 
 export default function MainLayout() {
-  const [collapsed, setCollapsed] = useState(false);
-  const [hoverExpanded, setHoverExpanded] = useState(false);
-  const [hoverClosing, setHoverClosing] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
   const [commandQuery, setCommandQuery] = useState("");
-  const hoverCloseTimer = useRef<number | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuthStore();
@@ -186,16 +198,9 @@ export default function MainLayout() {
   const role = (user?.role || "enterprise") as UserRole;
   const roleMeta = ROLE_META[role];
   const menus = roleMenuMap[role];
+  const roleTheme = ROLE_MENU_THEME[role];
   const selectedKey = location.pathname;
   const activeMenu = menus.find((item) => item.key === selectedKey);
-  const siderCollapsed = collapsed && !hoverExpanded && !hoverClosing;
-
-  const clearHoverCloseTimer = () => {
-    if (hoverCloseTimer.current !== null) {
-      window.clearTimeout(hoverCloseTimer.current);
-      hoverCloseTimer.current = null;
-    }
-  };
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -207,8 +212,6 @@ export default function MainLayout() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
-
-  useEffect(() => () => clearHoverCloseTimer(), []);
 
   const commandActions = useMemo<CommandAction[]>(() => {
     if (role === "government") return GOV_COMMANDS;
@@ -241,82 +244,49 @@ export default function MainLayout() {
         : "/gov/notifications";
 
   return (
-    <Layout className="app-shell">
+    <Layout
+      className="app-shell"
+      data-role={role}
+      style={
+        {
+          "--role-primary": roleTheme.accent,
+          "--role-spark": roleTheme.spark,
+          "--top-menu-progress": 1,
+          "--top-menu-shift": "var(--top-menu-content-offset)",
+        } as CSSProperties
+      }
+    >
       <a className="skip-link" href="#main-content">
         跳到主内容
       </a>
 
-      <Sider
-        className={`app-sider ${collapsed ? "is-collapse-locked" : ""} ${hoverExpanded ? "is-hover-expanded" : ""} ${hoverClosing ? "is-hover-closing" : ""}`}
-        trigger={null}
-        collapsible
-        collapsed={siderCollapsed}
-        breakpoint="lg"
-        width={238}
-        onMouseEnter={() => {
-          if (!collapsed) return;
-          clearHoverCloseTimer();
-          setHoverClosing(false);
-          setHoverExpanded(true);
-        }}
-        onMouseLeave={() => {
-          if (!collapsed) return;
-          clearHoverCloseTimer();
-          setHoverExpanded(false);
-          setHoverClosing(true);
-          hoverCloseTimer.current = window.setTimeout(() => {
-            setHoverClosing(false);
-            hoverCloseTimer.current = null;
-          }, 220);
-        }}
-      >
-        <div className="layout-brand">
-          <span className="layout-brand-mark">孵</span>
-          {!siderCollapsed && (
-            <div className="layout-brand-copy">
-              <strong>孵化载体管理平台</strong>
-              <span>{roleMeta.scope}</span>
-            </div>
-          )}
-        </div>
-
-        <Menu
-          className="app-menu"
-          mode="inline"
-          selectedKeys={[selectedKey]}
-          aria-label={`${roleMeta.label}导航`}
-          onClick={({ key }) => goRoute(key)}
-          items={menus.map((item) => ({
-            key: item.key,
-            icon: item.icon,
-            label: item.label,
-          }))}
-        />
-
-        {!siderCollapsed && (
-          <div className="sider-status-card">
-            <span>今日工作状态</span>
-            <strong>{unreadCount > 0 ? `${unreadCount} 条未读提醒` : "暂无未读提醒"}</strong>
-            <small>使用 Ctrl K 可快速办理常用事项</small>
-          </div>
-        )}
-      </Sider>
-
       <Layout>
         <Header className="app-header">
           <Space size={10} style={{ minWidth: 0 }}>
-            <Button
-              type="text"
-              aria-label={collapsed ? "展开侧边栏" : "收起侧边栏"}
-              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-              onClick={() => {
-                clearHoverCloseTimer();
-                setHoverExpanded(false);
-                setHoverClosing(false);
-                setCollapsed(!collapsed);
-              }}
-            />
-            <SafetyCertificateOutlined style={{ color: roleMeta.primary, fontSize: 20 }} />
+            <div className="header-menu-slot">
+              <Menu
+                className="top-staggered-menu"
+                selectedKeys={[selectedKey]}
+                aria-label="role navigation"
+                accentColor={roleTheme.accent}
+                closeOnClickAway={false}
+                closeOnItemClick={false}
+                colors={roleTheme.colors}
+                defaultOpen
+                displayItemNumbering
+                displaySocials={false}
+                logoText={roleMeta.scope}
+                menuButtonColor={roleTheme.accent}
+                openMenuButtonColor="#ffffff"
+                onClick={({ key }) => goRoute(key)}
+                items={menus.map((item) => ({
+                  key: item.key,
+                  icon: item.icon,
+                  label: item.label,
+                }))}
+              />
+            </div>
+            <SafetyCertificateOutlined style={{ color: roleTheme.accent, fontSize: 20 }} />
             <div className="header-title">
               <strong>{activeMenu?.label || `${roleMeta.label}工作空间`}</strong>
               <span>
@@ -358,7 +328,7 @@ export default function MainLayout() {
               }}
             >
               <Space className="user-entry">
-                <Avatar size="small" icon={<UserOutlined />} style={{ backgroundColor: roleMeta.primary }} />
+                <Avatar size="small" icon={<UserOutlined />} style={{ backgroundColor: roleTheme.accent }} />
                 <Text style={{ color: "#334155" }}>{user?.name || user?.phone || "用户"}</Text>
               </Space>
             </Dropdown>

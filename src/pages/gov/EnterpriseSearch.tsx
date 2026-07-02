@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Card, Typography, Space, Tag, Table, Button, Input, message, Drawer, Descriptions, Skeleton, Modal, Form } from "antd";
 import { TeamOutlined, SearchOutlined, EyeOutlined, IdcardOutlined, EnvironmentOutlined, UserOutlined, PhoneOutlined, ReloadOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
@@ -31,6 +31,11 @@ export default function GovEnterpriseSearch() {
       setLoading(false);
     }
   }, [keyword]);
+
+  // 首次打开时自动加载数据
+  useEffect(() => {
+    fetchList("", 1, 10);
+  }, []);
 
   const viewDetail = async (id: number) => {
     setDrawerOpen(true);

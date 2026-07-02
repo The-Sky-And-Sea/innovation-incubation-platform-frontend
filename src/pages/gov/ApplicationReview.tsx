@@ -6,6 +6,7 @@ import AuditReview from "../../components/AuditReview";
 import { govCompleteIncubation } from "../../api/gov";
 import { getGovPendingApplications, govReviewApplication } from "../../api/policies";
 import type { AuditAction, PolicyApplication } from "../../types";
+import { describeBusinessData } from "../../utils/businessDisplay";
 
 const { Title, Text } = Typography;
 
@@ -88,7 +89,7 @@ export default function GovApplicationReview() {
       key: "materials",
       ellipsis: true,
       render: (_, record) =>
-        record.materials?.map((item) => item.name).join("、") || JSON.stringify(record.form_data || {}),
+        record.materials?.map((item) => item.name).join("、") || describeBusinessData(record.form_data),
     },
     {
       title: "提交时间",
