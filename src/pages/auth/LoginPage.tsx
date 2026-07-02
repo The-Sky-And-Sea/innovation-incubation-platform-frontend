@@ -108,19 +108,20 @@ export default function LoginPage() {
         <span className="login-floater login-floater-disk login-floater-disk-small" />
       </div>
       <AuthRouteTransition active={routeTransitioning} />
-      <section className="gov-login-visual" aria-label="平台介绍">
-        <div className="gov-login-brand">
-          <span className="gov-login-brand-mark">
-            <BrandLogo />
-          </span>
-          <span>创新创业孵化载体管理平台</span>
-        </div>
 
+      <div className="gov-login-brand-corner" aria-label="平台品牌">
+        <span className="login-corner-mark">
+          <BrandLogo />
+        </span>
+        <span className="login-corner-title">创新创业孵化载体管理平台</span>
+      </div>
+
+      <section className="gov-login-visual" aria-label="平台介绍">
         <div className="gov-login-copy">
           <Title level={1}>注册创新孵化 ID，成为平台实名用户</Title>
           <p>即可同步开通入驻管理、政策申报、绩效考核与多端审核业务。</p>
           <span>企业服务平台、载体协同平台、政策兑现平台、数据开放平台</span>
-          <a href="#login-panel">了解更多 &gt;</a>
+          <a href="#login-panel">了解更多 →</a>
         </div>
       </section>
 

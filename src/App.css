@@ -255,10 +255,37 @@ select {
 
 .gov-login-page {
   min-height: 100vh;
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(420px, 480px);
   background:
     linear-gradient(120deg, rgba(8, 34, 70, 0.92), rgba(18, 88, 126, 0.84)),
+    url("https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1800&q=80");
+  background-size: cover;
+  background-position: center;
+  transition: background 600ms ease;
+}
+
+/* 三端背景色区分 */
+.gov-login-page[data-selected-role="enterprise"] {
+  background:
+    linear-gradient(120deg, rgba(8, 34, 70, 0.92), rgba(18, 88, 126, 0.84)),
+    url("https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1800&q=80");
+  background-size: cover;
+  background-position: center;
+}
+
+.gov-login-page[data-selected-role="carrier"] {
+  background:
+    linear-gradient(120deg, rgba(0, 52, 44, 0.94), rgba(8, 108, 90, 0.78)),
+    url("https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1800&q=80");
+  background-size: cover;
+  background-position: center;
+}
+
+.gov-login-page[data-selected-role="government"] {
+  background:
+    linear-gradient(120deg, rgba(50, 14, 18, 0.96), rgba(120, 32, 44, 0.8)),
     url("https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1800&q=80");
   background-size: cover;
   background-position: center;
@@ -5858,4 +5885,103 @@ select {
 .route-loading-mark .brand-logo {
   width: 100%;
   height: 100%;
+}
+
+/* ── 左上角固定品牌区（登录页） ── */
+.gov-login-brand-corner {
+  position: fixed;
+  top: 34px;
+  left: 38px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.login-corner-mark {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(6px);
+  overflow: hidden;
+  padding: 2px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.login-corner-mark .brand-logo {
+  width: 100%;
+  height: 100%;
+}
+
+.login-corner-title {
+  font-family: "Inter", "Noto Sans SC", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow:
+    0 0 0.3em rgba(255, 255, 255, 0.18),
+    0 0 0.6em rgba(255, 255, 255, 0.08);
+  white-space: nowrap;
+  user-select: none;
+  transition: text-shadow 600ms ease, color 600ms ease;
+}
+
+/* 三端品牌文字微光差异 */
+.gov-login-page[data-selected-role="enterprise"] .login-corner-title {
+  text-shadow:
+    0 0 0.35em rgba(100, 170, 240, 0.25),
+    0 0 0.7em rgba(100, 160, 230, 0.12),
+    0.02em 0.02em 0 rgba(8, 34, 70, 0.3);
+}
+
+.gov-login-page[data-selected-role="carrier"] .login-corner-title {
+  text-shadow:
+    0 0 0.35em rgba(80, 210, 180, 0.28),
+    0 0 0.7em rgba(60, 190, 160, 0.14),
+    0.02em 0.02em 0 rgba(0, 52, 44, 0.3);
+}
+
+.gov-login-page[data-selected-role="government"] .login-corner-title {
+  text-shadow:
+    0 0 0.35em rgba(240, 120, 140, 0.26),
+    0 0 0.7em rgba(220, 100, 120, 0.12),
+    0.02em 0.02em 0 rgba(50, 14, 18, 0.3);
+}
+
+/* 品牌区缓慢浮动动画（微妙，不突兀） */
+@keyframes loginCornerFloat {
+  0%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -4px, 0);
+  }
+}
+
+.gov-login-brand-corner {
+  animation: loginCornerFloat 8s ease-in-out infinite;
+}
+
+/* 响应式 */
+@media (max-width: 860px) {
+  .gov-login-brand-corner {
+    top: 20px;
+    left: 24px;
+    gap: 8px;
+  }
+
+  .login-corner-mark {
+    width: 32px;
+    height: 32px;
+  }
+
+  .login-corner-title {
+    font-size: 14px;
+  }
 }
