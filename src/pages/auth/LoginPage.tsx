@@ -46,11 +46,15 @@ const ROLE_CONFIG: Record<
 
 const DEMO_LOGIN: Partial<Record<UserRole, Pick<LoginRequest, "credential" | "password">>> = {
   enterprise: {
-    credential: "91110000123456789X",
+    credential: "111",
+    password: "111111",
+  },
+  carrier: {
+    credential: "111",
     password: "111111",
   },
   government: {
-    credential: "13800138000",
+    credential: "111",
     password: "111111",
   },
 };
