@@ -19,6 +19,7 @@ import {
 } from "@ant-design/icons";
 import BrandLogo from "../components/BrandLogo";
 import AuthRouteTransition from "../components/AuthRouteTransition";
+import MouseTrailGrid from "../components/MouseTrailGrid";
 
 const libraryColumns = [
   {
@@ -176,6 +177,8 @@ export default function HomePage() {
       </header>
 
       <main>
+        <MouseTrailGrid />
+
         <section className="mobbin-hero reveal-section">
           <div className="reveal-heading-wrapper">
             <div className="mobbin-hero-icon" aria-hidden="true">
