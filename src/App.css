@@ -258,37 +258,23 @@ select {
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(420px, 480px);
-  background:
-    linear-gradient(120deg, rgba(8, 34, 70, 0.92), rgba(18, 88, 126, 0.84)),
-    url("https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1800&q=80");
+  background: linear-gradient(120deg, rgba(8, 34, 70, 0.36), rgba(18, 88, 126, 0.26));
   background-size: cover;
   background-position: center;
   transition: background 600ms ease;
 }
 
-/* 三端背景色区分 */
+/* 三端背景渐变色 */
 .gov-login-page[data-selected-role="enterprise"] {
-  background:
-    linear-gradient(120deg, rgba(8, 34, 70, 0.35), rgba(18, 88, 126, 0.28)),
-    url("https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1800&q=80");
-  background-size: cover;
-  background-position: center;
+  background: linear-gradient(120deg, rgba(8, 34, 70, 0.32), rgba(18, 88, 126, 0.24));
 }
 
 .gov-login-page[data-selected-role="carrier"] {
-  background:
-    linear-gradient(120deg, rgba(0, 52, 44, 0.35), rgba(8, 108, 90, 0.26)),
-    url("https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1800&q=80");
-  background-size: cover;
-  background-position: center;
+  background: linear-gradient(120deg, rgba(0, 52, 44, 0.32), rgba(8, 108, 90, 0.22));
 }
 
 .gov-login-page[data-selected-role="government"] {
-  background:
-    linear-gradient(120deg, rgba(50, 14, 18, 0.36), rgba(120, 32, 44, 0.26)),
-    url("https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1800&q=80");
-  background-size: cover;
-  background-position: center;
+  background: linear-gradient(120deg, rgba(50, 14, 18, 0.34), rgba(120, 32, 44, 0.24));
 }
 
 .auth-register-page {
@@ -6004,13 +5990,15 @@ select {
   left: 38px;
 }
 
-/* 注册页返回按钮深色 */
+/* 登录/注册页返回按钮深色 */
+.gov-login-page .login-back-btn,
 .auth-register-page .login-back-btn {
   color: #334155;
   border-color: rgba(0, 0, 0, 0.15);
   background: rgba(0, 0, 0, 0.06);
 }
 
+.gov-login-page .login-back-btn:hover,
 .auth-register-page .login-back-btn:hover {
   color: #111827;
   background: rgba(0, 0, 0, 0.12);
