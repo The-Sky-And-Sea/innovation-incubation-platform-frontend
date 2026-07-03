@@ -32,9 +32,9 @@ export default function GovEnterpriseSearch() {
     }
   }, [keyword]);
 
-  // 首次打开时自动加载数据
+  // 页面加载时自动获取数据
   useEffect(() => {
-    fetchList("", 1, 10);
+    fetchList(keyword, 1, pagination.pageSize);
   }, []);
 
   const viewDetail = async (id: number) => {

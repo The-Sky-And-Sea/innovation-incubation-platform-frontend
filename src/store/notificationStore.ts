@@ -83,19 +83,21 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   },
 
   markAsRead: async (ids) => {
+    // 乐观更新本地状态
+    set((state) => {
+      const nextList = state.list.map((item) =>
+        ids.includes(item.id) ? { ...item, is_read: true } : item,
+      );
+      return {
+        list: nextList,
+        unreadCount: nextList.filter((item) => !item.is_read).length,
+      };
+    });
     try {
       await markNotificationsRead(ids);
-      set((state) => {
-        const nextList = state.list.map((item) =>
-          ids.includes(item.id) ? { ...item, is_read: true } : item,
-        );
-        return {
-          list: nextList,
-          unreadCount: nextList.filter((item) => !item.is_read).length,
-        };
-      });
     } catch {
-      // 页面保留当前状态，下一次刷新会恢复真实数据。
+      // API 失败时回滚状态
+      await get().refresh();
     }
   },
 

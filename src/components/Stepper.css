@@ -110,6 +110,14 @@
   animation-name: platform-step-back;
 }
 
+.platform-step-content {
+  display: none;
+}
+
+.platform-step-content.is-active {
+  display: block;
+}
+
 .platform-step {
   display: flex;
   flex-direction: column;

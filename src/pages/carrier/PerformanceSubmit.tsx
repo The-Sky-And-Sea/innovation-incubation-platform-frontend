@@ -3,7 +3,8 @@ import { Alert, Button, Card, Empty, Form, Input, InputNumber, Modal, Table, Tag
 import { ReloadOutlined, SendOutlined, TrophyOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { getPerformanceCampaigns, submitPerformance } from "../../api/performances";
-import type { PerformanceCampaign } from "../../types";
+import FileUpload from "../../components/FileUpload";
+import type { FileInfo, PerformanceCampaign } from "../../types";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -23,6 +24,7 @@ export default function CarrierPerformanceSubmit() {
   const [selectedCampaign, setSelectedCampaign] = useState<PerformanceCampaign | null>(null);
   const [submitForm] = Form.useForm<PerformanceFormValues>();
   const [submitting, setSubmitting] = useState(false);
+  const [documentFile, setDocumentFile] = useState<FileInfo | null>(null);
 
   const fetchCampaigns = useCallback(async (page = 1, pageSize = 10) => {
     setLoading(true);
@@ -44,6 +46,7 @@ export default function CarrierPerformanceSubmit() {
   const openSubmit = (campaign: PerformanceCampaign) => {
     setSelectedCampaign(campaign);
     submitForm.resetFields();
+    setDocumentFile(null);
     submitForm.setFieldsValue({ service_enterprises: 0, events: 0 });
     setSubmitOpen(true);
   };
@@ -53,7 +56,7 @@ export default function CarrierPerformanceSubmit() {
     try {
       const values = await submitForm.validateFields();
       setSubmitting(true);
-      await submitPerformance(selectedCampaign.id, { ...values });
+      await submitPerformance(selectedCampaign.id, { ...values, document_file_id: documentFile?.file_id });
       message.success("考核申报已提交");
       setSubmitOpen(false);
     } catch (err) {
@@ -136,6 +139,13 @@ export default function CarrierPerformanceSubmit() {
           </Form.Item>
           <Form.Item name="incubation_results" label="孵化成果说明" rules={[{ required: true, message: "请填写孵化成果说明" }]}>
             <TextArea rows={4} placeholder="请说明孵化项目、企业服务、活动组织和成果转化情况" />
+          </Form.Item>
+          <Form.Item label="考核文档（选填，仅 PDF/Word）">
+            <FileUpload
+              folderColor="#0b7568"
+              allowedTypes={[".pdf", ".doc", ".docx"]}
+              onUploaded={(fileInfo) => setDocumentFile(fileInfo)}
+            />
           </Form.Item>
         </Form>
       </Modal>

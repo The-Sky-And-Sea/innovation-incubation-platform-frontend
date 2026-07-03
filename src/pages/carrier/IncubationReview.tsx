@@ -96,7 +96,13 @@ export default function CarrierIncubationReview() {
 
   const columns: ColumnsType<IncubationRecord> = [
     { title: "申请编号", dataIndex: "id", key: "id", width: 80 },
-    { title: "企业ID", dataIndex: "enterprise_id", key: "enterprise_id", width: 80 },
+    {
+      title: "企业名称",
+      key: "enterprise_name",
+      width: 180,
+      ellipsis: true,
+      render: (_, r) => r.enterprise?.name || "-",
+    },
     {
       title: "入孵时间",
       key: "date",

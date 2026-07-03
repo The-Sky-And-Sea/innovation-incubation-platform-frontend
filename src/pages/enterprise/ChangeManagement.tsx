@@ -36,6 +36,7 @@ import {
   submitChange,
   updateChange,
 } from "../../api/changes";
+import { getMyIncubation } from "../../api/enterprise";
 import type { AuditStatus, ChangeRecord, ChangeType, FileInfo } from "../../types";
 import { describeBusinessData } from "../../utils/businessDisplay";
 
@@ -78,6 +79,18 @@ export default function EnterpriseChangeManagement() {
     open: false,
     record: null,
   });
+  const [hasActiveIncubation, setHasActiveIncubation] = useState(false);
+
+  useEffect(() => {
+    getMyIncubation(1, 1)
+      .then((res) => {
+        const active = res.data.list.some(
+          (item: any) => item.status === "approved" && item.incubate_status === "in_incubation",
+        );
+        setHasActiveIncubation(active);
+      })
+      .catch(() => {});
+  }, []);
 
   const fetchList = useCallback(async (page = 1, pageSize = 10) => {
     setLoading(true);
@@ -108,6 +121,10 @@ export default function EnterpriseChangeManagement() {
   };
 
   const openCreateModal = async () => {
+    if (!hasActiveIncubation) {
+      message.warning("请先申请入驻并通过载体审核后，再进行重大事项变更");
+      return;
+    }
     try {
       await ensureChangeTypes();
       setEditingRecord(null);
@@ -121,6 +138,10 @@ export default function EnterpriseChangeManagement() {
   };
 
   const openEditModal = async (record: ChangeRecord) => {
+    if (!hasActiveIncubation) {
+      message.warning("请先申请入驻并通过载体审核后，再进行重大事项变更");
+      return;
+    }
     try {
       await ensureChangeTypes();
       setEditingRecord(record);
@@ -223,7 +244,13 @@ export default function EnterpriseChangeManagement() {
             详情
           </Button>
           {record.status === "returned" && (
-            <Button type="link" size="small" icon={<EditOutlined />} onClick={() => openEditModal(record)}>
+            <Button
+              type="link"
+              size="small"
+              icon={<EditOutlined />}
+              onClick={() => openEditModal(record)}
+              disabled={!hasActiveIncubation}
+            >
               重新提交
             </Button>
           )}
@@ -238,6 +265,16 @@ export default function EnterpriseChangeManagement() {
         <FormOutlined style={{ marginRight: 8 }} />
         重大事项变更
       </Title>
+
+      {!hasActiveIncubation && (
+        <Alert
+          message="温馨提示"
+          description="请先申请入驻并通过载体审核后，才能进行重大事项变更"
+          type="warning"
+          showIcon
+          style={{ marginBottom: 16 }}
+        />
+      )}
 
       <Alert
         message="变更说明"
@@ -257,7 +294,12 @@ export default function EnterpriseChangeManagement() {
             >
               刷新
             </Button>
-            <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={openCreateModal}
+              disabled={!hasActiveIncubation}
+            >
               新建变更申请
             </Button>
           </Space>

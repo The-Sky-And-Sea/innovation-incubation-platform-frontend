@@ -99,8 +99,12 @@ export default function Stepper({
         </div>
       )}
 
-      <div className={`platform-stepper-content is-${direction}`} key={currentStep}>
-        {steps[currentStep - 1]}
+      <div className={`platform-stepper-content is-${direction}`}>
+        {steps.map((step, index) => (
+          <div key={index + 1} className={`platform-step-content ${index + 1 === currentStep ? "is-active" : "is-hidden"}`}>
+            {step}
+          </div>
+        ))}
       </div>
 
       <div className={`platform-stepper-footer ${currentStep === 1 ? "is-end" : ""}`}>

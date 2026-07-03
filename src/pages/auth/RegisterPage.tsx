@@ -97,7 +97,16 @@ export default function RegisterPage() {
   };
 
   const validateBeforeNext = async (step: number) => {
-    const fields = step === 2 ? (["phone", "email", "password"] as RegisterField[]) : step === 3 ? ROLE_FIELDS[role] : [];
+    let fields: RegisterField[];
+    if (step === 2) {
+      fields = ["phone", "email", "password"];
+    } else if (step === 3) {
+      fields = ROLE_FIELDS[role];
+    } else if (step === 4) {
+      fields = ["phone", "password", ...ROLE_FIELDS[role]];
+    } else {
+      fields = [];
+    }
     if (!fields.length) return true;
     try {
       await form.validateFields(fields);

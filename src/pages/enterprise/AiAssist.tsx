@@ -74,7 +74,7 @@ export default function EnterpriseAiAssist() {
         industry: "信息技术",
         scale: "小型",
       });
-      setMatchResult(res.data);
+      setMatchResult(res.data as { match_level: MatchLevel; reason: string; policy_title: string; subsidy_amount: string });
       message.success("AI 匹配分析完成");
     } catch (err) {
       message.error((err as Error).message || "AI 分析失败");
