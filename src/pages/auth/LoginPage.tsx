@@ -25,22 +25,22 @@ const ROLE_CONFIG: Record<
     label: "企业端",
     description: "企业申报与材料管理",
     icon: <TeamOutlined />,
-    color: "#14508c",
-    bgColor: "#e6f0fa",
+    color: "#1f78d8",
+    bgColor: "#e8f3ff",
   },
   carrier: {
     label: "载体端",
     description: "载体审核与绩效填报",
     icon: <BankOutlined />,
-    color: "#0b7568",
-    bgColor: "#e4f5f2",
+    color: "#11a992",
+    bgColor: "#e5fbf7",
   },
   government: {
     label: "政务端",
     description: "政策发布与监督审核",
     icon: <SafetyCertificateOutlined />,
-    color: "#b83246",
-    bgColor: "#fdebed",
+    color: "#d63b5c",
+    bgColor: "#ffe8ee",
   },
 };
 

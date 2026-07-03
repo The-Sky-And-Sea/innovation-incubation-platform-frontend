@@ -3131,13 +3131,13 @@ select {
 
 .login-card-emblem {
   box-sizing: border-box;
-  width: 64px;
-  height: 64px;
+  width: 76px;
+  height: 76px;
   display: grid;
   place-items: center;
   align-self: center;
-  margin: 0 0 22px;
-  padding: 10px;
+  margin: 0 0 24px;
+  padding: 11px;
   border: 1px solid #e8eef6;
   border-radius: 50%;
   background:
@@ -3145,7 +3145,7 @@ select {
     #f8fbff;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.92),
-    0 8px 18px rgba(29, 54, 92, 0.08);
+    0 12px 24px rgba(29, 54, 92, 0.1);
 }
 
 .login-card-emblem .brand-logo {
@@ -3213,15 +3213,15 @@ select {
 }
 
 .login-role-button[data-role="enterprise"][aria-pressed="true"] {
-  color: #1b6aa8 !important;
+  color: #1f78d8 !important;
 }
 
 .login-role-button[data-role="carrier"][aria-pressed="true"] {
-  color: #118575 !important;
+  color: #11a992 !important;
 }
 
 .login-role-button[data-role="government"][aria-pressed="true"] {
-  color: #b83246 !important;
+  color: #d63b5c !important;
 }
 
 .login-role-button[aria-pressed="true"]::after {
@@ -3314,27 +3314,27 @@ select {
 }
 
 .gov-login-page[data-selected-role="enterprise"] .gov-login-card .ant-btn-primary {
-  background: #1b6aa8 !important;
+  background: #1f78d8 !important;
 }
 
 .gov-login-page[data-selected-role="enterprise"] .gov-login-card .ant-btn-primary:hover {
-  background: #247bbb !important;
+  background: #2f91ea !important;
 }
 
 .gov-login-page[data-selected-role="carrier"] .gov-login-card .ant-btn-primary {
-  background: #118575 !important;
+  background: #11a992 !important;
 }
 
 .gov-login-page[data-selected-role="carrier"] .gov-login-card .ant-btn-primary:hover {
-  background: #159684 !important;
+  background: #19bfa8 !important;
 }
 
 .gov-login-page[data-selected-role="government"] .gov-login-card .ant-btn-primary {
-  background: #b83246 !important;
+  background: #d63b5c !important;
 }
 
 .gov-login-page[data-selected-role="government"] .gov-login-card .ant-btn-primary:hover {
-  background: #c43a4f !important;
+  background: #e24f70 !important;
 }
 
 .policy-search-analysis {
