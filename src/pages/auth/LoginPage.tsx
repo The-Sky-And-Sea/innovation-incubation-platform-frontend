@@ -45,8 +45,12 @@ const ROLE_CONFIG: Record<
 };
 
 const DEMO_LOGIN: Partial<Record<UserRole, Pick<LoginRequest, "credential" | "password">>> = {
+  enterprise: {
+    credential: "91110000123456789X",
+    password: "111111",
+  },
   government: {
-    credential: "1",
+    credential: "13800138000",
     password: "111111",
   },
 };
@@ -188,13 +192,13 @@ export default function LoginPage() {
             >
               <Form.Item
                 name="credential"
-                label={selectedRole === "enterprise" ? "统一社会信用代码" : "登录账号"}
-                rules={[{ required: true, message: "请输入登录账号" }]}
+                label={selectedRole === "enterprise" ? "统一社会信用代码" : "手机号"}
+                rules={[{ required: true, message: "请输入" + (selectedRole === "enterprise" ? "统一社会信用代码" : "手机号") }]}
               >
                 <Input
                   size="large"
                   prefix={<UserOutlined style={{ color: "#7b8da3" }} />}
-                  placeholder={selectedRole === "enterprise" ? "请输入统一社会信用代码" : "请输入手机号或账号"}
+                  placeholder={selectedRole === "enterprise" ? "请输入统一社会信用代码" : "请输入手机号"}
                 />
               </Form.Item>
 

@@ -9,8 +9,13 @@ function normalizeUser(user: BackendUserInfo): UserInfo {
   };
 }
 
-function buildLoginPayload(credential: string, password: string, role: string) {
-  return { credential, password, role };
+// 新版后端登录参数：企业用 credit_code，载体/政府用 phone
+function buildLoginPayload(credential: string, password: string, role: UserRole) {
+  const base = { password, role };
+  if (role === "enterprise") {
+    return { ...base, credit_code: credential };
+  }
+  return { ...base, phone: credential };
 }
 
 export async function loginAuth(

@@ -38,7 +38,7 @@ export interface LoginRequest {
 
 export interface RegisterRequest {
   password: string;
-  role: "enterprise" | "carrier";
+  role: UserRole;
   phone: string;
   email?: string;
   enterprise_name?: string;
@@ -49,6 +49,8 @@ export interface RegisterRequest {
   carrier_name?: string;
   carrier_type?: string;
   carrier_area?: string;
+  gov_name?: string;
+  gov_department?: string;
 }
 
 export interface AuthData {
