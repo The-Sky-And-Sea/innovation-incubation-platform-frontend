@@ -253,9 +253,9 @@ export default function HomePage() {
               </span>
             ))}
           </div>
-          <div className="mobbin-screen-rail">
+          <div className="mobbin-screen-rail" key={activePatternTab}>
             {currentPatterns.map((screen) => (
-              <article key={screen.title} className={`mobbin-phone-card is-${screen.tone}`}>
+              <article key={screen.title} className={`mobbin-phone-card is-${screen.tone} mobbin-card-wave`}>
                 <small>{screen.meta}</small>
                 <h3>{screen.title}</h3>
                 <div>
