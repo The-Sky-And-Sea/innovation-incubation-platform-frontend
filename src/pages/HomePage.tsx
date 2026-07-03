@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
+  ApiOutlined,
   ArrowRightOutlined,
   AuditOutlined,
   BankOutlined,
   BellOutlined,
   CheckCircleOutlined,
+  CloudServerOutlined,
+  CodeOutlined,
+  DatabaseOutlined,
   FileDoneOutlined,
   FileSearchOutlined,
   LoginOutlined,
@@ -238,6 +242,80 @@ export default function HomePage() {
                   </div>
                 </article>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 完善的设计开发资源 */}
+        <section className="arco-resource-section reveal-section" aria-label="设计开发资源">
+          <span className="arco-section-kicker reveal-heading">快速上手</span>
+          <h2 className="reveal-heading">完善的设计开发资源</h2>
+          <div className="reveal-body">
+            <div className="arco-resource-grid">
+              <article className="arco-resource-card is-blue">
+                <div>
+                  <h3>设计资源</h3>
+                  <p>使用孵化平台页面规范，帮助你创建一致、清晰的三端业务体验。</p>
+                </div>
+                <ul>
+                  <li><FileSearchOutlined />入驻申请页面</li>
+                  <li><AuditOutlined />审核队列组件</li>
+                  <li><FileDoneOutlined />材料上传与复用</li>
+                  <li><SafetyCertificateOutlined />政策发布流程</li>
+                </ul>
+                <div className="arco-card-footer">
+                  <a href="#flows">设计原则</a>
+                  <a href="#flows">样式指南</a>
+                  <a href="#flows">组件用法</a>
+                </div>
+              </article>
+              <article className="arco-resource-card is-dark">
+                <div>
+                  <h3>开发资源</h3>
+                  <p>接口、Mock、Docker 和页面状态都已围绕联调前准备整理。</p>
+                </div>
+                <ul>
+                  <li><ApiOutlined />API 服务层</li>
+                  <li><CloudServerOutlined />Docker 后端服务</li>
+                  <li><CodeOutlined />Mock 环境切换</li>
+                  <li><DatabaseOutlined />数据归档模型</li>
+                </ul>
+                <div className="arco-card-footer">
+                  <Link to="/login">Web React</Link>
+                  <a href="#patterns">联调准备</a>
+                  <a href="#patterns">演示账号</a>
+                </div>
+              </article>
+            </div>
+            <div className="arco-principles">
+              <article className="is-blue">
+                <i />
+                <div>
+                  <h3>一致</h3>
+                  <p>统一规则保证三端协作口径一致</p>
+                </div>
+              </article>
+              <article className="is-green">
+                <i />
+                <div>
+                  <h3>有序</h3>
+                  <p>把申报、审核和通知整理成清晰流程</p>
+                </div>
+              </article>
+              <article className="is-cyan">
+                <i />
+                <div>
+                  <h3>清晰</h3>
+                  <p>减少重复填报，让用户只关注下一步</p>
+                </div>
+              </article>
+              <article className="is-teal">
+                <i />
+                <div>
+                  <h3>开放</h3>
+                  <p>为 API、Mock 和联调保留稳定入口</p>
+                </div>
+              </article>
             </div>
           </div>
         </section>
