@@ -95,25 +95,25 @@ export default function CarrierIncubationReview() {
   };
 
   const columns: ColumnsType<IncubationRecord> = [
-    { title: "申请编号", dataIndex: "id", key: "id", width: 80 },
+    { title: "编号", dataIndex: "id", key: "id", width: 60 },
     {
       title: "企业名称",
       key: "enterprise_name",
-      width: 180,
+      width: 150,
       ellipsis: true,
       render: (_, r) => r.enterprise?.name || "-",
     },
     {
       title: "入孵时间",
       key: "date",
-      width: 200,
+      width: 180,
       render: (_, r) => `${r.incubate_start} ~ ${r.incubate_end}`,
     },
     {
       title: "协议文件",
       dataIndex: "agreement_file_id",
       key: "file",
-      width: 100,
+      width: 80,
       render: (id: number) => (
         <Tag icon={<FileTextOutlined />}>ID: {id}</Tag>
       ),
@@ -122,15 +122,15 @@ export default function CarrierIncubationReview() {
       title: "提交时间",
       dataIndex: "created_at",
       key: "created_at",
-      width: 160,
+      width: 140,
       render: (d: string) => (d ? new Date(d).toLocaleString("zh-CN") : "-"),
     },
     {
       title: "操作",
       key: "action",
-      width: 280,
+      width: 240,
       render: (_, record) => (
-        <Space>
+        <Space wrap size={[4, 4]}>
           {reviewActions.map((ra) => (
             <Button
               key={ra.action}
@@ -180,6 +180,7 @@ export default function CarrierIncubationReview() {
           dataSource={records}
           rowKey="id"
           loading={loading}
+          scroll={{ x: "max-content" }}
           pagination={{
             current: pagination.current,
             pageSize: pagination.pageSize,

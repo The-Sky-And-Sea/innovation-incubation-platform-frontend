@@ -5,6 +5,7 @@
  * - POST  /enterprise/incubations       企业提交入驻申请
  * - GET   /enterprise/incubations  我的入驻记录（分页）
  * - GET   /enterprise/incubations/:id   入驻详情
+ * - GET   /enterprise/dicts             获取入驻表单字典数据
  */
 
 import type {
@@ -12,6 +13,28 @@ import type {
   IncubationRecord,
   IncubationApplyRequest,
 } from "../types";
+
+/** 字典数据响应结构 */
+export interface DictItem {
+  value: string;
+  label: string;
+}
+
+export interface DictResponse {
+  enterprise_natures: DictItem[];
+  founding_categories: DictItem[];
+  industry_categories: DictItem[];
+  high_tech_fields: DictItem[];
+  incubate_statuses: DictItem[];
+}
+
+/**
+ * 获取入驻申请表单所需的字典数据
+ */
+export async function getIncubationDicts(): Promise<ApiResponse<DictResponse>> {
+  const { get } = await import("../utils/request");
+  return get("/enterprise/dicts");
+}
 
 /**
  * 企业提交入驻申请

@@ -164,12 +164,11 @@ export default function EnterpriseMyInfo() {
           description="请先申请入驻并通过载体审核后，才能进行信息变更等操作"
           type="info"
           showIcon
-          style={{ marginBottom: 16, maxWidth: 800 }}
+          style={{ marginBottom: 16 }}
         />
       )}
 
       <Card
-        style={{ maxWidth: 800 }}
         title={
           <>
             <BankOutlined style={{ marginRight: 8 }} />
@@ -192,7 +191,7 @@ export default function EnterpriseMyInfo() {
         }
       >
         <Descriptions
-          column={{ xs: 1, sm: 2 }}
+          column={{ xs: 1, sm: 2, md: 3, lg: 4 }}
           bordered
           size="middle"
         >

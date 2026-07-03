@@ -101,7 +101,6 @@ export default function CarrierInfoPage() {
       </Title>
 
       <Card
-        style={{ maxWidth: 800 }}
         title={
           <Space>
             <BankOutlined />

@@ -104,6 +104,8 @@ export interface IncubationApplyRequest {
   incubate_start: string;
   incubate_end: string;
   agreement_file_id: number;
+  credit_code?: string;
+  enterprise_name?: string;
 }
 
 export interface IncubationRecord {
@@ -111,6 +113,7 @@ export interface IncubationRecord {
   enterprise_id: number;
   carrier_id: number;
   status: AuditStatus;
+  incubate_status?: "in_incubation" | "graduated" | "exited" | string;
   incubate_start: string;
   incubate_end: string;
   agreement_file_id: number;

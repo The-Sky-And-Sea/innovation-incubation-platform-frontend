@@ -210,8 +210,23 @@ export default function RegisterPage() {
                     <h3>设置登录账号</h3>
                   </div>
                 </div>
-                <Form.Item name="phone" label="手机号" rules={[{ required: true, message: "请输入手机号" }]}>
-                  <Input prefix={<PhoneOutlined />} placeholder="请输入手机号" size="large" />
+                <Form.Item
+                  name="phone"
+                  label="手机号"
+                  rules={[
+                    { required: true, message: "请输入手机号" },
+                    {
+                      validator: (_, value) => {
+                        if (!value) return Promise.resolve();
+                        if (!/^1[3-9]\d{9}$/.test(value)) {
+                          return Promise.reject(new Error("手机号错误"));
+                        }
+                        return Promise.resolve();
+                      },
+                    },
+                  ]}
+                >
+                  <Input prefix={<PhoneOutlined />} placeholder="请输入 11 位手机号" size="large" maxLength={11} />
                 </Form.Item>
                 <Form.Item name="email" label="邮箱" rules={[{ type: "email", message: "请输入正确的邮箱地址" }]}>
                   <Input prefix={<MailOutlined />} placeholder="请输入邮箱" size="large" />
@@ -244,9 +259,21 @@ export default function RegisterPage() {
                     <Form.Item
                       name="enterprise_credit_code"
                       label="统一社会信用代码"
-                      rules={[{ required: true, message: "请输入统一社会信用代码" }]}
+                      rules={[
+                        { required: true, message: "请输入统一社会信用代码" },
+                        { len: 18, message: "统一社会信用代码必须为 18 位" },
+                        {
+                          pattern: /^[0-9A-Z]{18}$/,
+                          message: "由 18 位数字或大写字母组成",
+                        },
+                      ]}
                     >
-                      <Input prefix={<IdcardOutlined />} placeholder="请输入统一社会信用代码" size="large" />
+                      <Input
+                        prefix={<IdcardOutlined />}
+                        placeholder="请输入 18 位统一社会信用代码"
+                        size="large"
+                        maxLength={18}
+                      />
                     </Form.Item>
                     <Form.Item name="enterprise_industry" label="所属行业" rules={[{ required: true, message: "请输入所属行业" }]}>
                       <Input prefix={<TeamOutlined />} placeholder="如：信息技术、生物医药" size="large" />

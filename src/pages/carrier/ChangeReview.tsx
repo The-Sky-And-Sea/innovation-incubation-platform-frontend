@@ -58,11 +58,11 @@ export default function CarrierChangeReview() {
   };
 
   const columns: ColumnsType<ChangeRecord> = [
-    { title: "编号", dataIndex: "id", key: "id", width: 70 },
+    { title: "编号", dataIndex: "id", key: "id", width: 60 },
     {
       title: "企业名称",
       key: "enterprise_name",
-      width: 180,
+      width: 150,
       ellipsis: true,
       render: (_, record) => (record as ChangeRecord & { enterprise?: { name?: string } }).enterprise?.name || "-",
     },
@@ -70,21 +70,21 @@ export default function CarrierChangeReview() {
       title: "变更类型",
       dataIndex: "change_type",
       key: "change_type",
-      width: 140,
+      width: 100,
       render: (t: ChangeType) => <Tag color="purple">{t}</Tag>,
     },
     {
       title: "变更说明",
       dataIndex: "change_content",
       key: "change_content",
-      width: 250,
+      width: 200,
       ellipsis: true,
     },
     {
       title: "新值",
       dataIndex: "new_value",
       key: "new_value",
-      width: 150,
+      width: 120,
       ellipsis: true,
       render: (v: Record<string, unknown>) => describeBusinessData(v),
     },
@@ -92,13 +92,13 @@ export default function CarrierChangeReview() {
       title: "提交时间",
       dataIndex: "created_at",
       key: "created_at",
-      width: 150,
+      width: 140,
       render: (d: string) => (d ? new Date(d).toLocaleString("zh-CN") : "-"),
     },
     {
       title: "操作",
       key: "action",
-      width: 260,
+      width: 240,
       render: (_, record) => (
         <AuditReview
           targetName={`变更 #${record.id}`}
@@ -142,6 +142,7 @@ export default function CarrierChangeReview() {
           dataSource={records}
           rowKey="id"
           loading={loading}
+          scroll={{ x: "max-content" }}
           pagination={{
             current: pagination.current,
             pageSize: pagination.pageSize,

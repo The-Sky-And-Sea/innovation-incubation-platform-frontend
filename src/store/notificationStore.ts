@@ -83,7 +83,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   },
 
   markAsRead: async (ids) => {
-    // 乐观更新本地状态
+    // 乐观更新本地状态（先让 UI 立即反馈）
     set((state) => {
       const nextList = state.list.map((item) =>
         ids.includes(item.id) ? { ...item, is_read: true } : item,
@@ -93,11 +93,11 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
         unreadCount: nextList.filter((item) => !item.is_read).length,
       };
     });
+    // 异步同步到后端；失败仅记录日志，不回滚（避免频繁刷新导致状态闪烁）
     try {
       await markNotificationsRead(ids);
-    } catch {
-      // API 失败时回滚状态
-      await get().refresh();
+    } catch (err) {
+      console.error("[notification] 标为已读失败（本地状态已更新，请检查后端服务）", err);
     }
   },
 

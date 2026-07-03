@@ -26,6 +26,7 @@ import AppealsPage from "../pages/Appeals";
 import NotificationCenter from "../pages/Notifications";
 import CarrierApplicationReview from "../pages/carrier/ApplicationReview";
 import CarrierChangeReview from "../pages/carrier/ChangeReview";
+import CarrierEnterprises from "../pages/carrier/Enterprises";
 import CarrierDashboard from "../pages/carrier/Dashboard";
 import CarrierInfoPage from "../pages/carrier/CarrierInfo";
 import CarrierIncubationReview from "../pages/carrier/IncubationReview";
@@ -36,7 +37,8 @@ import EnterpriseCarrierList from "../pages/enterprise/CarrierList";
 import EnterpriseChangeManagement from "../pages/enterprise/ChangeManagement";
 import EnterpriseDashboard from "../pages/enterprise/Dashboard";
 import EnterpriseFileManagement from "../pages/enterprise/FileManagement";
-import EnterpriseIncubationManagement from "../pages/enterprise/IncubationManagement";
+import IncubationApplyPage from "../pages/enterprise/IncubationApplyPage";
+import IncubationWizardPage from "../pages/enterprise/IncubationWizardPage";
 import EnterpriseMyInfo from "../pages/enterprise/MyInfo";
 import EnterprisePolicyList from "../pages/enterprise/PolicyList";
 import GovAccountDeletion from "../pages/gov/AccountDeletion";
@@ -151,7 +153,8 @@ const router = createBrowserRouter([
               { path: "/enterprise/info", element: <EnterpriseMyInfo /> },
               { path: "/enterprise/files", element: <EnterpriseFileManagement /> },
               { path: "/enterprise/carriers", element: <EnterpriseCarrierList /> },
-              { path: "/enterprise/incubation", element: <EnterpriseIncubationManagement /> },
+              { path: "/enterprise/incubation", element: <IncubationApplyPage /> },
+              { path: "/enterprise/incubation/apply", element: <IncubationWizardPage /> },
               { path: "/enterprise/changes", element: <EnterpriseChangeManagement /> },
               { path: "/enterprise/policies", element: <EnterprisePolicyList /> },
               { path: "/enterprise/ai-assist", element: <EnterpriseAiAssist /> },
@@ -175,6 +178,7 @@ const router = createBrowserRouter([
             children: [
               { path: "/carrier/dashboard", element: <CarrierDashboard /> },
               { path: "/carrier/incubation", element: <CarrierIncubationReview /> },
+              { path: "/carrier/enterprises", element: <CarrierEnterprises /> },
               { path: "/carrier/changes", element: <CarrierChangeReview /> },
               { path: "/carrier/policies", element: <CarrierPolicyList /> },
               { path: "/carrier/applications", element: <CarrierApplicationReview /> },

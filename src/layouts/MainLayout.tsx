@@ -77,6 +77,7 @@ const roleMenuMap: Record<UserRole, MenuItem[]> = {
   carrier: [
     { key: "/carrier/dashboard", icon: <DashboardOutlined />, label: "载体工作台" },
     { key: "/carrier/incubation", icon: <AuditOutlined />, label: "入驻审核" },
+    { key: "/carrier/enterprises", icon: <TeamOutlined />, label: "入驻企业" },
     { key: "/carrier/info", icon: <SettingOutlined />, label: "基础信息" },
     { key: "/carrier/changes", icon: <FormOutlined />, label: "变更审核" },
     { key: "/carrier/policies", icon: <FileTextOutlined />, label: "政策申报" },
@@ -200,7 +201,10 @@ export default function MainLayout() {
   const menus = roleMenuMap[role];
   const roleTheme = ROLE_MENU_THEME[role];
   const selectedKey = location.pathname;
-  const activeMenu = menus.find((item) => item.key === selectedKey);
+  const activeMenu = menus.find(
+    (item) => item.key === selectedKey || selectedKey.startsWith(item.key + "/")
+  );
+  const computedSelectedKey = activeMenu ? activeMenu.key : selectedKey;
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -266,7 +270,7 @@ export default function MainLayout() {
             <div className="header-menu-slot">
               <Menu
                 className="top-staggered-menu"
-                selectedKeys={[selectedKey]}
+                selectedKeys={[computedSelectedKey]}
                 aria-label="role navigation"
                 accentColor={roleTheme.accent}
                 closeOnClickAway={false}
