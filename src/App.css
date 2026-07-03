@@ -8190,7 +8190,9 @@ select {
 
 .home-hero-logo-text {
   display: inline-flex;
-  width: min(206px, 54vw);
+  width: auto;
+  min-width: 206px;
+  align-items: center;
   opacity: 0;
   transform: translateX(28px);
   clip-path: inset(0 100% 0 0);
@@ -8206,11 +8208,12 @@ select {
 
 .home-hero-logo-text strong {
   color: #1d2129;
-  font-size: 28px;
-  line-height: 1.1;
+  font-size: 40px;
+  line-height: 1.25;
   font-weight: 800;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   text-wrap: balance;
+  white-space: nowrap;
 }
 
 @keyframes homeHeroMarkIn {
@@ -9437,8 +9440,9 @@ select {
 }
 
 .arco-case-section {
-  margin-top: 60px;
-  padding: 96px 24px 112px;
+  margin-top: 32px;
+  min-height: calc(100vh - 86px);
+  padding: 20px 24px 28px;
   color: #fff;
   text-align: center;
   background:
@@ -9453,18 +9457,22 @@ select {
   color: #fff;
 }
 
+.arco-case-section h2 {
+  margin-bottom: 34px;
+}
+
 .arco-case-carousel {
-  width: min(1080px, calc(100vw - 48px));
+  width: min(980px, calc(100vw - 48px));
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 58px 1fr 58px;
+  grid-template-columns: 52px 1fr 52px;
   align-items: center;
-  gap: 26px;
+  gap: 20px;
 }
 
 .arco-case-carousel button {
-  width: 58px;
-  height: 58px;
+  width: 52px;
+  height: 52px;
   border: 0;
   border-radius: 50%;
   color: #1d2129;
@@ -9474,7 +9482,7 @@ select {
 }
 
 .arco-case-card {
-  min-height: 430px;
+  min-height: 360px;
   border-radius: var(--arco-radius);
   overflow: hidden;
   display: grid;
@@ -9506,7 +9514,7 @@ select {
 }
 
 .arco-case-screen {
-  padding: 58px 70px;
+  padding: 34px 48px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -9524,8 +9532,8 @@ select {
 }
 
 .case-screen-top {
-  min-height: 96px;
-  padding: 20px 22px;
+  min-height: 72px;
+  padding: 16px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -9540,7 +9548,7 @@ select {
 
 .case-screen-top strong {
   color: #165dff;
-  font-size: 30px;
+  font-size: 28px;
   line-height: 1;
 }
 
@@ -9556,12 +9564,12 @@ select {
 
 .case-screen-list {
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
 .case-screen-list article {
-  min-height: 58px;
-  padding: 12px 16px;
+  min-height: 96px;
+  padding: 16px 18px;
   display: grid;
   grid-template-columns: 38px 1fr;
   align-items: center;
@@ -9608,8 +9616,8 @@ select {
 }
 
 .case-screen-footer {
-  min-height: 46px;
-  padding: 0 18px;
+  min-height: 42px;
+  padding: 0 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -9621,7 +9629,7 @@ select {
 }
 
 .arco-case-card article {
-  padding: 64px 58px;
+  padding: 46px 48px;
   color: #1d2129;
   background: #fff;
   animation: arcoCaseTextIn 360ms cubic-bezier(0.22, 1, 0.36, 1) 120ms both;
@@ -9629,7 +9637,7 @@ select {
 
 .arco-case-card article .anticon {
   color: var(--arco-blue);
-  font-size: 34px;
+  font-size: 30px;
 }
 
 .arco-case-card.is-carrier article .anticon,
@@ -9643,21 +9651,21 @@ select {
 }
 
 .arco-case-card h3 {
-  margin: 20px 0 18px;
-  font-size: 30px;
+  margin: 18px 0 14px;
+  font-size: 28px;
 }
 
 .arco-case-card p {
   color: #4e5969;
-  font-size: 17px;
-  line-height: 1.8;
+  font-size: 16px;
+  line-height: 1.7;
 }
 
 .arco-case-card strong {
   display: inline-block;
-  margin-top: 20px;
+  margin-top: 16px;
   color: var(--arco-blue);
-  font-size: 34px;
+  font-size: 30px;
 }
 
 .arco-case-card span {
@@ -9666,9 +9674,9 @@ select {
 }
 
 .arco-case-card a {
-  height: 54px;
-  margin-top: 32px;
-  padding: 0 24px;
+  height: 48px;
+  margin-top: 24px;
+  padding: 0 22px;
   border-radius: 4px;
   display: inline-flex;
   align-items: center;
@@ -10674,7 +10682,11 @@ select {
   }
 
   .home-hero-logo-text {
-    width: 190px;
+    min-width: 0;
+  }
+
+  .home-hero-logo-text strong {
+    font-size: 32px;
   }
 
   .arco-workspace-board {
