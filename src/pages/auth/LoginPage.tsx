@@ -2,8 +2,8 @@ import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from "re
 import { Link, useNavigate } from "react-router-dom";
 import { Button, Card, ConfigProvider, Form, Input, Space, Typography, message } from "antd";
 import {
+  ArrowLeftOutlined,
   BankOutlined,
-  CheckCircleOutlined,
   LockOutlined,
   LoginOutlined,
   SafetyCertificateOutlined,
@@ -108,6 +108,10 @@ export default function LoginPage() {
         <span className="login-floater login-floater-disk login-floater-disk-small" />
       </div>
       <AuthRouteTransition active={routeTransitioning} />
+      <Link className="auth-home-link" to="/">
+        <ArrowLeftOutlined />
+        <span>返回首页</span>
+      </Link>
       <section className="gov-login-visual" aria-label="平台介绍">
         <div className="gov-login-brand">
           <span className="gov-login-brand-mark">
@@ -133,7 +137,6 @@ export default function LoginPage() {
             <Title level={2} style={{ margin: 0, color: "#10243e" }}>
               登录平台
             </Title>
-            <Text style={{ color: "#65758b" }}>请选择角色后输入账号信息，Mock 环境任意账号可登录。</Text>
           </Space>
 
           <div className="login-role-grid" role="tablist" aria-label="选择登录角色">
@@ -225,17 +228,11 @@ export default function LoginPage() {
             </Form>
           </ConfigProvider>
 
-          <Space orientation="vertical" size={10} style={{ width: "100%" }}>
-            <Text style={{ color: "#65758b", fontSize: 13 }}>
-              <CheckCircleOutlined style={{ color: "#0b7568", marginRight: 6 }} />
-              已启用角色隔离、审核流转与通知追踪。
-            </Text>
-            <div style={{ textAlign: "center" }}>
-              <Link to="/register" onClick={goRegister} style={{ color: "#14508c", fontSize: 13 }}>
-                还没有账号？立即注册
-              </Link>
-            </div>
-          </Space>
+          <div className="login-register-link">
+            <Link to="/register" onClick={goRegister} style={{ color: "#14508c", fontSize: 13 }}>
+              还没有账号？立即注册
+            </Link>
+          </div>
         </Card>
       </main>
     </div>

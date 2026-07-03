@@ -2,8 +2,8 @@ import { useMemo, useState, type MouseEvent, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button, Card, Form, Input, Select, Space, Typography, message } from "antd";
 import {
+  ArrowLeftOutlined,
   BankOutlined,
-  CheckCircleOutlined,
   EnvironmentOutlined,
   IdcardOutlined,
   LockOutlined,
@@ -27,35 +27,23 @@ const ROLE_META: Record<
   {
     title: string;
     shortTitle: string;
-    desc: string;
     icon: ReactNode;
-    credentialHint: string;
-    subjectHint: string;
   }
 > = {
   enterprise: {
     title: "企业注册",
     shortTitle: "企业",
-    desc: "适用于入驻申请、政策申报、材料上传和进度跟踪。",
     icon: <TeamOutlined />,
-    credentialHint: "企业后续可使用统一社会信用代码或手机号登录。",
-    subjectHint: "请准备企业名称、统一社会信用代码、行业和地址信息。",
   },
   carrier: {
     title: "载体注册",
     shortTitle: "载体",
-    desc: "适用于孵化载体审核、入驻协同、绩效填报和政策协同。",
     icon: <BankOutlined />,
-    credentialHint: "载体端建议使用运营手机号作为登录账号。",
-    subjectHint: "请确认载体名称、类型和所在区域。",
   },
   government: {
     title: "政务注册",
     shortTitle: "政务",
-    desc: "适用于政策发布、终审流转、监督治理和通知管理。",
     icon: <SafetyCertificateOutlined />,
-    credentialHint: "政务端建议使用工作手机号注册，便于后续通知触达。",
-    subjectHint: "请填写真实姓名和所属部门。",
   },
 };
 
@@ -82,17 +70,17 @@ export default function RegisterPage() {
   const navigate = useNavigate();
   const register = useAuthStore((s) => s.register);
   const [form] = Form.useForm<RegisterRequest>();
-  const watchedValues = (Form.useWatch([], form) as Partial<RegisterRequest> | undefined) ?? {};
+  const [formValues, setFormValues] = useState<Partial<RegisterRequest>>({});
   const roleInfo = ROLE_META[role];
 
   const summaryItems = useMemo(
     () => [
       { label: "注册身份", value: roleInfo.title },
-      { label: "登录手机号", value: watchedValues.phone || "待填写" },
-      { label: "主体名称", value: getSubjectName(role, watchedValues) || "待填写" },
-      { label: "联系邮箱", value: watchedValues.email || "可后续补充" },
+      { label: "登录手机号", value: formValues.phone || "待填写" },
+      { label: "主体名称", value: getSubjectName(role, formValues) || "待填写" },
+      { label: "联系邮箱", value: formValues.email || "待填写" },
     ],
-    [role, roleInfo.title, watchedValues],
+    [role, roleInfo.title, formValues],
   );
 
   const onFinish = async (values: RegisterRequest) => {
@@ -113,6 +101,7 @@ export default function RegisterPage() {
     if (!fields.length) return true;
     try {
       await form.validateFields(fields);
+      setFormValues(form.getFieldsValue(true) as Partial<RegisterRequest>);
       return true;
     } catch {
       message.warning("请先完善当前步骤的信息");
@@ -123,6 +112,7 @@ export default function RegisterPage() {
   const changeRole = (nextRole: UserRole) => {
     setRole(nextRole);
     form.resetFields(ALL_ROLE_FIELDS);
+    setFormValues(form.getFieldsValue(true) as Partial<RegisterRequest>);
   };
 
   const goLogin = (event: MouseEvent<HTMLAnchorElement>) => {
@@ -134,6 +124,10 @@ export default function RegisterPage() {
   return (
     <div className="auth-register-page">
       <AuthRouteTransition active={routeTransitioning} />
+      <Link className="auth-home-link" to="/">
+        <ArrowLeftOutlined />
+        <span>返回首页</span>
+      </Link>
       <section className="auth-register-aside">
         <div className="gov-login-brand">
           <span className="gov-login-brand-mark">
@@ -156,10 +150,15 @@ export default function RegisterPage() {
             <Title level={2} style={{ margin: 0 }}>
               创建实名账号
             </Title>
-            <Text type="secondary">按步骤补齐必要信息，提交后将自动进入对应工作台。</Text>
           </Space>
 
-          <Form form={form} layout="vertical" onFinish={onFinish} requiredMark={false}>
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={onFinish}
+            onValuesChange={() => setFormValues(form.getFieldsValue(true) as Partial<RegisterRequest>)}
+            requiredMark={false}
+          >
             <Stepper
               labels={STEP_LABELS}
               initialStep={1}
@@ -175,7 +174,6 @@ export default function RegisterPage() {
                   <span>01</span>
                   <div>
                     <h3>选择注册主体</h3>
-                    <p>平台会根据主体身份开启不同的工作台、菜单和审核流程。</p>
                   </div>
                 </div>
                 <div className="register-role-grid">
@@ -190,14 +188,9 @@ export default function RegisterPage() {
                         onClick={() => changeRole(itemRole)}
                       >
                         <strong>{item.title}</strong>
-                        <span>{item.desc}</span>
                       </Button>
                     );
                   })}
-                </div>
-                <div className="register-step-note">
-                  <SafetyCertificateOutlined />
-                  <span>{roleInfo.credentialHint}</span>
                 </div>
               </Step>
 
@@ -206,14 +199,13 @@ export default function RegisterPage() {
                   <span>02</span>
                   <div>
                     <h3>设置登录账号</h3>
-                    <p>手机号用于登录和通知触达，邮箱可作为业务材料接收方式。</p>
                   </div>
                 </div>
                 <Form.Item name="phone" label="手机号" rules={[{ required: true, message: "请输入手机号" }]}>
                   <Input prefix={<PhoneOutlined />} placeholder="请输入手机号" size="large" />
                 </Form.Item>
                 <Form.Item name="email" label="邮箱" rules={[{ type: "email", message: "请输入正确的邮箱地址" }]}>
-                  <Input prefix={<MailOutlined />} placeholder="请输入邮箱，可后续补充" size="large" />
+                  <Input prefix={<MailOutlined />} placeholder="请输入邮箱" size="large" />
                 </Form.Item>
                 <Form.Item
                   name="password"
@@ -232,7 +224,6 @@ export default function RegisterPage() {
                   <span>03</span>
                   <div>
                     <h3>完善{roleInfo.shortTitle}资料</h3>
-                    <p>{roleInfo.subjectHint}</p>
                   </div>
                 </div>
 
@@ -298,7 +289,6 @@ export default function RegisterPage() {
                   <span>04</span>
                   <div>
                     <h3>确认注册信息</h3>
-                    <p>确认无误后提交，系统会创建账号并进入对应工作台。</p>
                   </div>
                 </div>
                 <div className="register-summary-panel">
@@ -308,10 +298,6 @@ export default function RegisterPage() {
                       <strong>{item.value}</strong>
                     </div>
                   ))}
-                </div>
-                <div className="register-step-note is-ready">
-                  <CheckCircleOutlined />
-                  <span>提交后可继续完善材料、申请入驻或进入审核协同流程。</span>
                 </div>
               </Step>
             </Stepper>
