@@ -621,11 +621,7 @@ export default function HomePage() {
                 <BrandLogo variant="mark" tone={isNight ? "night" : "default"} />
               </span>
               <span className="home-hero-logo-text">
-                {isEnglish ? (
-                  <strong>{copy.brandName}</strong>
-                ) : (
-                  <BrandLogo variant="text" tone={isNight ? "night" : "default"} />
-                )}
+                <strong>{copy.brandName}</strong>
               </span>
             </div>
             <h1>

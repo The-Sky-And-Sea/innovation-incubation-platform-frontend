@@ -134,6 +134,9 @@ export default function LoginPage() {
 
       <main className="gov-login-panel" id="login-panel">
         <Card className="gov-login-card" variant="borderless">
+          <div className="login-card-emblem" aria-hidden="true">
+            <BrandLogo variant="mark" />
+          </div>
           <Space orientation="vertical" size={2} style={{ width: "100%" }}>
             <Text strong style={{ color: "#14508c" }}>
               统一身份认证
@@ -224,7 +227,7 @@ export default function LoginPage() {
                   size="large"
                   loading={loading}
                   icon={<LoginOutlined />}
-                  style={{ height: 46, fontWeight: 600 }}
+                  style={{ height: 44, fontWeight: 600 }}
                 >
                   登录{roleConfig.label}
                 </Button>

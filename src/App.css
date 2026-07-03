@@ -3109,19 +3109,49 @@ select {
 .gov-login-card {
   width: 100%;
   max-width: none;
-  min-height: 438px;
+  min-height: 484px;
   display: flex;
-  border: 0 !important;
-  border-radius: 0;
-  background: rgba(255, 255, 255, 0.94) !important;
-  box-shadow: 0 10px 22px rgba(54, 84, 132, 0.08) !important;
+  border: 1px solid rgba(244, 247, 251, 0.94) !important;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.97) !important;
+  box-shadow:
+    0 96px 42px rgba(18, 35, 63, 0.01),
+    0 54px 34px rgba(18, 35, 63, 0.04),
+    0 24px 24px rgba(18, 35, 63, 0.07),
+    0 7px 14px rgba(18, 35, 63, 0.08) !important;
 }
 
 .gov-login-card .ant-card-body {
   width: 100%;
   display: flex;
   flex-direction: column;
-  padding: 36px 42px 0;
+  align-items: stretch;
+  padding: 38px 40px 0;
+}
+
+.login-card-emblem {
+  box-sizing: border-box;
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  align-self: center;
+  margin: 0 0 22px;
+  padding: 10px;
+  border: 1px solid #e8eef6;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.96), rgba(238, 244, 252, 0.88)),
+    #f8fbff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 8px 18px rgba(29, 54, 92, 0.08);
+}
+
+.login-card-emblem .brand-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .gov-login-card .ant-typography strong,
@@ -3131,6 +3161,7 @@ select {
 
 .gov-login-card .ant-space:first-child {
   margin-bottom: 18px !important;
+  text-align: center;
 }
 
 .gov-login-card .ant-space:first-child .ant-typography:first-child {
@@ -3141,6 +3172,7 @@ select {
 
 .gov-login-card .ant-space:first-child .ant-typography:last-child {
   max-width: 310px;
+  margin-inline: auto;
   color: #7a8798 !important;
   font-size: 14px;
   line-height: 1.55;
@@ -3157,19 +3189,22 @@ select {
 .login-role-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0;
-  margin: 0 0 28px;
-  border-bottom: 1px solid #e5ebf4;
+  gap: 8px;
+  margin: 0 0 24px;
+  padding: 4px;
+  border: 1px solid #edf2f7;
+  border-radius: 10px;
+  background: #f8fafc;
 }
 
 .login-role-button {
-  height: 48px;
+  height: 42px;
   border: 0 !important;
-  border-radius: 0 !important;
+  border-radius: 7px !important;
   background: transparent !important;
   box-shadow: none !important;
   color: #4b5b70 !important;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -3190,13 +3225,7 @@ select {
 }
 
 .login-role-button[aria-pressed="true"]::after {
-  position: absolute;
-  right: 12px;
-  bottom: -1px;
-  left: 12px;
-  height: 2px;
-  background: currentColor;
-  content: "";
+  content: none;
 }
 
 .gov-login-card .ant-form-item {
@@ -3215,26 +3244,43 @@ select {
 }
 
 .gov-login-card .ant-input-affix-wrapper {
-  height: 48px;
-  padding: 0 15px;
-  border-color: #edf1f7 !important;
-  border-radius: 2px;
-  box-shadow: none !important;
+  height: 44px;
+  padding: 0 14px;
+  border-color: #e5eaf1 !important;
+  border-radius: 7px;
+  background: #ffffff;
+  box-shadow:
+    0 1px 0 #f0f3f7,
+    0 1px 0.5px rgba(226, 232, 240, 0.58) !important;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
+}
+
+.gov-login-card .ant-input-affix-wrapper:hover {
+  border-color: #cbd8e8 !important;
+}
+
+.gov-login-card .ant-input-affix-wrapper-focused {
+  border-color: transparent !important;
+  background: #ffffff;
+  box-shadow: 0 0 0 2px #1f2937 !important;
 }
 
 .gov-login-card .ant-input-affix-wrapper .ant-input {
-  height: 46px;
+  height: 42px;
   color: #334155;
-  font-size: 15px;
-  line-height: 46px;
+  font-size: 14px;
+  line-height: 42px;
   letter-spacing: 0;
 }
 
 .gov-login-card .ant-input::placeholder,
 .gov-login-card .ant-input-password input::placeholder {
   color: #8fa0b6;
-  font-size: 15px;
-  line-height: 46px;
+  font-size: 14px;
+  line-height: 42px;
   letter-spacing: 0;
   opacity: 1;
 }
@@ -3257,10 +3303,10 @@ select {
 }
 
 .gov-login-card .ant-btn-primary {
-  height: 48px !important;
-  border-radius: 2px;
+  height: 44px !important;
+  border-radius: 7px;
   background: #3f7df4;
-  box-shadow: none;
+  box-shadow: 0 8px 14px rgba(47, 112, 245, 0.18);
 }
 
 .gov-login-card .ant-btn-primary:hover {
@@ -8190,7 +8236,9 @@ select {
 
 .home-hero-logo-text {
   display: inline-flex;
-  width: min(206px, 54vw);
+  width: auto;
+  min-width: 206px;
+  align-items: center;
   opacity: 0;
   transform: translateX(28px);
   clip-path: inset(0 100% 0 0);
@@ -8206,11 +8254,12 @@ select {
 
 .home-hero-logo-text strong {
   color: #1d2129;
-  font-size: 28px;
-  line-height: 1.1;
+  font-size: 40px;
+  line-height: 1.25;
   font-weight: 800;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   text-wrap: balance;
+  white-space: nowrap;
 }
 
 @keyframes homeHeroMarkIn {
@@ -9437,8 +9486,9 @@ select {
 }
 
 .arco-case-section {
-  margin-top: 60px;
-  padding: 96px 24px 112px;
+  margin-top: 32px;
+  min-height: calc(100vh - 86px);
+  padding: 20px 24px 28px;
   color: #fff;
   text-align: center;
   background:
@@ -9453,18 +9503,22 @@ select {
   color: #fff;
 }
 
+.arco-case-section h2 {
+  margin-bottom: 34px;
+}
+
 .arco-case-carousel {
-  width: min(1080px, calc(100vw - 48px));
+  width: min(980px, calc(100vw - 48px));
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 58px 1fr 58px;
+  grid-template-columns: 52px 1fr 52px;
   align-items: center;
-  gap: 26px;
+  gap: 20px;
 }
 
 .arco-case-carousel button {
-  width: 58px;
-  height: 58px;
+  width: 52px;
+  height: 52px;
   border: 0;
   border-radius: 50%;
   color: #1d2129;
@@ -9474,7 +9528,7 @@ select {
 }
 
 .arco-case-card {
-  min-height: 430px;
+  min-height: 360px;
   border-radius: var(--arco-radius);
   overflow: hidden;
   display: grid;
@@ -9506,7 +9560,7 @@ select {
 }
 
 .arco-case-screen {
-  padding: 58px 70px;
+  padding: 34px 48px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -9524,8 +9578,8 @@ select {
 }
 
 .case-screen-top {
-  min-height: 96px;
-  padding: 20px 22px;
+  min-height: 72px;
+  padding: 16px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -9540,7 +9594,7 @@ select {
 
 .case-screen-top strong {
   color: #165dff;
-  font-size: 30px;
+  font-size: 28px;
   line-height: 1;
 }
 
@@ -9556,12 +9610,12 @@ select {
 
 .case-screen-list {
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
 .case-screen-list article {
-  min-height: 58px;
-  padding: 12px 16px;
+  min-height: 96px;
+  padding: 16px 18px;
   display: grid;
   grid-template-columns: 38px 1fr;
   align-items: center;
@@ -9608,8 +9662,8 @@ select {
 }
 
 .case-screen-footer {
-  min-height: 46px;
-  padding: 0 18px;
+  min-height: 42px;
+  padding: 0 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -9621,7 +9675,7 @@ select {
 }
 
 .arco-case-card article {
-  padding: 64px 58px;
+  padding: 46px 48px;
   color: #1d2129;
   background: #fff;
   animation: arcoCaseTextIn 360ms cubic-bezier(0.22, 1, 0.36, 1) 120ms both;
@@ -9629,7 +9683,7 @@ select {
 
 .arco-case-card article .anticon {
   color: var(--arco-blue);
-  font-size: 34px;
+  font-size: 30px;
 }
 
 .arco-case-card.is-carrier article .anticon,
@@ -9643,21 +9697,21 @@ select {
 }
 
 .arco-case-card h3 {
-  margin: 20px 0 18px;
-  font-size: 30px;
+  margin: 18px 0 14px;
+  font-size: 28px;
 }
 
 .arco-case-card p {
   color: #4e5969;
-  font-size: 17px;
-  line-height: 1.8;
+  font-size: 16px;
+  line-height: 1.7;
 }
 
 .arco-case-card strong {
   display: inline-block;
-  margin-top: 20px;
+  margin-top: 16px;
   color: var(--arco-blue);
-  font-size: 34px;
+  font-size: 30px;
 }
 
 .arco-case-card span {
@@ -9666,9 +9720,9 @@ select {
 }
 
 .arco-case-card a {
-  height: 54px;
-  margin-top: 32px;
-  padding: 0 24px;
+  height: 48px;
+  margin-top: 24px;
+  padding: 0 22px;
   border-radius: 4px;
   display: inline-flex;
   align-items: center;
@@ -10674,7 +10728,11 @@ select {
   }
 
   .home-hero-logo-text {
-    width: 190px;
+    min-width: 0;
+  }
+
+  .home-hero-logo-text strong {
+    font-size: 32px;
   }
 
   .arco-workspace-board {
