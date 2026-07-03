@@ -6196,7 +6196,7 @@ select {
   flex-direction: column;
   align-items: center;
   opacity: 0;
-  animation: heroBlockIn 2.8s cubic-bezier(0.23, 1, 0.32, 1) 2.5s forwards;
+  animation: heroBlockIn 1.9s cubic-bezier(0.23, 1, 0.32, 1) 1.6s forwards;
 }
 
 @keyframes heroBlockIn {
