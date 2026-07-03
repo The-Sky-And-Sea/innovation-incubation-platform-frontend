@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type MouseEvent } from "react";
+import { Fragment, useState, type CSSProperties, type MouseEvent } from "react";
 import { Link } from "react-router-dom";
 import {
   ApiOutlined,
@@ -979,6 +979,26 @@ export default function HomePage() {
                   <ArrowRightOutlined />
                 </Link>
               ))}
+            </div>
+            <div className="arco-footer-rating" aria-label={isEnglish ? "Rate this platform" : "评价平台体验"}>
+              <div>
+                <strong>{isEnglish ? "Rate the experience" : "体验反馈"}</strong>
+              </div>
+              <div className="arco-star-rating" role="radiogroup" aria-label={isEnglish ? "Rating" : "评分"}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Fragment key={star}>
+                    <input type="radio" id={`home-star-${star}`} name="home-star-rating" value={star} />
+                    <label htmlFor={`home-star-${star}`} aria-label={`${star} ${isEnglish ? "stars" : "星"}`}>
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                          pathLength={360}
+                          d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z"
+                        />
+                      </svg>
+                    </label>
+                  </Fragment>
+                ))}
+              </div>
             </div>
           </div>
         </nav>
