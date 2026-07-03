@@ -2,6 +2,7 @@ import { useMemo, useState, type MouseEvent, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button, Card, Form, Input, Select, Space, Typography, message } from "antd";
 import {
+  ArrowLeftOutlined,
   BankOutlined,
   CheckCircleOutlined,
   EnvironmentOutlined,
@@ -143,6 +144,12 @@ export default function RegisterPage() {
   return (
     <div className="auth-register-page">
       <AuthRouteTransition active={routeTransitioning} />
+
+      <Link to="/" className="login-back-btn login-back-btn--corner" aria-label="返回首页">
+        <ArrowLeftOutlined />
+        <span>返回首页</span>
+      </Link>
+
       <section className="auth-register-aside">
         <div className="gov-login-brand">
           <span className="gov-login-brand-mark">

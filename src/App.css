@@ -269,7 +269,7 @@ select {
 /* 三端背景色区分 */
 .gov-login-page[data-selected-role="enterprise"] {
   background:
-    linear-gradient(120deg, rgba(8, 34, 70, 0.55), rgba(18, 88, 126, 0.45)),
+    linear-gradient(120deg, rgba(8, 34, 70, 0.35), rgba(18, 88, 126, 0.28)),
     url("https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1800&q=80");
   background-size: cover;
   background-position: center;
@@ -277,7 +277,7 @@ select {
 
 .gov-login-page[data-selected-role="carrier"] {
   background:
-    linear-gradient(120deg, rgba(0, 52, 44, 0.55), rgba(8, 108, 90, 0.42)),
+    linear-gradient(120deg, rgba(0, 52, 44, 0.35), rgba(8, 108, 90, 0.26)),
     url("https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1800&q=80");
   background-size: cover;
   background-position: center;
@@ -285,7 +285,7 @@ select {
 
 .gov-login-page[data-selected-role="government"] {
   background:
-    linear-gradient(120deg, rgba(50, 14, 18, 0.58), rgba(120, 32, 44, 0.42)),
+    linear-gradient(120deg, rgba(50, 14, 18, 0.36), rgba(120, 32, 44, 0.26)),
     url("https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1800&q=80");
   background-size: cover;
   background-position: center;
@@ -488,6 +488,7 @@ select {
   gap: 14px;
   font-size: 16px;
   font-weight: 700;
+  color: #ffffff;
 }
 
 .gov-login-brand-mark,
@@ -2514,6 +2515,13 @@ select {
     linear-gradient(135deg, #eef3f7 0%, #dfe8f2 45%, #cbdcff 100%);
 }
 
+/* 登录/注册页品牌颜色 */
+.gov-login-page .gov-login-brand,
+.auth-register-page .gov-login-brand,
+.auth-register-aside .gov-login-brand {
+  color: #111827 !important;
+}
+
 .gov-login-page::before {
   content: none;
 }
@@ -3457,7 +3465,7 @@ select {
   align-items: flex-start;
   justify-content: flex-start;
   gap: 0;
-  padding: 0;
+  padding: 52px 0 0;
   color: #18263a;
   background: transparent;
   text-align: left;
@@ -5968,6 +5976,52 @@ select {
   animation: loginCornerFloat 8s ease-in-out infinite;
 }
 
+/* 登录/注册页返回按钮 */
+.login-back-btn {
+  position: fixed;
+  top: 34px;
+  right: 38px;
+  z-index: 100;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(6px);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 180ms ease, border-color 180ms ease;
+}
+
+.login-back-btn--corner {
+  top: 34px;
+  right: auto;
+  left: 38px;
+}
+
+/* 注册页返回按钮深色 */
+.auth-register-page .login-back-btn {
+  color: #334155;
+  border-color: rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.auth-register-page .login-back-btn:hover {
+  color: #111827;
+  background: rgba(0, 0, 0, 0.12);
+  border-color: rgba(0, 0, 0, 0.3);
+}
+
+.login-back-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.6);
+  color: #ffffff;
+}
+
 /* 响应式 */
 @media (max-width: 860px) {
   .gov-login-brand-corner {
@@ -5983,6 +6037,13 @@ select {
 
   .login-corner-title {
     font-size: 14px;
+  }
+
+  .login-back-btn {
+    top: 20px;
+    right: 24px;
+    padding: 6px 12px;
+    font-size: 12px;
   }
 }
 

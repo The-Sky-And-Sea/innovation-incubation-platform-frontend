@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRightOutlined,
   AuditOutlined,
@@ -13,6 +14,7 @@ import {
   TeamOutlined,
 } from "@ant-design/icons";
 import BrandLogo from "../components/BrandLogo";
+import AuthRouteTransition from "../components/AuthRouteTransition";
 
 const libraryColumns = [
   {
@@ -78,18 +80,41 @@ const quoteCards = [
 const marqueeItems = ["企业端", "载体端", "政务端", "入驻申请", "政策申报", "文件管理", "审核流转", "绩效考核", "智能辅助", "通知中心"];
 
 export default function HomePage() {
+  const navigate = useNavigate();
+  const [routeTransitioning, setRouteTransitioning] = useState(false);
+  const routeTimerRef = useRef<number | null>(null);
+
+  const smoothScrollTo = (selector: string) => {
+    const el = document.querySelector(selector);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  const handleNavClick = (e: React.MouseEvent, selector: string) => {
+    e.preventDefault();
+    smoothScrollTo(selector);
+  };
+
+  const handleLoginClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setRouteTransitioning(true);
+    routeTimerRef.current = window.setTimeout(() => navigate("/login"), 520);
+  };
+
   return (
     <div className="public-home-page mobbin-home">
+      <AuthRouteTransition active={routeTransitioning} />
       <header className="mobbin-home-nav">
         <Link to="/" className="mobbin-home-brand" aria-label="创新创业孵化载体管理平台首页">
           <BrandLogo />
           <strong>孵化平台</strong>
         </Link>
         <nav aria-label="首页导航">
-          <a href="#patterns">业务库</a>
-          <a href="#flows">流程</a>
-          <a href="#comments">反馈</a>
-          <Link to="/login">登录</Link>
+          <a href="#patterns" onClick={(e) => handleNavClick(e, "#patterns")}>业务库</a>
+          <a href="#flows" onClick={(e) => handleNavClick(e, "#flows")}>流程</a>
+          <a href="#comments" onClick={(e) => handleNavClick(e, "#comments")}>反馈</a>
+          <a href="/login" onClick={handleLoginClick}>登录</a>
           <Link to="/register" className="mobbin-home-join">
             注册
           </Link>
@@ -104,9 +129,9 @@ export default function HomePage() {
           <h1>发现真实可用的孵化协同工作台。</h1>
           <p>面向企业、载体和政务三端，把入驻、材料、政策、审核与通知流程组织成一个清晰入口。</p>
           <div className="mobbin-hero-actions">
-            <Link to="/login" className="mobbin-primary">
-              进入登录
-            </Link>
+          <a href="/login" className="mobbin-primary" onClick={handleLoginClick}>
+            进入登录
+          </a>
             <Link to="/register" className="mobbin-secondary">
               创建账号
               <ArrowRightOutlined />
@@ -287,10 +312,10 @@ export default function HomePage() {
           <span>创新创业孵化载体管理平台</span>
         </div>
         <nav aria-label="页脚导航">
-          <a href="#patterns">业务库</a>
-          <a href="#flows">流程</a>
-          <a href="#comments">反馈</a>
-          <Link to="/login">登录</Link>
+          <a href="#patterns" onClick={(e) => handleNavClick(e, "#patterns")}>业务库</a>
+          <a href="#flows" onClick={(e) => handleNavClick(e, "#flows")}>流程</a>
+          <a href="#comments" onClick={(e) => handleNavClick(e, "#comments")}>反馈</a>
+          <a href="/login" onClick={handleLoginClick}>登录</a>
         </nav>
         <small>© 2026 Incubation Platform</small>
       </footer>
