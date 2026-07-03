@@ -123,9 +123,7 @@ export default function LoginPage() {
             </span>
             <span>创新创业孵化载体管理平台</span>
           </div>
-          <Title level={1}>注册创新孵化 ID，成为平台实名用户</Title>
-          <p>即可同步开通入驻管理、政策申报、绩效考核与多端审核业务。</p>
-          <span>企业服务平台、载体协同平台、政策兑现平台、数据开放平台</span>
+          <span className="login-shimmer-text" data-text="智能管理  协同发展">智能管理,协同发展</span>
           <a href="#login-panel">了解更多 →</a>
         </div>
       </section>

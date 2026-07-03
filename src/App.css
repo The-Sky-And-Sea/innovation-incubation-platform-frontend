@@ -6104,3 +6104,60 @@ select {
     background-attachment: scroll;
   }
 }
+
+/* ── 登录页流光文字效果 ── */
+.gov-login-copy .login-shimmer-text {
+  position: relative;
+  display: inline-block;
+  font-size: 3rem !important;
+  font-weight: 800 !important;
+  word-spacing: 0.2em !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  color: transparent !important;
+  background-color: #111827 !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  margin-top: 14px !important;
+  margin-bottom: 16px !important;
+  letter-spacing: 0.04em !important;
+}
+
+@media (max-width: 1100px) {
+  .gov-login-copy .login-shimmer-text {
+    font-size: 2.2rem !important;
+  }
+}
+
+@media (max-width: 860px) {
+  .gov-login-copy .login-shimmer-text {
+    font-size: 1.6rem !important;
+    white-space: normal !important;
+    word-spacing: 0.1em !important;
+  }
+}
+
+.gov-login-copy .login-shimmer-text::after {
+  content: attr(data-text);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+  background-image: linear-gradient(90deg, transparent 0%, transparent 35%, rgba(255, 255, 255, 0.7) 45%, white 50%, rgba(255, 255, 255, 0.7) 55%, transparent 65%, transparent 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: loginShine 4s ease-in-out infinite;
+}
+
+@keyframes loginShine {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: -100% 50%;
+  }
+}
