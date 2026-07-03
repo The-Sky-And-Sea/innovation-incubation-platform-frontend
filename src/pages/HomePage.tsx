@@ -155,7 +155,7 @@ export default function HomePage() {
   return (
     <div className="public-home-page mobbin-home">
       <AuthRouteTransition active={routeTransitioning} />
-      <header className="mobbin-home-nav">
+      <header className="mobbin-home-nav reveal-nav">
         <Link to="/" className="mobbin-home-brand" aria-label="创新创业孵化载体管理平台首页">
           <BrandLogo />
           <strong>孵化平台</strong>
@@ -172,27 +172,31 @@ export default function HomePage() {
       </header>
 
       <main>
-        <section className="mobbin-hero">
-          <div className="mobbin-hero-icon" aria-hidden="true">
-            <BrandLogo variant="mark" />
+        <section className="mobbin-hero reveal-section">
+          <div className="reveal-heading-wrapper">
+            <div className="mobbin-hero-icon" aria-hidden="true">
+              <BrandLogo variant="mark" />
+            </div>
+            <h1 className="reveal-heading">发现真实可用的孵化协同工作台。</h1>
+            <p className="reveal-heading">面向企业、载体和政务三端，把入驻、材料、政策、审核与通知流程组织成一个清晰入口。</p>
           </div>
-          <h1>发现真实可用的孵化协同工作台。</h1>
-          <p>面向企业、载体和政务三端，把入驻、材料、政策、审核与通知流程组织成一个清晰入口。</p>
-          <div className="mobbin-hero-actions">
-          <a href="/login" className="mobbin-primary" onClick={handleLoginClick}>
-            进入登录
-          </a>
-            <Link to="/register" className="mobbin-secondary">
-              创建账号
-              <ArrowRightOutlined />
-            </Link>
-          </div>
-          <div className="mobbin-trust">
-            <span>覆盖核心业务场景</span>
-            <strong>企业服务</strong>
-            <strong>载体协同</strong>
-            <strong>政务治理</strong>
-            <strong>数据归档</strong>
+          <div className="reveal-body">
+            <div className="mobbin-hero-actions">
+            <a href="/login" className="mobbin-primary" onClick={handleLoginClick}>
+              进入登录
+            </a>
+              <Link to="/register" className="mobbin-secondary">
+                创建账号
+                <ArrowRightOutlined />
+              </Link>
+            </div>
+            <div className="mobbin-trust">
+              <span>覆盖核心业务场景</span>
+              <strong>企业服务</strong>
+              <strong>载体协同</strong>
+              <strong>政务治理</strong>
+              <strong>数据归档</strong>
+            </div>
           </div>
         </section>
 

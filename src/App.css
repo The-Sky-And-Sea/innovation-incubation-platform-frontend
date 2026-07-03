@@ -6178,24 +6178,71 @@ select {
   }
 }
 
+/* ── 顶部导航栏页面加载浮现 ── */
+.reveal-nav {
+  opacity: 0;
+  animation: navFadeIn 1.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+@keyframes navFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ── Hero 页面加载浮现动画 ── */
+.reveal-heading-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0;
+  animation: heroBlockIn 2.8s cubic-bezier(0.23, 1, 0.32, 1) 2.5s forwards;
+}
+
+@keyframes heroBlockIn {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mobbin-hero .reveal-body {
+  opacity: 0;
+  animation: heroBodyBlockIn 2.4s cubic-bezier(0.23, 1, 0.32, 1) 2.5s forwards;
+}
+
+@keyframes heroBodyBlockIn {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* ── 滚动触发浮现动画（标题先出，内容按顺序依次淡入） ── */
 .reveal-heading {
   opacity: 0;
   transform: translateY(28px);
-  transition: opacity 1.2s cubic-bezier(0.23, 1, 0.32, 1), transform 1.2s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: opacity 2.4s cubic-bezier(0.23, 1, 0.32, 1), transform 2.4s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .reveal-body > * {
   opacity: 0;
-  transition: opacity 0.9s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: opacity 1.8s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-.reveal-body > :nth-child(1) { transition-delay: 0.10s; }
-.reveal-body > :nth-child(2) { transition-delay: 0.20s; }
-.reveal-body > :nth-child(3) { transition-delay: 0.30s; }
-.reveal-body > :nth-child(4) { transition-delay: 0.40s; }
-.reveal-body > :nth-child(5) { transition-delay: 0.50s; }
-.reveal-body > :nth-child(6) { transition-delay: 0.60s; }
+.reveal-body > :nth-child(1) { transition-delay: 0.20s; }
+.reveal-body > :nth-child(2) { transition-delay: 0.40s; }
+.reveal-body > :nth-child(3) { transition-delay: 0.60s; }
+.reveal-body > :nth-child(4) { transition-delay: 0.80s; }
+.reveal-body > :nth-child(5) { transition-delay: 1.00s; }
+.reveal-body > :nth-child(6) { transition-delay: 1.20s; }
 
 .is-revealed .reveal-heading {
   opacity: 1;
