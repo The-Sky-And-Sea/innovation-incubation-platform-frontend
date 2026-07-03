@@ -6189,3 +6189,31 @@ select {
     transform: translateY(0) translateZ(0);
   }
 }
+
+/* ── 滚动触发浮现动画（标题先出，内容按顺序依次淡入） ── */
+.reveal-heading {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 1.2s cubic-bezier(0.23, 1, 0.32, 1), transform 1.2s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.reveal-body > * {
+  opacity: 0;
+  transition: opacity 0.9s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.reveal-body > :nth-child(1) { transition-delay: 0.10s; }
+.reveal-body > :nth-child(2) { transition-delay: 0.20s; }
+.reveal-body > :nth-child(3) { transition-delay: 0.30s; }
+.reveal-body > :nth-child(4) { transition-delay: 0.40s; }
+.reveal-body > :nth-child(5) { transition-delay: 0.50s; }
+.reveal-body > :nth-child(6) { transition-delay: 0.60s; }
+
+.is-revealed .reveal-heading {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.is-revealed .reveal-body > * {
+  opacity: 1;
+}

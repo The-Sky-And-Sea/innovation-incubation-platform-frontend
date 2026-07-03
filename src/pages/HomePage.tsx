@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRightOutlined,
@@ -115,6 +115,23 @@ export default function HomePage() {
   const [activePatternTab, setActivePatternTab] = useState<PatternTab>("页面");
   const routeTimerRef = useRef<number | null>(null);
 
+  /* 滚动触发浮现动画 */
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-revealed");
+          }
+        });
+      },
+      { threshold: 0.18, rootMargin: "0px 0px -40px 0px" },
+    );
+    const sections = document.querySelectorAll(".reveal-section");
+    sections.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
   const smoothScrollTo = (selector: string) => {
     const el = document.querySelector(selector);
     if (el) {
@@ -221,7 +238,8 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="mobbin-stats">
+        {/* 大块 1: 一个持续扩展的业务库 */}
+        <section className="mobbin-stats reveal-section">
           <div className="mobbin-floating-icon is-enterprise">
             <TeamOutlined />
           </div>
@@ -234,78 +252,90 @@ export default function HomePage() {
           <div className="mobbin-floating-icon is-file">
             <FileSearchOutlined />
           </div>
-          <span>一个持续扩展的业务库</span>
-          <strong>3 端工作台</strong>
-          <strong>18+ 核心页面</strong>
-          <em>6 条主流程</em>
+          <span className="reveal-heading">一个持续扩展的业务库</span>
+          <div className="reveal-body">
+            <strong>3 端工作台</strong>
+            <strong>18+ 核心页面</strong>
+            <em>6 条主流程</em>
+          </div>
         </section>
 
-        <section className="mobbin-patterns-showcase" id="flows">
-          <h2>几秒钟找到业务模式。</h2>
-          <div className="mobbin-tabs" aria-label="业务模式分类">
-            {patternTabs.map((tab) => (
-              <span
-                key={tab}
-                className={activePatternTab === tab ? "mobbin-tab-active" : ""}
-                onClick={() => setActivePatternTab(tab)}
-              >
-                {tab}
-              </span>
-            ))}
+        {/* 大块 2: 几秒钟找到业务模式 */}
+        <section className="mobbin-patterns-showcase reveal-section" id="flows">
+          <h2 className="reveal-heading">几秒钟找到业务模式。</h2>
+          <div className="reveal-body">
+            <div className="mobbin-tabs" aria-label="业务模式分类">
+              {patternTabs.map((tab) => (
+                <span
+                  key={tab}
+                  className={activePatternTab === tab ? "mobbin-tab-active" : ""}
+                  onClick={() => setActivePatternTab(tab)}
+                >
+                  {tab}
+                </span>
+              ))}
+            </div>
+            <div className="mobbin-screen-rail" key={activePatternTab}>
+              {currentPatterns.map((screen) => (
+                <article key={screen.title} className={`mobbin-phone-card is-${screen.tone} mobbin-card-wave`}>
+                  <small>{screen.meta}</small>
+                  <h3>{screen.title}</h3>
+                  <div>
+                    {screen.lines.map((line) => (
+                      <span key={line}>{line}</span>
+                    ))}
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
-          <div className="mobbin-screen-rail" key={activePatternTab}>
-            {currentPatterns.map((screen) => (
-              <article key={screen.title} className={`mobbin-phone-card is-${screen.tone} mobbin-card-wave`}>
-                <small>{screen.meta}</small>
-                <h3>{screen.title}</h3>
-                <div>
-                  {screen.lines.map((line) => (
-                    <span key={line}>{line}</span>
-                  ))}
+        </section>
+
+        {/* 大块 3: 探索完整用户旅程 */}
+        <section className="mobbin-flow-duo reveal-section">
+          <h2 className="reveal-heading">探索完整用户旅程。</h2>
+          <div className="reveal-body">
+            <div className="mobbin-duo-grid">
+              <article>
+                <div className="mobbin-video-mock">
+                  <span />
+                  <strong>企业入驻</strong>
                 </div>
+                <h3>流程演示</h3>
+                <p>从账号创建、材料上传到载体审核，按真实办理顺序展示。</p>
               </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="mobbin-flow-duo">
-          <h2>探索完整用户旅程。</h2>
-          <div className="mobbin-duo-grid">
-            <article>
-              <div className="mobbin-video-mock">
-                <span />
-                <strong>企业入驻</strong>
-              </div>
-              <h3>流程演示</h3>
-              <p>从账号创建、材料上传到载体审核，按真实办理顺序展示。</p>
-            </article>
-            <article>
-              <div className="mobbin-prototype-mock">
-                <span>政务端</span>
-                <strong>发布政策</strong>
-                <em>申报条件 → 材料清单 → 结果通知</em>
-              </div>
-              <h3>交互原型</h3>
-              <p>点击登录后进入现有登录页，继续选择角色进入对应工作台。</p>
-            </article>
-          </div>
-        </section>
-
-        <section className="mobbin-creation">
-          <h2>从入口到办理。</h2>
-          <div className="mobbin-feature-row">
-            {featureCards.map((feature) => (
-              <article key={feature.title}>
-                <div>{feature.icon}</div>
-                <h3>{feature.title}</h3>
-                <p>{feature.text}</p>
+              <article>
+                <div className="mobbin-prototype-mock">
+                  <span>政务端</span>
+                  <strong>发布政策</strong>
+                  <em>申报条件 → 材料清单 → 结果通知</em>
+                </div>
+                <h3>交互原型</h3>
+                <p>点击登录后进入现有登录页，继续选择角色进入对应工作台。</p>
               </article>
-            ))}
+            </div>
           </div>
         </section>
 
-        <section className="mobbin-comments" id="comments">
-          <h2>平台用户会怎么使用。</h2>
+        {/* 大块 4: 从入口到办理 */}
+        <section className="mobbin-creation reveal-section">
+          <h2 className="reveal-heading">从入口到办理。</h2>
+          <div className="reveal-body">
+            <div className="mobbin-feature-row">
+              {featureCards.map((feature) => (
+                <article key={feature.title}>
+                  <div>{feature.icon}</div>
+                  <h3>{feature.title}</h3>
+                  <p>{feature.text}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="mobbin-comments reveal-section" id="comments">
+          <h2 className="reveal-heading">平台用户会怎么使用。</h2>
+          <div className="reveal-body">
           <div className="mobbin-comment-grid">
             {quoteCards.map((quote, index) => (
               <article key={`${quote.name}-${quote.role}`}>
@@ -319,26 +349,30 @@ export default function HomePage() {
               </article>
             ))}
           </div>
+          </div>
         </section>
 
-        <section className="mobbin-final-cta">
-          <h2>别再让流程散在各处。</h2>
-          <p>先从统一入口登录，再进入企业、载体或政务端工作台。</p>
-          <div>
-            <Link to="/login" className="mobbin-primary">
-              <LoginOutlined />
-              登录平台
-            </Link>
-            <Link to="/register" className="mobbin-secondary">
-              注册账号
-              <ArrowRightOutlined />
-            </Link>
-          </div>
-          <div className="mobbin-marquee" aria-hidden="true">
+        {/* 大块 5: 别再让流程散在各处 */}
+        <section className="mobbin-final-cta reveal-section">
+          <h2 className="reveal-heading">别再让流程散在各处。</h2>
+          <div className="reveal-body">
+            <p>先从统一入口登录，再进入企业、载体或政务端工作台。</p>
             <div>
-              {[...marqueeItems, ...marqueeItems].map((item, index) => (
-                <span key={`${item}-${index}`}>{item}</span>
-              ))}
+              <Link to="/login" className="mobbin-primary">
+                <LoginOutlined />
+                登录平台
+              </Link>
+              <Link to="/register" className="mobbin-secondary">
+                注册账号
+                <ArrowRightOutlined />
+              </Link>
+            </div>
+            <div className="mobbin-marquee" aria-hidden="true">
+              <div>
+                {[...marqueeItems, ...marqueeItems].map((item, index) => (
+                  <span key={`${item}-${index}`}>{item}</span>
+                ))}
+              </div>
             </div>
           </div>
         </section>
