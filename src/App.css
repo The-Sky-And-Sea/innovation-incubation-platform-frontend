@@ -5307,9 +5307,10 @@ select {
   white-space: nowrap;
 }
 
-.mobbin-tabs span:first-child {
-  background: #ffffff;
-  color: #111111;
+.mobbin-tab-active {
+  background: #ffffff !important;
+  color: #111111 !important;
+  cursor: pointer;
 }
 
 .mobbin-screen-rail {
