@@ -41,6 +41,7 @@ import { useAuthStore } from "../store/authStore";
 import { useNotificationStore } from "../store/notificationStore";
 import type { UserRole } from "../types";
 import Menu from "../components/StaggeredMenu";
+import GlobalAiAssistant from "../components/GlobalAiAssistant";
 
 const { Header, Content } = Layout;
 const { Text } = Typography;
@@ -345,6 +346,8 @@ export default function MainLayout() {
           </div>
         </Content>
       </Layout>
+
+      <GlobalAiAssistant />
 
       <Modal
         open={commandOpen}

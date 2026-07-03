@@ -33,79 +33,81 @@ export default function EnterpriseDashboard() {
   const navigate = useNavigate();
 
   return (
-    <div className="role-dashboard role-dashboard-enterprise">
-      <section className="role-hero">
-        <div>
-          <Space wrap>
-            <Tag color="blue" icon={<SafetyCertificateOutlined />}>
-              企业端
-            </Tag>
-            <Text>入驻、文件、政策申报统一办理</Text>
-          </Space>
-          <h1>把企业材料、申报记录和政策机会放在同一个工作台</h1>
-          <p>优先完善基础信息与文件材料，随后查看载体和政策机会，持续跟踪审核进度。</p>
-          <div className="hero-action-row">
-            <Button type="primary" icon={<UploadOutlined />} onClick={() => navigate("/enterprise/files")}>
-              上传材料
-            </Button>
-            <Button icon={<BankOutlined />} onClick={() => navigate("/enterprise/carriers")}>
-              浏览载体
-            </Button>
+    <div className="role-dashboard role-dashboard-enterprise enterprise-dashboard-ai-layout">
+      <div className="enterprise-dashboard-main">
+        <section className="role-hero">
+          <div>
+            <Space wrap>
+              <Tag color="blue" icon={<SafetyCertificateOutlined />}>
+                企业端
+              </Tag>
+              <Text>入驻、文件、政策申报统一办理</Text>
+            </Space>
+            <h1>把企业材料、申报记录和政策机会放在同一个工作台</h1>
+            <p>优先完善基础信息与文件材料，随后查看载体和政策机会，持续跟踪审核进度。</p>
+            <div className="hero-action-row">
+              <Button type="primary" icon={<UploadOutlined />} onClick={() => navigate("/enterprise/files")}>
+                上传材料
+              </Button>
+              <Button icon={<BankOutlined />} onClick={() => navigate("/enterprise/carriers")}>
+                浏览载体
+              </Button>
+            </div>
           </div>
-        </div>
-        <div className="role-hero-panel">
-          <Text>资料完整度</Text>
-          <Progress percent={68} strokeColor="#1f78d8" />
-          <small>补齐企业地址、联系人和协议文件后可提升办理效率</small>
-        </div>
-      </section>
+          <div className="role-hero-panel">
+            <Text>资料完整度</Text>
+            <Progress percent={68} strokeColor="#1f78d8" />
+            <small>补齐企业地址、联系人和协议文件后可提升办理效率</small>
+          </div>
+        </section>
 
-      <Row gutter={[16, 16]}>
-        {stats.map((item, index) => (
-          <Col xs={24} sm={12} lg={6} key={item.title}>
-            <SpotlightCard
-              className={`role-stat-card role-stat-${item.tone}`}
-              spotlightColor={statSpotlightColor}
-              style={{ animationDelay: `${index * 70}ms` }}
-            >
-              <span className="role-stat-icon">{item.icon}</span>
-              <Text>{item.title}</Text>
-              <strong>
-                <CountUp to={item.value} />
-                <span>{item.suffix}</span>
-              </strong>
-              <small>{item.label}</small>
-            </SpotlightCard>
+        <Row gutter={[16, 16]}>
+          {stats.map((item, index) => (
+            <Col xs={24} sm={12} lg={6} key={item.title}>
+              <SpotlightCard
+                className={`role-stat-card role-stat-${item.tone}`}
+                spotlightColor={statSpotlightColor}
+                style={{ animationDelay: `${index * 70}ms` }}
+              >
+                <span className="role-stat-icon">{item.icon}</span>
+                <Text>{item.title}</Text>
+                <strong>
+                  <CountUp to={item.value} />
+                  <span>{item.suffix}</span>
+                </strong>
+                <small>{item.label}</small>
+              </SpotlightCard>
+            </Col>
+          ))}
+        </Row>
+
+        <Row gutter={[16, 16]}>
+          <Col xs={24} lg={14}>
+            <Card className="role-section-card" variant="borderless" title="今日建议">
+              <div className="role-task-list">
+                {tasks.map((item) => (
+                  <button key={item.title} type="button" onClick={() => navigate(item.path)}>
+                    <span>
+                      <strong>{item.title}</strong>
+                      <small>{item.status}</small>
+                    </span>
+                    <RightOutlined />
+                  </button>
+                ))}
+              </div>
+            </Card>
           </Col>
-        ))}
-      </Row>
-
-      <Row gutter={[16, 16]}>
-        <Col xs={24} lg={14}>
-          <Card className="role-section-card" variant="borderless" title="今日建议">
-            <div className="role-task-list">
-              {tasks.map((item) => (
-                <button key={item.title} type="button" onClick={() => navigate(item.path)}>
-                  <span>
-                    <strong>{item.title}</strong>
-                    <small>{item.status}</small>
-                  </span>
-                  <RightOutlined />
-                </button>
-              ))}
-            </div>
-          </Card>
-        </Col>
-        <Col xs={24} lg={10}>
-          <Card className="role-section-card" variant="borderless" title="申报进度">
-            <div className="role-progress-stack">
-              <div><span>材料准备</span><Progress percent={68} showInfo={false} /></div>
-              <div><span>载体对接</span><Progress percent={42} showInfo={false} /></div>
-              <div><span>政策匹配</span><Progress percent={55} showInfo={false} /></div>
-            </div>
-          </Card>
-        </Col>
-      </Row>
+          <Col xs={24} lg={10}>
+            <Card className="role-section-card" variant="borderless" title="申报进度">
+              <div className="role-progress-stack">
+                <div><span>材料准备</span><Progress percent={68} showInfo={false} /></div>
+                <div><span>载体对接</span><Progress percent={42} showInfo={false} /></div>
+                <div><span>政策匹配</span><Progress percent={55} showInfo={false} /></div>
+              </div>
+            </Card>
+          </Col>
+        </Row>
+      </div>
     </div>
   );
 }
