@@ -1,10 +1,11 @@
-import React from "react";
 import ReactDOM from "react-dom/client";
 import { ConfigProvider } from "antd";
 import zhCN from "antd/locale/zh_CN";
 import { RouterProvider } from "react-router-dom";
+import MouseTrailGrid from "./components/MouseTrailGrid";
 import router from "./router";
 import "./App.css";
+import "./components/MouseTrailGrid.css";
 
 const themeTokens = {
   colorPrimary: "#14508c",
@@ -30,7 +31,6 @@ const themeTokens = {
 };
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
     <ConfigProvider
       locale={zhCN}
       theme={{
@@ -74,7 +74,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
         },
       }}
     >
+      <MouseTrailGrid />
       <RouterProvider router={router} />
-    </ConfigProvider>
-  </React.StrictMode>,
+    </ConfigProvider>,
 );
