@@ -6264,7 +6264,55 @@ select {
   line-height: 1.55;
 }
 
-/* ── 首页背景图片 + 遮挡块效果 ── */
+/* ── Hero SVG 文字描边动画 ── */
+.hero-stroke-svg {
+  width: min(780px, 90vw);
+  height: auto;
+  display: block;
+  margin: 0 auto 24px;
+}
+
+.hero-stroke-svg text {
+  font-size: 64px;
+  font-weight: 900;
+  letter-spacing: 6px;
+  animation: heroStrokeAnim 6s infinite alternate;
+  fill: rgba(20, 80, 140, 0);
+  stroke: rgba(54, 95, 160, 0.8);
+  stroke-dasharray: 0 50%;
+  stroke-dashoffset: 25%;
+  stroke-width: 0.5;
+}
+
+@keyframes heroStrokeAnim {
+  0% {
+    fill: rgba(20, 80, 140, 0);
+    stroke: rgba(54, 95, 160, 0.8);
+    stroke-dashoffset: 25%;
+    stroke-dasharray: 0 50%;
+    stroke-width: 0.3;
+  }
+  50% {
+    fill: rgba(20, 80, 140, 0);
+    stroke: rgba(54, 95, 160, 0.9);
+    stroke-width: 0.6;
+  }
+  70% {
+    fill: rgba(20, 80, 140, 0.02);
+    stroke: rgba(54, 95, 160, 0.7);
+    stroke-width: 1;
+  }
+  90%,
+  100% {
+    fill: rgba(20, 80, 140, 0.95);
+    stroke: rgba(54, 95, 160, 0);
+    stroke-dashoffset: -25%;
+    stroke-dasharray: 50% 0;
+    stroke-width: 0;
+  }
+}
+
+/* ── 首页背景纯白 ── */
 .mobbin-hero,
 .mobbin-product-stage,
 .mobbin-stats,
@@ -6273,53 +6321,7 @@ select {
 .mobbin-creation,
 .mobbin-comments,
 .mobbin-final-cta {
-  position: relative;
-  background:
-    url("https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1800&q=80")
-    fixed 0 / cover;
-}
-
-/* 半透明遮罩让背景图变淡 */
-.mobbin-hero::before,
-.mobbin-product-stage::before,
-.mobbin-stats::before,
-.mobbin-patterns-showcase::before,
-.mobbin-flow-duo::before,
-.mobbin-creation::before,
-.mobbin-comments::before,
-.mobbin-final-cta::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.65);
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* 确保内容在遮罩层之上（排除 absolute 定位的浮动元素） */
-.mobbin-hero > :not(.mobbin-floating-icon),
-.mobbin-product-stage > :not(.mobbin-floating-icon),
-.mobbin-stats > :not(.mobbin-floating-icon),
-.mobbin-patterns-showcase > :not(.mobbin-floating-icon),
-.mobbin-flow-duo > :not(.mobbin-floating-icon),
-.mobbin-creation > :not(.mobbin-floating-icon),
-.mobbin-comments > :not(.mobbin-floating-icon),
-.mobbin-final-cta > :not(.mobbin-floating-icon) {
-  position: relative;
-  z-index: 1;
-}
-
-@media (max-width: 720px) {
-  .mobbin-hero,
-  .mobbin-product-stage,
-  .mobbin-stats,
-  .mobbin-patterns-showcase,
-  .mobbin-flow-duo,
-  .mobbin-creation,
-  .mobbin-comments,
-  .mobbin-final-cta {
-    background-attachment: scroll;
-  }
+  background: #ffffff;
 }
 
 /* ── 登录页流光文字效果 ── */

@@ -177,10 +177,12 @@ export default function HomePage() {
 
       <main>
         <section className="mobbin-hero reveal-section">
+          <svg className="hero-stroke-svg" viewBox="0 0 1000 160" aria-label="创新创业孵化载体管理平台" aria-hidden="true">
+            <text x="50%" y="50%" textAnchor="middle" dominantBaseline="central">
+              创新创业孵化载体管理平台
+            </text>
+          </svg>
           <div className="reveal-heading-wrapper">
-            <div className="mobbin-hero-icon" aria-hidden="true">
-              <BrandLogo variant="mark" />
-            </div>
             <h1 className="reveal-heading">发现真实可用的孵化协同工作台。</h1>
             <p className="reveal-heading">面向企业、载体和政务三端，把入驻、材料、政策、审核与通知流程组织成一个清晰入口。</p>
           </div>
