@@ -101,26 +101,26 @@ const roleMenuMap: Record<UserRole, MenuItem[]> = {
 };
 
 const ROLE_META: Record<UserRole, { label: string; scope: string; primary: string }> = {
-  enterprise: { label: "企业端", scope: "申报服务", primary: "#14508c" },
-  carrier: { label: "载体端", scope: "审核协同", primary: "#0b7568" },
-  government: { label: "政务端", scope: "监督治理", primary: "#9a5b12" },
+  enterprise: { label: "企业端", scope: "申报服务", primary: "#1f78d8" },
+  carrier: { label: "载体端", scope: "审核协同", primary: "#11a992" },
+  government: { label: "政务端", scope: "监督治理", primary: "#d63b5c" },
 };
 
 const ROLE_MENU_THEME: Record<UserRole, { accent: string; colors: string[]; spark: string }> = {
   enterprise: {
-    accent: "#14508c",
-    colors: ["#d7eafa", "#8bbbe8", "#14508c"],
-    spark: "#64a8ef",
+    accent: "#1f78d8",
+    colors: ["#dceeff", "#8fc8ff", "#1f78d8"],
+    spark: "#78bdff",
   },
   carrier: {
-    accent: "#0b7568",
-    colors: ["#d9f3ee", "#77d8c7", "#0b7568"],
-    spark: "#47d8c2",
+    accent: "#11a992",
+    colors: ["#dcfaf5", "#7ee4d2", "#11a992"],
+    spark: "#58dccb",
   },
   government: {
-    accent: "#b83246",
-    colors: ["#fde7eb", "#ee8c9b", "#b83246"],
-    spark: "#ff8fa3",
+    accent: "#d63b5c",
+    colors: ["#ffe4ea", "#ff93a8", "#d63b5c"],
+    spark: "#ff8da4",
   },
 };
 
@@ -273,7 +273,7 @@ export default function MainLayout() {
                 closeOnItemClick={false}
                 colors={roleTheme.colors}
                 defaultOpen
-                displayItemNumbering
+                displayItemNumbering={false}
                 displaySocials={false}
                 logoText={roleMeta.scope}
                 menuButtonColor={roleTheme.accent}

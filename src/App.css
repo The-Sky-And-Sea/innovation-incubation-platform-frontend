@@ -9,14 +9,14 @@
   --color-ink-soft: #334155;
   --color-muted: #52647a;
   --color-muted-2: #6d7f95;
-  --color-primary: #14508c;
-  --color-primary-strong: #0f3d70;
-  --color-primary-soft: #e6f0fa;
-  --color-carrier: #0b7568;
-  --color-gov: #9a5b12;
+  --color-primary: #1f78d8;
+  --color-primary-strong: #1761b1;
+  --color-primary-soft: #e8f3ff;
+  --color-carrier: #11a992;
+  --color-gov: #d63b5c;
   --color-warning: #b7781f;
   --color-danger: #a7352f;
-  --color-success: #0b7568;
+  --color-success: #11a992;
   --color-border: #d7e2ee;
   --color-border-subtle: #e6edf5;
   --shadow-raised: 0 1px 2px rgba(16, 45, 77, 0.05), 0 4px 8px rgba(16, 45, 77, 0.05);
@@ -1701,9 +1701,9 @@ select {
 }
 
 .role-dashboard-enterprise {
-  --role-accent: #14508c;
-  --role-accent-soft: #e6f0fa;
-  --role-accent-border: #9cc4ea;
+  --role-accent: #1f78d8;
+  --role-accent-soft: #e8f3ff;
+  --role-accent-border: #a7d1fb;
   --role-accent-shadow: rgba(20, 80, 140, 0.16);
   --spotlight-color: rgba(20, 80, 140, 0.16);
 }
@@ -1714,9 +1714,9 @@ select {
 }
 
 .role-dashboard-carrier {
-  --role-accent: #0b7568;
-  --role-accent-soft: #e4f5f2;
-  --role-accent-border: #8fd3c7;
+  --role-accent: #11a992;
+  --role-accent-soft: #e5fbf7;
+  --role-accent-border: #96e4d8;
   --role-accent-shadow: rgba(11, 117, 104, 0.16);
   --spotlight-color: rgba(11, 117, 104, 0.16);
 }
@@ -2259,15 +2259,15 @@ select {
 
 .gov-command-hero {
   grid-template-columns: minmax(0, 1fr) 188px;
-  background: linear-gradient(135deg, #7d1f2e 0%, #98283a 56%, #842536 100%);
+  background: linear-gradient(135deg, #d63b5c 0%, #e24f70 56%, #f06d89 100%);
 }
 
 .role-dashboard-enterprise .role-hero {
-  background: #123f68;
+  background: linear-gradient(135deg, #1f78d8 0%, #2f91ea 58%, #50a9f6 100%);
 }
 
 .role-dashboard-carrier .role-hero {
-  background: linear-gradient(135deg, #0c5c55 0%, #0f6f65 58%, #0b5a52 100%);
+  background: linear-gradient(135deg, #11a992 0%, #19bfa8 58%, #3bd4bf 100%);
 }
 
 .hero-main-copy h1,
@@ -2307,7 +2307,7 @@ select {
 }
 
 .role-dashboard-carrier .role-hero .ant-tag {
-  color: #0b7568;
+  color: #11a992;
 }
 
 .gov-command-hero .hero-action-row .ant-btn-primary,
@@ -2318,27 +2318,27 @@ select {
 }
 
 .role-dashboard-enterprise .role-hero .hero-action-row .ant-btn-primary {
-  background: #1b6aa8;
+  background: #2f91ea;
 }
 
 .role-dashboard-enterprise .role-hero .hero-action-row .ant-btn-primary:hover {
-  background: #247bbb;
+  background: #50a9f6;
 }
 
 .gov-command-hero .hero-action-row .ant-btn-primary {
-  background: #b83246;
+  background: #d63b5c;
 }
 
 .gov-command-hero .hero-action-row .ant-btn-primary:hover {
-  background: #c43a4f;
+  background: #e24f70;
 }
 
 .role-dashboard-carrier .role-hero .hero-action-row .ant-btn-primary {
-  background: #118575;
+  background: #19bfa8;
 }
 
 .role-dashboard-carrier .role-hero .hero-action-row .ant-btn-primary:hover {
-  background: #159684;
+  background: #3bd4bf;
 }
 
 .gov-command-hero .hero-action-row .ant-btn:not(.ant-btn-primary),
@@ -2367,11 +2367,11 @@ select {
 }
 
 .role-dashboard-carrier .role-hero-panel .ant-progress-bg {
-  background: #0a8b7b;
+  background: #3bd4bf;
 }
 
 .role-dashboard-carrier .role-hero-panel .ant-progress-inner {
-  background: rgba(8, 78, 72, 0.58);
+  background: rgba(8, 122, 108, 0.32);
 }
 
 .gov-command-hero .ant-progress-circle-trail {
@@ -2379,7 +2379,7 @@ select {
 }
 
 .gov-command-hero .ant-progress-circle-path {
-  stroke: #c92e43;
+  stroke: #ff8da4;
 }
 
 .gov-command-hero .ant-progress-text {
@@ -4067,22 +4067,22 @@ select {
 }
 
 .app-shell[data-role="enterprise"] {
-  --role-primary: #14508c;
-  --role-spark: #64a8ef;
+  --role-primary: #1f78d8;
+  --role-spark: #78bdff;
 }
 
 .app-shell[data-role="carrier"] {
-  --role-primary: #0b7568;
-  --role-spark: #47d8c2;
+  --role-primary: #11a992;
+  --role-spark: #58dccb;
 }
 
 .app-shell[data-role="government"] {
-  --role-primary: #b83246;
-  --role-spark: #ff8fa3;
+  --role-primary: #d63b5c;
+  --role-spark: #ff8da4;
 }
 
 .app-shell {
-  --top-menu-panel-width: 360px;
+  --top-menu-panel-width: 280px;
   --top-menu-content-gap: 16px;
   --top-menu-content-offset: calc(var(--top-menu-panel-width) + var(--top-menu-content-gap));
   --top-menu-progress: 0;
@@ -4242,7 +4242,7 @@ select {
 }
 
 .top-staggered-menu .staggered-menu-panel {
-  padding: 24px 16px 18px;
+  padding: 24px 14px 18px;
   border-right: 1px solid color-mix(in srgb, var(--role-primary) 16%, #ffffff);
   background:
     radial-gradient(circle at 12% 12%, color-mix(in srgb, var(--role-primary) 12%, transparent), transparent 34%),
@@ -4252,7 +4252,12 @@ select {
 
 .top-staggered-menu .sm-panel-item {
   min-height: 44px;
+  padding-inline: 12px;
   border-radius: 10px;
+}
+
+.top-staggered-menu .sm-panel-list[data-numbering] .sm-panel-item::after {
+  display: none;
 }
 
 .top-staggered-menu .sm-panel-item:hover,

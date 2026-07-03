@@ -54,7 +54,7 @@ export default function CarrierDashboard() {
         </div>
         <div className="role-hero-panel">
           <Text>审核响应率</Text>
-          <Progress percent={82} strokeColor="#0b7568" />
+          <Progress percent={82} strokeColor="#11a992" />
           <small>本周平均响应 4.8 小时，优于平台均值</small>
         </div>
       </section>

@@ -55,7 +55,7 @@ export default function EnterpriseDashboard() {
         </div>
         <div className="role-hero-panel">
           <Text>资料完整度</Text>
-          <Progress percent={68} strokeColor="#14508c" />
+          <Progress percent={68} strokeColor="#1f78d8" />
           <small>补齐企业地址、联系人和协议文件后可提升办理效率</small>
         </div>
       </section>

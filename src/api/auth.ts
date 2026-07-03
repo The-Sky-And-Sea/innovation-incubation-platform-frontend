@@ -9,13 +9,9 @@ function normalizeUser(user: BackendUserInfo): UserInfo {
   };
 }
 
-// 新版后端登录参数：企业用 credit_code，载体/政府用 phone
+// 后端登录接口统一用 credential 承载账号、手机号或统一社会信用代码。
 function buildLoginPayload(credential: string, password: string, role: UserRole) {
-  const base = { password, role };
-  if (role === "enterprise") {
-    return { ...base, credit_code: credential };
-  }
-  return { ...base, phone: credential };
+  return { credential, password, role };
 }
 
 export async function loginAuth(
@@ -48,6 +44,6 @@ export async function registerAuth(params: RegisterRequest): Promise<ApiResponse
 
 export async function getMe(): Promise<ApiResponse<UserInfo>> {
   const { get } = await import("../utils/request");
-  const res = await get<BackendUserInfo>("/users/me");
+  const res = await get<BackendUserInfo>("/auth/me");
   return { ...res, data: normalizeUser(res.data) };
 }
