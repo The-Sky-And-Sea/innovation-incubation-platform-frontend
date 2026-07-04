@@ -1,18 +1,22 @@
-import type { PointerEvent } from "react";
+import type { CSSProperties, PointerEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   CloseOutlined,
+  CopyOutlined,
   DatabaseOutlined,
+  DeleteOutlined,
+  EditOutlined,
   HistoryOutlined,
   PlusOutlined,
-  SendOutlined,
 } from "@ant-design/icons";
 import {
   createAgentSession,
+  editAgentMessageStream,
   getAgentQuickPrompts,
   getAgentSession,
   getAgentToolCatalog,
+  deleteAgentSession,
   listAgentSessions,
   sendAgentMessageStream,
   type AgentChatSession,
@@ -20,11 +24,12 @@ import {
 import { useAuthStore } from "../store/authStore";
 import type { UserRole } from "../types";
 
-type AssistantTab = "chat" | "assistant" | "workbench";
+type AssistantTab = "chat" | "workbench";
 type ChatMessage = {
   id: number | string;
   role: "user" | "assistant";
   text: string;
+  createdAt?: string;
   status?: "error";
 };
 
@@ -67,14 +72,112 @@ const roleAssistantMeta: Record<
   },
 };
 
-function toChatMessages(messages: Array<{ id: number; role: string; content: string }>): ChatMessage[] {
-  return messages
-    .filter((message) => (message.role === "user" || message.role === "assistant") && message.content)
-    .map((message) => ({
-      id: message.id,
-      role: message.role as "user" | "assistant",
-      text: message.content,
-    }));
+type AgentMessageLike = {
+  id?: number | string;
+  ID?: number | string;
+  role?: string;
+  Role?: string;
+  content?: string;
+  Content?: string;
+  message?: string;
+  Message?: string;
+  text?: string;
+  Text?: string;
+  created_at?: string;
+  createdAt?: string;
+  CreatedAt?: string;
+};
+
+function readAgentMessages(source: unknown): AgentMessageLike[] {
+  if (Array.isArray(source)) return source as AgentMessageLike[];
+  if (!source || typeof source !== "object") return [];
+
+  const record = source as Record<string, unknown>;
+  for (const key of ["messages", "Messages", "records", "Records", "items", "Items", "list", "List", "data", "Data"]) {
+    const messages = readAgentMessages(record[key]);
+    if (messages.length > 0) return messages;
+  }
+
+  return [];
+}
+
+function getAgentMessageId(message: AgentMessageLike, index: number): number | string {
+  return message.id || message.ID || `history-message-${index}`;
+}
+
+function getAgentMessageRole(message: AgentMessageLike): "user" | "assistant" | null {
+  const role = String(message.role || message.Role || "").toLowerCase();
+  if (role === "user") return "user";
+  if (role === "assistant" || role === "ai") return "assistant";
+  return null;
+}
+
+function getAgentMessageText(message: AgentMessageLike): string {
+  return String(message.content || message.Content || message.message || message.Message || message.text || message.Text || "").trim();
+}
+
+function getAgentMessageTime(message: AgentMessageLike): string | undefined {
+  return message.created_at || message.createdAt || message.CreatedAt;
+}
+
+function toChatMessages(source: unknown): ChatMessage[] {
+  return readAgentMessages(source).flatMap((message, index) => {
+    const role = getAgentMessageRole(message);
+    const text = getAgentMessageText(message);
+    if (!role || !text) return [];
+    return [
+      {
+        id: getAgentMessageId(message, index),
+        role,
+        text,
+        createdAt: getAgentMessageTime(message),
+      },
+    ];
+  });
+}
+
+function mergeRefreshedMessages(
+  currentMessages: ChatMessage[],
+  refreshedMessages: unknown,
+): ChatMessage[] {
+  const persistedMessages = toChatMessages(refreshedMessages);
+  const allCurrentMessagesPersisted = currentMessages.every((message) =>
+    typeof message.id === "number"
+      ? persistedMessages.some((persistedMessage) => persistedMessage.id === message.id)
+      : persistedMessages.some((persistedMessage) => persistedMessage.role === message.role && persistedMessage.text === message.text),
+  );
+  if (allCurrentMessagesPersisted && persistedMessages.length >= currentMessages.length) return persistedMessages;
+
+  const usedPersistedIndexes = new Set<number>();
+  return currentMessages.map((message) => {
+    if (typeof message.id === "number") {
+      return persistedMessages.find((persistedMessage) => persistedMessage.id === message.id) || message;
+    }
+
+    const persistedIndex = persistedMessages.findIndex(
+      (persistedMessage, index) =>
+        !usedPersistedIndexes.has(index) && persistedMessage.role === message.role && persistedMessage.text === message.text,
+    );
+    if (persistedIndex === -1) return message;
+
+    usedPersistedIndexes.add(persistedIndex);
+    const persistedMessage = persistedMessages[persistedIndex];
+    return {
+      ...message,
+      id: persistedMessage.id,
+      createdAt: persistedMessage.createdAt || message.createdAt,
+    };
+  });
+}
+
+function formatMessageTime(value?: string): string {
+  const date = value ? new Date(value) : new Date();
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleTimeString("zh-CN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
 }
 
 export default function GlobalAiAssistant() {
@@ -87,10 +190,17 @@ export default function GlobalAiAssistant() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [sessions, setSessions] = useState<AgentChatSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<number | null>(null);
+  const [selectedSessionIds, setSelectedSessionIds] = useState<Set<number>>(new Set());
+  const [deletingSessionIds, setDeletingSessionIds] = useState<Set<number>>(new Set());
+  const [sessionManageMode, setSessionManageMode] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
   const [sessionsLoading, setSessionsLoading] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
   const [streamingText, setStreamingText] = useState("");
+  const [editingMessageId, setEditingMessageId] = useState<number | string | null>(null);
+  const [editingText, setEditingText] = useState("");
   const assistantElementRef = useRef<HTMLElement | null>(null);
   const nextMessageIdRef = useRef(1);
   const sessionsLoadedRef = useRef(false);
@@ -107,28 +217,38 @@ export default function GlobalAiAssistant() {
 
   const quickPrompts = useMemo(() => getAgentQuickPrompts(role), [role]);
   const toolCatalog = useMemo(() => getAgentToolCatalog(role), [role]);
+  const activeTabOffset = activeTab === "chat" ? "0px" : "calc(100% + 4px)";
 
   const currentSession = sessions.find((session) => session.id === currentSessionId);
   const sessionTitle = currentSession?.title || (messages.length === 0 ? "新会话" : messages[0].text.slice(0, 16));
-  const connectionLabel = loading ? "处理中" : "已连接";
+  const editableMessageKey = [...messages].reverse().find((message) => message.role === "user")?.id;
 
   const showNotice = useCallback((text: string) => {
     setNotice(text);
     window.setTimeout(() => setNotice(""), 1800);
   }, []);
 
-  const loadSessions = useCallback(async () => {
+  const loadSessions = useCallback(async (preserveSession?: AgentChatSession) => {
     setSessionsLoading(true);
     try {
       const nextSessions = await listAgentSessions();
-      setSessions(nextSessions);
+      setSessions((items) => {
+        const preservedSession =
+          preserveSession ||
+          (currentSessionId ? items.find((session) => session.id === currentSessionId) : undefined);
+        if (!preservedSession || nextSessions.some((session) => session.id === preservedSession.id)) {
+          return nextSessions;
+        }
+        return [preservedSession, ...nextSessions];
+      });
+      setSelectedSessionIds((ids) => new Set([...ids].filter((id) => nextSessions.some((session) => session.id === id))));
       sessionsLoadedRef.current = true;
     } catch (err) {
       showNotice((err as Error).message || "会话列表加载失败");
     } finally {
       setSessionsLoading(false);
     }
-  }, [showNotice]);
+  }, [currentSessionId, showNotice]);
 
   useEffect(() => {
     if (assistantOpen && !sessionsLoadedRef.current) {
@@ -189,18 +309,25 @@ export default function GlobalAiAssistant() {
     setMessages([]);
     setStreamingText("");
     setInputValue("");
+    setEditingMessageId(null);
+    setEditingText("");
+    setHistoryOpen(false);
+    setSessionManageMode(false);
     setActiveTab("chat");
     showNotice("已新建会话");
   };
 
   const openSession = async (sessionId: number) => {
     setActiveTab("chat");
+    setHistoryOpen(false);
     setLoading(true);
     setStreamingText("");
     try {
       const detail = await getAgentSession(sessionId);
       setCurrentSessionId(detail.session.id);
-      setMessages(toChatMessages(detail.messages));
+      setMessages(toChatMessages(detail.messages?.length ? detail.messages : detail));
+      setEditingMessageId(null);
+      setEditingText("");
     } catch (err) {
       showNotice((err as Error).message || "打开会话失败");
     } finally {
@@ -208,9 +335,191 @@ export default function GlobalAiAssistant() {
     }
   };
 
-  const appendInputText = (text: string) => {
-    setInputValue((value) => `${value}${value && !value.endsWith(" ") ? " " : ""}${text}`);
+  const toggleSessionSelection = (sessionId: number) => {
+    setSelectedSessionIds((ids) => {
+      const nextIds = new Set(ids);
+      if (nextIds.has(sessionId)) {
+        nextIds.delete(sessionId);
+      } else {
+        nextIds.add(sessionId);
+      }
+      return nextIds;
+    });
+  };
+
+  const clearCurrentSessionIfDeleted = (sessionIds: number[]) => {
+    if (currentSessionId && sessionIds.includes(currentSessionId)) {
+      setCurrentSessionId(null);
+      setMessages([]);
+      setStreamingText("");
+      setInputValue("");
+      setEditingMessageId(null);
+      setEditingText("");
+    }
+  };
+
+  const deleteSessions = async (sessionIds: number[]) => {
+    if (!sessionIds.length) return;
+    setDeletingSessionIds((ids) => new Set([...ids, ...sessionIds]));
+    try {
+      await Promise.all(sessionIds.map((sessionId) => deleteAgentSession(sessionId)));
+      setSessions((items) => items.filter((session) => !sessionIds.includes(session.id)));
+      setSelectedSessionIds((ids) => new Set([...ids].filter((id) => !sessionIds.includes(id))));
+      if (sessionIds.length > 1) setSessionManageMode(false);
+      clearCurrentSessionIfDeleted(sessionIds);
+      showNotice(sessionIds.length > 1 ? "已删除选中的历史会话" : "已删除历史会话");
+    } catch (err) {
+      showNotice((err as Error).message || "删除历史会话失败");
+    } finally {
+      setDeletingSessionIds((ids) => new Set([...ids].filter((id) => !sessionIds.includes(id))));
+    }
+  };
+
+  const startEditingMessage = (message: ChatMessage) => {
+    setEditingMessageId(message.id);
+    setEditingText(message.text);
+  };
+
+  const cancelEditingMessage = () => {
+    setEditingMessageId(null);
+    setEditingText("");
+  };
+
+  const copyMessageText = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      showNotice("已复制消息");
+    } catch {
+      showNotice("复制失败，请手动选择文本");
+    }
+  };
+
+  const resendEditedMessage = async () => {
+    const text = editingText.trim();
+    if (!currentSessionId || !editingMessageId || !text || loading) {
+      if (!text) showNotice("请输入要重发的消息");
+      return;
+    }
+
+    const editingMessageKey = editingMessageId as number | string;
+    const editingTargetMessage = messages.find((message) => message.id === editingMessageKey);
+    let editedMessageId = typeof editingMessageKey === "number" ? editingMessageKey : null;
+    if (!editedMessageId && currentSessionId) {
+      try {
+        const detail = await getAgentSession(currentSessionId);
+        const refreshedMessages = toChatMessages(detail.messages?.length ? detail.messages : detail);
+        setCurrentSessionId(detail.session.id);
+        setMessages((items) => mergeRefreshedMessages(items, detail.messages?.length ? detail.messages : detail));
+        const persistedMessage = [...refreshedMessages].reverse().find(
+          (message) =>
+            message.role === "user" &&
+            message.text === (editingTargetMessage?.text || editingText) &&
+            typeof message.id === "number",
+        );
+        editedMessageId = typeof persistedMessage?.id === "number" ? persistedMessage.id : null;
+      } catch (err) {
+        editedMessageId = null;
+      }
+    }
+
+    const resolvedEditedMessageId = typeof editedMessageId === "number" ? editedMessageId : null;
+    const shouldUseEditEndpoint = resolvedEditedMessageId !== null;
+    const editedUserMessage: ChatMessage = {
+      id: shouldUseEditEndpoint ? resolvedEditedMessageId : editingMessageKey,
+      role: "user",
+      text,
+      createdAt: new Date().toISOString(),
+    };
+    setMessages((items) => {
+      const editIndex = items.findIndex((message) => message.id === editingMessageKey);
+      if (editIndex === -1) return items;
+      return [...items.slice(0, editIndex), editedUserMessage];
+    });
+    setEditingMessageId(null);
+    setEditingText("");
     setActiveTab("chat");
+    setHistoryOpen(false);
+    setLoading(true);
+    setStreamingText("");
+
+    let accumulatedThinking = "";
+    let finalReply = "";
+    let streamError = "";
+
+    try {
+      const streamCallbacks = {
+        onThinking: (chunk: string) => {
+          accumulatedThinking += chunk;
+          setStreamingText(accumulatedThinking);
+        },
+        onReply: (reply: string) => {
+          finalReply = reply;
+          setStreamingText(reply);
+        },
+        onError: (message: string) => {
+          streamError = message;
+          setStreamingText(message);
+        },
+      };
+
+      if (shouldUseEditEndpoint) {
+        await editAgentMessageStream(
+          currentSessionId,
+          resolvedEditedMessageId,
+          text,
+          {
+            role,
+          },
+          streamCallbacks,
+        );
+      } else {
+        await sendAgentMessageStream(
+          currentSessionId,
+          text,
+          {
+            role,
+          },
+          streamCallbacks,
+        );
+      }
+
+      const assistantText = streamError || finalReply || accumulatedThinking || "已完成处理。";
+      setMessages((items) => [
+        ...items,
+        {
+          id: `local-assistant-${nextMessageIdRef.current++}`,
+          role: "assistant",
+          text: assistantText,
+          createdAt: new Date().toISOString(),
+          status: streamError ? "error" : undefined,
+        },
+      ]);
+      if (!streamError) {
+        void getAgentSession(currentSessionId)
+          .then((detail) => {
+            setCurrentSessionId(detail.session.id);
+            setMessages((items) => mergeRefreshedMessages(items, detail.messages?.length ? detail.messages : detail));
+          })
+          .catch(() => {
+            // Keep the optimistic messages if the refresh fails.
+          });
+      }
+      void loadSessions();
+    } catch (err) {
+      setMessages((items) => [
+        ...items,
+        {
+          id: `local-assistant-${nextMessageIdRef.current++}`,
+          role: "assistant",
+          text: (err as Error).message || "AI 助手暂时不可用，请稍后再试。",
+          createdAt: new Date().toISOString(),
+          status: "error",
+        },
+      ]);
+    } finally {
+      setStreamingText("");
+      setLoading(false);
+    }
   };
 
   const ensureSession = async (firstMessage: string) => {
@@ -232,10 +541,13 @@ export default function GlobalAiAssistant() {
       id: `local-user-${nextMessageIdRef.current++}`,
       role: "user",
       text,
+      createdAt: new Date().toISOString(),
     };
     setMessages((items) => [...items, userMessage]);
     setInputValue("");
     setActiveTab("chat");
+    setToolsOpen(false);
+    setHistoryOpen(false);
     setLoading(true);
     setStreamingText("");
 
@@ -274,12 +586,21 @@ export default function GlobalAiAssistant() {
           id: `local-assistant-${nextMessageIdRef.current++}`,
           role: "assistant",
           text: assistantText,
+          createdAt: new Date().toISOString(),
           status: streamError ? "error" : undefined,
         },
       ]);
-      window.setTimeout(() => {
-        loadSessions();
-      }, 500);
+      if (!streamError) {
+        void getAgentSession(sessionId)
+          .then((detail) => {
+            setCurrentSessionId(detail.session.id);
+            setMessages((items) => mergeRefreshedMessages(items, detail.messages?.length ? detail.messages : detail));
+          })
+          .catch(() => {
+            // Keep the optimistic messages if the refresh fails.
+          });
+      }
+      void loadSessions();
     } catch (err) {
       setMessages((items) => [
         ...items,
@@ -287,6 +608,7 @@ export default function GlobalAiAssistant() {
           id: `local-assistant-${nextMessageIdRef.current++}`,
           role: "assistant",
           text: (err as Error).message || "AI 助手暂时不可用，请稍后再试。",
+          createdAt: new Date().toISOString(),
           status: "error",
         },
       ]);
@@ -332,31 +654,130 @@ export default function GlobalAiAssistant() {
           <header className="enterprise-ai-panel-header">
             <div>
               <strong>{meta.title}</strong>
-              <span>{meta.scope}</span>
             </div>
             <div className="enterprise-ai-header-tools">
-              <span className={`enterprise-ai-status${loading ? " is-busy" : ""}`}>{connectionLabel}</span>
+              <button
+                type="button"
+                className={`enterprise-ai-history-toggle${historyOpen ? " is-active" : ""}`}
+                aria-label="查看历史会话"
+                title="历史会话"
+                aria-expanded={historyOpen}
+                aria-controls="enterprise-ai-history-menu"
+                onClick={() => {
+                  setHistoryOpen((value) => !value);
+                  setToolsOpen(false);
+                }}
+              >
+                <HistoryOutlined />
+              </button>
               <button type="button" aria-label="新建会话" title="新建会话" onClick={startNewConversation}>
                 <PlusOutlined />
               </button>
+              {historyOpen ? (
+                <div id="enterprise-ai-history-menu" className="enterprise-ai-history-popover" role="dialog" aria-label="历史会话">
+                  <div className="enterprise-ai-section-heading enterprise-ai-history-heading">
+                    <div>
+                      <strong>历史会话</strong>
+                      <span>继续最近的咨询记录，或新建会话处理新的业务问题。</span>
+                    </div>
+                    {sessions.length > 0 ? (
+                      <button
+                        type="button"
+                        className="enterprise-ai-history-manage"
+                        onClick={() => {
+                          setSessionManageMode((value) => !value);
+                          setSelectedSessionIds(new Set());
+                        }}
+                      >
+                        {sessionManageMode ? "完成" : "管理"}
+                      </button>
+                    ) : null}
+                  </div>
+                  <div className="enterprise-ai-session-list">
+                    {sessionsLoading ? <span className="enterprise-ai-muted">正在加载会话...</span> : null}
+                    {!sessionsLoading && sessions.length === 0 ? <span className="enterprise-ai-muted">暂无历史会话</span> : null}
+                    {sessionManageMode && !sessionsLoading && sessions.length > 0 ? (
+                      <div className="enterprise-ai-session-bulk">
+                        <span>{selectedSessionIds.size > 0 ? `已选择 ${selectedSessionIds.size} 项` : "选择要删除的会话"}</span>
+                        <button
+                          type="button"
+                          disabled={selectedSessionIds.size === 0}
+                          onClick={() => deleteSessions([...selectedSessionIds])}
+                        >
+                          删除选中 {selectedSessionIds.size}
+                        </button>
+                      </div>
+                    ) : null}
+                    {sessions.map((session) => (
+                      <div
+                        key={session.id}
+                        className={`enterprise-ai-session-item${session.id === currentSessionId ? " is-active" : ""}${sessionManageMode ? " is-managing" : ""}`}
+                      >
+                        {sessionManageMode ? (
+                          <label className="enterprise-ai-session-check">
+                            <input
+                              type="checkbox"
+                              aria-label={`选择会话 ${session.title || "未命名会话"}`}
+                              checked={selectedSessionIds.has(session.id)}
+                              onChange={() => toggleSessionSelection(session.id)}
+                            />
+                          </label>
+                        ) : null}
+                        <button type="button" className="enterprise-ai-session-open" onClick={() => openSession(session.id)}>
+                          <HistoryOutlined />
+                          <span>
+                            <b>{session.title || "未命名会话"}</b>
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          className="enterprise-ai-session-delete"
+                          aria-label={`删除会话 ${session.title || "未命名会话"}`}
+                          disabled={deletingSessionIds.has(session.id)}
+                          onClick={() => deleteSessions([session.id])}
+                        >
+                          <DeleteOutlined />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </div>
           </header>
 
-          <div className="enterprise-ai-tabs" role="tablist" aria-label="AI 助手模式">
-            <button type="button" className={activeTab === "chat" ? "is-active" : ""} onClick={() => setActiveTab("chat")}>
+          <div
+            className="enterprise-ai-tabs"
+            role="tablist"
+            aria-label="AI 助手模式"
+            style={{ "--active-tab-offset": activeTabOffset } as CSSProperties}
+          >
+            <button
+              type="button"
+              className={activeTab === "chat" ? "is-active" : ""}
+              onClick={() => {
+                setActiveTab("chat");
+                setToolsOpen(false);
+                setHistoryOpen(false);
+              }}
+            >
               对话
             </button>
-            <button type="button" className={activeTab === "assistant" ? "is-active" : ""} onClick={() => setActiveTab("assistant")}>
-              工具
-              <em>{toolCatalog.length}</em>
-            </button>
-            <button type="button" className={activeTab === "workbench" ? "is-active" : ""} onClick={() => setActiveTab("workbench")}>
+            <button
+              type="button"
+              className={activeTab === "workbench" ? "is-active" : ""}
+              onClick={() => {
+                setActiveTab("workbench");
+                setToolsOpen(false);
+                setHistoryOpen(false);
+              }}
+            >
               工作台
-              <em>{sessions.length}</em>
             </button>
           </div>
 
           <main className={`enterprise-ai-conversation${messages.length > 0 || streamingText ? " has-messages" : ""}`}>
+            <div key={activeTab} className={`enterprise-ai-tab-panel is-${activeTab}`}>
             {activeTab === "chat" && (
               <>
                 {messages.length === 0 && !streamingText ? (
@@ -391,79 +812,89 @@ export default function GlobalAiAssistant() {
                   </div>
                 ) : (
                   <div className="enterprise-ai-thread" aria-live="polite">
-                    {messages.map((message) => (
-                      <article
-                        className={`enterprise-ai-bubble is-${message.role}${message.status === "error" ? " is-error" : ""}`}
-                        key={message.id}
-                      >
-                        <p>{message.text}</p>
-                      </article>
-                    ))}
+                    {messages.map((message) => {
+                      const canEditMessage = message.role === "user" && message.id === editableMessageKey && !loading;
+                      const isEditingMessage = editingMessageId === message.id;
+
+                      return (
+                        <article
+                          className={`enterprise-ai-bubble is-${message.role}${message.status === "error" ? " is-error" : ""}${isEditingMessage ? " is-editing" : ""}`}
+                          key={message.id}
+                        >
+                          {isEditingMessage ? (
+                            <div className="enterprise-ai-edit-message">
+                              <textarea
+                                aria-label="编辑要重发的消息"
+                                rows={3}
+                                value={editingText}
+                                onChange={(event) => setEditingText(event.target.value)}
+                                onKeyDown={(event) => {
+                                  if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+                                    event.preventDefault();
+                                    resendEditedMessage();
+                                  }
+                                }}
+                              />
+                              <div className="enterprise-ai-edit-actions">
+                                <button type="button" onClick={cancelEditingMessage}>
+                                  取消
+                                </button>
+                                <button type="button" disabled={!editingText.trim()} onClick={resendEditedMessage}>
+                                  重发
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <p>{message.text}</p>
+                              <div className="enterprise-ai-message-meta">
+                                <time dateTime={message.createdAt}>{formatMessageTime(message.createdAt)}</time>
+                                <button
+                                  type="button"
+                                  aria-label={`复制消息 ${message.text}`}
+                                  title="复制"
+                                  onClick={() => copyMessageText(message.text)}
+                                >
+                                  <CopyOutlined />
+                                </button>
+                                {canEditMessage ? (
+                                  <button
+                                    type="button"
+                                    aria-label={`编辑消息 ${message.text}`}
+                                    title="编辑"
+                                    onClick={() => startEditingMessage(message)}
+                                  >
+                                    <EditOutlined />
+                                  </button>
+                                ) : null}
+                              </div>
+                              {false && canEditMessage ? (
+                                <button
+                                  type="button"
+                                  className="enterprise-ai-message-edit"
+                                  aria-label={`编辑消息 ${message.text}`}
+                                  onClick={() => startEditingMessage(message)}
+                                >
+                                  编辑
+                                </button>
+                              ) : null}
+                            </>
+                          )}
+                        </article>
+                      );
+                    })}
                     {streamingText && (
                       <article className="enterprise-ai-bubble is-assistant is-streaming">
                         <p>{streamingText}</p>
                       </article>
                     )}
-                    {loading && <div className="enterprise-ai-loading">正在调用后端 Agent</div>}
                   </div>
                 )}
               </>
             )}
 
-            {activeTab === "assistant" && (
-              <div className="enterprise-ai-side-view">
-                <div className="enterprise-ai-section-heading">
-                  <strong>可调用工具</strong>
-                  <span>
-                    {toolCatalog.length > 0
-                      ? "助手会按问题自动选择工具；你也可以把工具说明填入输入框，明确本次查询范围。"
-                      : "当前角色暂无已注册业务工具，可进行普通对话。"}
-                  </span>
-                </div>
-                <div className="enterprise-ai-tool-list">
-                  {toolCatalog.map((tool) => (
-                    <button
-                      type="button"
-                      key={tool.name}
-                      onClick={() => appendInputText(`请使用${tool.label}：${tool.description}`)}
-                    >
-                      <DatabaseOutlined />
-                      <span>
-                        <b>{tool.label}</b>
-                        <em>{tool.description}</em>
-                      </span>
-                      <i>填入</i>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {activeTab === "workbench" && (
               <div className="enterprise-ai-side-view">
-                <div className="enterprise-ai-section-heading">
-                  <strong>历史会话</strong>
-                  <span>继续最近的咨询记录，或新建会话处理新的业务问题。</span>
-                </div>
-                <div className="enterprise-ai-session-list">
-                  {sessionsLoading ? <span className="enterprise-ai-muted">正在加载会话...</span> : null}
-                  {!sessionsLoading && sessions.length === 0 ? <span className="enterprise-ai-muted">暂无历史会话</span> : null}
-                  {sessions.map((session) => (
-                    <button
-                      type="button"
-                      key={session.id}
-                      className={session.id === currentSessionId ? "is-active" : ""}
-                      onClick={() => openSession(session.id)}
-                    >
-                      <HistoryOutlined />
-                      <span>
-                      <b>{session.title || "未命名会话"}</b>
-                      <em>{session.message_count} 条消息</em>
-                      </span>
-                    </button>
-                  ))}
-                </div>
-
                 <div className="enterprise-ai-section-heading">
                   <strong>业务入口</strong>
                   <span>选择一个业务入口继续办理，或回到对话描述需要处理的问题。</span>
@@ -477,6 +908,7 @@ export default function GlobalAiAssistant() {
                 </div>
               </div>
             )}
+            </div>
           </main>
 
           <footer className="enterprise-ai-composer">
@@ -492,27 +924,95 @@ export default function GlobalAiAssistant() {
               value={inputValue}
               onChange={(event) => setInputValue(event.target.value)}
               onKeyDown={(event) => {
-                if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+                if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
                   event.preventDefault();
                   sendMessage();
                 }
               }}
             />
             <div className="enterprise-ai-composer-actions">
-              <div />
+              <div className="enterprise-ai-tool-picker">
+                <button
+                  type="button"
+                  className={`enterprise-ai-tool-toggle${toolsOpen ? " is-active" : ""}`}
+                  aria-label="查看可调用工具"
+                  aria-expanded={toolsOpen}
+                  aria-controls="enterprise-ai-tool-menu"
+                  onClick={() => {
+                    setToolsOpen((value) => !value);
+                    setHistoryOpen(false);
+                  }}
+                >
+                  <PlusOutlined />
+                </button>
+                {toolsOpen ? (
+                  <div id="enterprise-ai-tool-menu" className="enterprise-ai-tool-popover" role="dialog" aria-label="可调用工具">
+                    <div className="enterprise-ai-tool-popover-head">
+                      <strong>可调用工具</strong>
+                      <span>{toolCatalog.length > 0 ? "发送问题后，助手会自动选择合适工具。" : "当前角色暂无已注册业务工具。"}</span>
+                    </div>
+                    {toolCatalog.length > 0 ? (
+                      <div className="enterprise-ai-tool-list">
+                        {toolCatalog.map((tool) => (
+                          <article key={tool.name}>
+                            <DatabaseOutlined />
+                            <span>
+                              <b>{tool.label}</b>
+                              <em>{tool.description}</em>
+                            </span>
+                          </article>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="enterprise-ai-muted">可继续进行普通对话</span>
+                    )}
+                  </div>
+                ) : null}
+              </div>
               <button
                 type="button"
-                className="enterprise-ai-send"
+                className={`enterprise-ai-send${loading ? " is-sent" : ""}`}
                 aria-label="发送"
                 disabled={(!inputValue.trim() && !loading) || loading}
                 onClick={() => sendMessage()}
               >
+                <span className="enterprise-ai-send-outline" aria-hidden="true" />
                 <span className="enterprise-ai-send-state enterprise-ai-send-default">
                   <span className="enterprise-ai-send-icon" aria-hidden="true">
-                    <SendOutlined />
+                    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" focusable="false">
+                      <g>
+                        <path
+                          d="M14.2199 21.63C13.0399 21.63 11.3699 20.8 10.0499 16.83L9.32988 14.67L7.16988 13.95C3.20988 12.63 2.37988 10.96 2.37988 9.78001C2.37988 8.61001 3.20988 6.93001 7.16988 5.60001L15.6599 2.77001C17.7799 2.06001 19.5499 2.27001 20.6399 3.35001C21.7299 4.43001 21.9399 6.21001 21.2299 8.33001L18.3999 16.82C17.0699 20.8 15.3999 21.63 14.2199 21.63ZM7.63988 7.03001C4.85988 7.96001 3.86988 9.06001 3.86988 9.78001C3.86988 10.5 4.85988 11.6 7.63988 12.52L10.1599 13.36C10.3799 13.43 10.5599 13.61 10.6299 13.83L11.4699 16.35C12.3899 19.13 13.4999 20.12 14.2199 20.12C14.9399 20.12 16.0399 19.13 16.9699 16.35L19.7999 7.86001C20.3099 6.32001 20.2199 5.06001 19.5699 4.41001C18.9199 3.76001 17.6599 3.68001 16.1299 4.19001L7.63988 7.03001Z"
+                          fill="currentColor"
+                        />
+                        <path
+                          d="M10.11 14.4C9.92005 14.4 9.73005 14.33 9.58005 14.18C9.29005 13.89 9.29005 13.41 9.58005 13.12L13.16 9.53C13.45 9.24 13.93 9.24 14.22 9.53C14.51 9.82 14.51 10.3 14.22 10.59L10.64 14.18C10.5 14.33 10.3 14.4 10.11 14.4Z"
+                          fill="currentColor"
+                        />
+                      </g>
+                    </svg>
                   </span>
                   <span className="enterprise-ai-send-label">
-                    <span>{loading ? "调用" : "发送"}</span>
+                    <span style={{ "--i": 0 } as CSSProperties}>发</span>
+                    <span style={{ "--i": 1 } as CSSProperties}>送</span>
+                  </span>
+                </span>
+                <span className="enterprise-ai-send-state enterprise-ai-send-sent">
+                  <span className="enterprise-ai-send-icon" aria-hidden="true">
+                    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" focusable="false">
+                      <path
+                        fill="currentColor"
+                        d="M12 22.75C6.07 22.75 1.25 17.93 1.25 12C1.25 6.07 6.07 1.25 12 1.25C17.93 1.25 22.75 6.07 22.75 12C22.75 17.93 17.93 22.75 12 22.75ZM12 2.75C6.9 2.75 2.75 6.9 2.75 12C2.75 17.1 6.9 21.25 12 21.25C17.1 21.25 21.25 17.1 21.25 12C21.25 6.9 17.1 2.75 12 2.75Z"
+                      />
+                      <path
+                        fill="currentColor"
+                        d="M10.5795 15.5801C10.3795 15.5801 10.1895 15.5001 10.0495 15.3601L7.21945 12.5301C6.92945 12.2401 6.92945 11.7601 7.21945 11.4701C7.50945 11.1801 7.98945 11.1801 8.27945 11.4701L10.5795 13.7701L15.7195 8.6301C16.0095 8.3401 16.4895 8.3401 16.7795 8.6301C17.0695 8.9201 17.0695 9.4001 16.7795 9.6901L11.1095 15.3601C10.9695 15.5001 10.7795 15.5801 10.5795 15.5801Z"
+                      />
+                    </svg>
+                  </span>
+                  <span className="enterprise-ai-send-label">
+                    <span style={{ "--i": 0 } as CSSProperties}>已</span>
+                    <span style={{ "--i": 1 } as CSSProperties}>发</span>
                   </span>
                 </span>
               </button>

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   getAgentQuickPrompts,
   getAgentToolCatalog,
+  editAgentMessageStream,
   parseAgentSSEBuffer,
   sendAgentMessageStream,
 } from "../api/agent";
@@ -72,6 +73,33 @@ describe("agent assistant API", () => {
     );
     expect(onThinking).toHaveBeenCalledWith("分析");
     expect(onReply).toHaveBeenCalledWith("可以申报");
+  });
+
+  it("puts edited chat messages and dispatches stream callbacks", async () => {
+    const encoder = new TextEncoder();
+    const body = new ReadableStream({
+      start(controller) {
+        controller.enqueue(encoder.encode('data: {"type":"reply","data":"已重新生成"}\n\n'));
+        controller.close();
+      },
+    });
+    const fetchMock = vi.fn().mockResolvedValue(new Response(body, { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const onReply = vi.fn();
+    await editAgentMessageStream(7, 31, "改后的问题", { current_page: "/enterprise/dashboard" }, { onReply });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining("/chat/sessions/7/messages/31"),
+      expect.objectContaining({
+        method: "PUT",
+        body: JSON.stringify({
+          content: "改后的问题",
+          state: { current_page: "/enterprise/dashboard" },
+        }),
+      }),
+    );
+    expect(onReply).toHaveBeenCalledWith("已重新生成");
   });
 
   it("sanitizes upstream authentication errors from SSE", async () => {

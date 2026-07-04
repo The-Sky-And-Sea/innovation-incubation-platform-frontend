@@ -305,3 +305,46 @@ export async function sendAgentMessageStream(
     parseAgentSSEBuffer(`${buffer}\n\n`, dispatch);
   }
 }
+
+export async function editAgentMessageStream(
+  sessionId: number,
+  messageId: number,
+  content: string,
+  state: Record<string, unknown>,
+  callbacks: AgentStreamCallbacks = {},
+): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/chat/sessions/${sessionId}/messages/${messageId}`, {
+    method: "PUT",
+    headers: authHeaders(),
+    body: JSON.stringify({ content, state }),
+  });
+
+  if (!response.ok || !response.body) {
+    const payload = await response.json().catch(() => null);
+    throw new Error(sanitizeAgentErrorMessage(payload?.message || "AI 助手暂时不可用"));
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  const dispatch = (event: AgentSSEEvent) => {
+    callbacks.onEvent?.(event);
+    if (event.type === "thinking") callbacks.onThinking?.(normalizeEventData(event));
+    if (event.type === "reply") callbacks.onReply?.(normalizeEventData(event));
+    if (event.type === "error") callbacks.onError?.(sanitizeAgentErrorMessage(normalizeEventData(event)));
+    if (event.type === "done") callbacks.onDone?.();
+  };
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    buffer = parseAgentSSEBuffer(buffer, dispatch);
+  }
+
+  buffer += decoder.decode();
+  if (buffer.trim()) {
+    parseAgentSSEBuffer(`${buffer}\n\n`, dispatch);
+  }
+}
