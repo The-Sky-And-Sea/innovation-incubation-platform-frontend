@@ -5597,47 +5597,118 @@ select {
 }
 
 .mobbin-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   min-height: 440px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 80px;
   padding: 82px max(28px, calc((100vw - 1180px) / 2)) 34px;
   border-radius: 34px 34px 0 0;
   background: #101010;
   color: #ffffff;
 }
 
-.mobbin-footer > div strong,
-.mobbin-footer > div span,
-.mobbin-footer small,
-.mobbin-footer nav a {
-  display: block;
+.mobbin-footer-svg {
+  position: absolute;
+  width: 0;
+  height: 0;
 }
 
-.mobbin-footer > div strong {
-  margin-bottom: 20px;
-  font-size: 30px;
+.mobbin-footer-animation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.mobbin-footer > div span,
-.mobbin-footer small {
+.g-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.g-container p {
+  font-size: 36px;
+  color: #fff;
+  text-align: center;
+  margin-top: 12px;
+}
+
+.g-container p span {
+  display: inline-block;
+  position: relative;
+}
+
+.g-container p span::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  width: 18px;
+  left: 50%;
+  transform: translate(-50%, 4px);
+  border-bottom: 4px solid #2d60aa;
+}
+
+.g-container svg {
+  position: absolute;
+}
+
+.g-top {
+  position: relative;
+  width: 220px;
+  height: 110px;
+  background: #000;
+  overflow: hidden;
+}
+
+.g-top::before {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  width: 200px;
+  height: 200px;
+  box-sizing: border-box;
+  border: 25px solid #fff;
+  box-shadow:
+    0 0 4px 1px rgba(255, 255, 255, 0.8),
+    0 0 8px 2px rgba(255, 255, 255, 0.6);
+}
+
+.g-bottom {
+  position: relative;
+  width: 220px;
+  height: 120px;
+  background: #000;
+  overflow: hidden;
+  filter: url(#fractal);
+}
+
+.g-bottom::before {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  top: 0;
+  left: 10px;
+  right: 10px;
+  width: 200px;
+  height: 200px;
+  box-sizing: border-box;
+  border: 25px solid #fff;
+  z-index: 10;
+  box-shadow:
+    0 0 4px 1px rgba(255, 255, 255, 0.8),
+    0 0 8px 2px rgba(255, 255, 255, 0.6);
+  transform: translate(0, -100px);
+  filter: blur(4px);
+}
+
+.mobbin-footer-contact {
+  font-size: 18px;
   color: #8b8b8b;
-}
-
-.mobbin-footer nav {
-  columns: 2;
-  column-gap: 72px;
-}
-
-.mobbin-footer nav a {
-  margin-bottom: 12px;
-  color: #ffffff;
-  font-weight: 800;
-  text-decoration: none;
-}
-
-.mobbin-footer small {
-  align-self: end;
+  margin-top: 32px;
 }
 
 @keyframes mobbinIconPulse {
@@ -5795,8 +5866,8 @@ select {
   }
 
   .mobbin-footer {
-    grid-template-columns: 1fr;
     min-height: 360px;
+    padding: 52px 24px 28px;
   }
 }
 

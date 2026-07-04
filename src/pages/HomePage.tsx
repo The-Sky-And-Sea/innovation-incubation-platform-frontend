@@ -485,17 +485,26 @@ export default function HomePage() {
       </main>
 
       <footer className="mobbin-footer">
-        <div>
-          <strong>孵化平台</strong>
-          <span>创新创业孵化载体管理平台</span>
+        <svg className="mobbin-footer-svg" width="0" height="0" aria-hidden="true">
+          <filter id="fractal" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+            <feTurbulence id="turbulence" type="fractalNoise" baseFrequency="0.02 0.02" numOctaves="5">
+              <animate
+                attributeName="baseFrequency"
+                dur="20s"
+                values="0.02 0.02;0.022 0.15;0.02 0.02"
+                repeatCount="indefinite" />
+            </feTurbulence>
+            <feDisplacementMap in="SourceGraphic" scale="15" />
+          </filter>
+        </svg>
+        <div className="mobbin-footer-animation">
+          <div className="g-container">
+            <div className="g-top" />
+            <div className="g-bottom" />
+            <p>Innovati<span>o</span>n</p>
+          </div>
         </div>
-        <nav aria-label="页脚导航">
-          <a href="#patterns" onClick={(e) => handleNavClick(e, "#patterns")}>业务库</a>
-          <a href="#flows" onClick={(e) => handleNavClick(e, "#flows")}>流程</a>
-          <a href="#comments" onClick={(e) => handleNavClick(e, "#comments")}>反馈</a>
-          <a href="/login" onClick={handleLoginClick}>登录</a>
-        </nav>
-        <small>© 2026 Incubation Platform</small>
+        <p className="mobbin-footer-contact">联系我们</p>
       </footer>
     </div>
   );
