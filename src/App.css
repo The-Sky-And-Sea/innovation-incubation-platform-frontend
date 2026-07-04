@@ -5622,7 +5622,7 @@ select {
 }
 
 .mobbin-footer-contact {
-  font-size: 36px;
+  font-size: 18px;
   color: #ffffff;
   font-weight: 700;
   margin: 0;
@@ -5630,7 +5630,7 @@ select {
 
 .mobbin-footer-icons {
   display: flex;
-  gap: 18px;
+  gap: 14px;
   align-items: center;
 }
 
@@ -5638,9 +5638,9 @@ select {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 12px;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.08);
   color: #a0a0a0;
   text-decoration: none;
@@ -5649,8 +5649,8 @@ select {
 }
 
 .mobbin-footer-icon-link svg {
-  width: 26px;
-  height: 26px;
+  width: 18px;
+  height: 18px;
 }
 
 a.mobbin-footer-icon-link:hover {
@@ -5666,11 +5666,11 @@ span.mobbin-footer-icon-link {
 .mobbin-footer-team {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
 }
 
 .mobbin-footer-team-name {
-  font-size: 28px;
+  font-size: 16px;
   font-weight: 700;
   color: #8b8b8b;
   letter-spacing: 0.04em;
@@ -5679,13 +5679,67 @@ span.mobbin-footer-icon-link {
 .mobbin-footer-team-members {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px 18px;
+  gap: 6px 12px;
 }
 
 .mobbin-footer-team-members span {
-  font-size: 22px;
+  font-size: 15px;
   color: #666666;
   font-weight: 500;
+}
+
+.mobbin-footer-right {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding-left: 28%;
+}
+
+.mobbin-footer-section-title {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 10px;
+}
+
+.mobbin-footer-eco-pending {
+  font-size: 15px;
+  color: #8b8b8b;
+  margin: 0;
+}
+
+.mobbin-footer-feedback {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mobbin-footer-stars {
+  display: flex;
+  gap: 6px;
+}
+
+.mobbin-footer-star {
+  font-size: 22px;
+  color: #444444;
+  cursor: pointer;
+  user-select: none;
+  transition: color 120ms ease, transform 120ms ease;
+}
+
+.mobbin-footer-star:hover {
+  transform: scale(1.15);
+}
+
+.mobbin-footer-star.is-active {
+  color: #f5c24b;
+}
+
+.mobbin-footer-powered {
+  font-size: 11px;
+  color: #555555;
+  margin-top: auto;
 }
 
 .mobbin-footer-animation {
@@ -5948,6 +6002,13 @@ span.mobbin-footer-icon-link {
 
   .mobbin-footer-left {
     order: 2;
+    align-items: center;
+    text-align: center;
+  }
+
+  .mobbin-footer-right {
+    order: 3;
+    padding-left: 0;
     align-items: center;
     text-align: center;
   }

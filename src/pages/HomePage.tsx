@@ -118,6 +118,8 @@ export default function HomePage() {
   const [routeTransitioning, setRouteTransitioning] = useState(false);
   const [activePatternTab, setActivePatternTab] = useState<PatternTab>("页面");
   const [darkMode, setDarkMode] = useState(false);
+  const [feedbackRating, setFeedbackRating] = useState(0);
+  const [feedbackHover, setFeedbackHover] = useState(0);
   const [animating, setAnimating] = useState(false);
   const [circlePos, setCirclePos] = useState({ cx: "50%", cy: "50%" });
   const routeTimerRef = useRef<number | null>(null);
@@ -539,6 +541,31 @@ export default function HomePage() {
             <div className="g-bottom" />
             <p>Innovati<span>o</span>n</p>
           </div>
+        </div>
+        <div className="mobbin-footer-right">
+          <div className="mobbin-footer-eco">
+            <span className="mobbin-footer-section-title">更多生态产品</span>
+            <p className="mobbin-footer-eco-pending">敬请期待</p>
+          </div>
+          <div className="mobbin-footer-feedback">
+            <span className="mobbin-footer-section-title">体验反馈</span>
+            <div
+              className="mobbin-footer-stars"
+              onMouseLeave={() => setFeedbackHover(0)}
+            >
+              {[1, 2, 3, 4, 5].map((star) => (
+                <span
+                  key={star}
+                  className={`mobbin-footer-star${star <= (feedbackHover || feedbackRating) ? " is-active" : ""}`}
+                  onClick={() => setFeedbackRating(star)}
+                  onMouseEnter={() => setFeedbackHover(star)}
+                >
+                  ★
+                </span>
+              ))}
+            </div>
+          </div>
+          <small className="mobbin-footer-powered">Powered by Incubation Platform</small>
         </div>
       </footer>
     </div>
