@@ -5611,8 +5611,10 @@ select {
 
 .mobbin-footer-svg {
   position: absolute;
-  width: 0;
-  height: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
 }
 
 .mobbin-footer-left {
@@ -5786,7 +5788,7 @@ span.mobbin-footer-icon-link {
   position: relative;
   width: 220px;
   height: 110px;
-  background: #000;
+  background: #101010;
   overflow: hidden;
 }
 
@@ -5810,7 +5812,7 @@ span.mobbin-footer-icon-link {
   position: relative;
   width: 220px;
   height: 120px;
-  background: #000;
+  background: #101010;
   overflow: hidden;
   filter: url(#fractal);
 }
