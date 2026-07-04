@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ApiOutlined,
@@ -111,12 +111,47 @@ const quoteCards = [
   { name: "平台维护人员", role: "统一入口", text: "登录、注册和三端权限清晰，演示时更容易说明平台价值。" },
 ];
 
+const caseSlides = [
+  {
+    tone: "enterprise",
+    icon: <TeamOutlined />,
+    title: "企业端申报服务",
+    text: "企业用户从资料完善、文件上传到政策申报都在同一条线上推进，减少重复录入。",
+    stat: "6 +",
+    statLabel: "主流程串联",
+    link: "/enterprise/dashboard",
+    bars: ["82%", "64%", "74%"],
+  },
+  {
+    tone: "carrier",
+    icon: <BankOutlined />,
+    title: "孵化载体协同",
+    text: "载体运营方统一处理入驻审核、变更审核、绩效填报和政策协同，为企业提供系统化路径。",
+    stat: "18 +",
+    statLabel: "核心页面接入",
+    link: "/carrier/dashboard",
+    bars: ["76%", "88%", "58%"],
+  },
+  {
+    tone: "government",
+    icon: <SafetyCertificateOutlined />,
+    title: "政务端监管治理",
+    text: "政务人员集中完成政策发布、申报终审、账号治理和通知监管，关键风险更容易被发现。",
+    stat: "12 +",
+    statLabel: "监管事项覆盖",
+    link: "/gov/dashboard",
+    bars: ["68%", "90%", "72%"],
+  },
+];
+
 const marqueeItems = ["企业端", "载体端", "政务端", "入驻申请", "政策申报", "文件管理", "审核流转", "绩效考核", "智能辅助", "通知中心"];
 
 export default function HomePage() {
   const navigate = useNavigate();
   const [routeTransitioning, setRouteTransitioning] = useState(false);
   const [activePatternTab, setActivePatternTab] = useState<PatternTab>("页面");
+  const [activeCaseIndex, setActiveCaseIndex] = useState(0);
+  const [caseDirection, setCaseDirection] = useState<"prev" | "next">("next");
   const [darkMode, setDarkMode] = useState(false);
   const [feedbackRating, setFeedbackRating] = useState(0);
   const [feedbackHover, setFeedbackHover] = useState(0);
@@ -157,6 +192,13 @@ export default function HomePage() {
     e.preventDefault();
     setRouteTransitioning(true);
     routeTimerRef.current = window.setTimeout(() => navigate("/login"), 520);
+  };
+
+  const activeCase = caseSlides[activeCaseIndex];
+
+  const switchCase = (direction: number) => {
+    setCaseDirection(direction === 1 ? "next" : "prev");
+    setActiveCaseIndex((current) => (current + direction + caseSlides.length) % caseSlides.length);
   };
 
   const currentPatterns = patternScreens[activePatternTab];
@@ -399,29 +441,66 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* 大块 3: 探索完整用户旅程 */}
-        <section className="mobbin-flow-duo reveal-section">
-          <h2 className="reveal-heading">探索完整用户旅程。</h2>
-          <div className="reveal-body">
-            <div className="mobbin-duo-grid">
-              <article>
-                <div className="mobbin-video-mock">
-                  <span />
-                  <strong>企业入驻</strong>
+        {/* 场景接入 */}
+        <section className="arco-case-section">
+          <span className="arco-section-kicker">场景接入</span>
+          <h2>三端协同接入场景</h2>
+          <div className="arco-case-carousel">
+            <button type="button" aria-label="上一个场景" onClick={() => switchCase(-1)}>
+              ‹
+            </button>
+            <div className={`arco-case-card is-${activeCase.tone} is-${caseDirection}`} key={activeCase.title}>
+              <div className="arco-case-screen">
+                <div className="case-screen-top">
+                  <span>{activeCase.title}</span>
+                  <strong>{activeCase.stat}</strong>
                 </div>
-                <h3>流程演示</h3>
-                <p>从账号创建、材料上传到载体审核，按真实办理顺序展示。</p>
-              </article>
-              <article>
-                <div className="mobbin-prototype-mock">
-                  <span>政务端</span>
-                  <strong>发布政策</strong>
-                  <em>申报条件 → 材料清单 → 结果通知</em>
+                <div className="case-screen-list">
+                  {activeCase.bars.slice(0, 2).map((width, idx) => (
+                    <article key={width}>
+                      <em>{String(idx + 1).padStart(2, "0")}</em>
+                      <div>
+                        <strong>{["", "流程跟踪", activeCase.statLabel][idx + 1] ?? activeCase.statLabel}</strong>
+                        <span>
+                          <i style={{ width }} />
+                        </span>
+                      </div>
+                    </article>
+                  ))}
                 </div>
-                <h3>交互原型</h3>
-                <p>点击登录后进入现有登录页，继续选择角色进入对应工作台。</p>
+                <div className="case-screen-footer">
+                  <span>查看工作台</span>
+                  <ArrowRightOutlined />
+                </div>
+              </div>
+              <article>
+                {activeCase.icon}
+                <h3>{activeCase.title}</h3>
+                <p>{activeCase.text}</p>
+                <strong>{activeCase.stat}</strong>
+                <span>{activeCase.statLabel}</span>
+                <Link to={activeCase.link}>
+                  查看工作台
+                  <ArrowRightOutlined />
+                </Link>
               </article>
             </div>
+            <button type="button" aria-label="下一个场景" onClick={() => switchCase(1)}>
+              ›
+            </button>
+          </div>
+          <div className="arco-case-dots" aria-label="场景进度">
+            {caseSlides.map((cs, i) => (
+              <button
+                key={cs.title}
+                type="button"
+                className={i === activeCaseIndex ? "is-active" : ""}
+                onClick={() => {
+                  setCaseDirection(i > activeCaseIndex ? "next" : "prev");
+                  setActiveCaseIndex(i);
+                }}
+              />
+            ))}
           </div>
         </section>
 
@@ -487,7 +566,7 @@ export default function HomePage() {
       </main>
 
       <footer className="mobbin-footer">
-        <svg className="mobbin-footer-svg" width="0" height="0" aria-hidden="true">
+        <svg className="mobbin-footer-svg" width="1" height="1" aria-hidden="true">
           <filter id="fractal" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
             <feTurbulence id="turbulence" type="fractalNoise" baseFrequency="0.02 0.02" numOctaves="5">
               <animate
