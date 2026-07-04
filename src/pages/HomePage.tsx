@@ -117,6 +117,7 @@ export default function HomePage() {
   const navigate = useNavigate();
   const [routeTransitioning, setRouteTransitioning] = useState(false);
   const [activePatternTab, setActivePatternTab] = useState<PatternTab>("页面");
+  const [darkMode, setDarkMode] = useState(false);
   const routeTimerRef = useRef<number | null>(null);
 
   /* 滚动触发浮现动画 */
@@ -157,13 +158,21 @@ export default function HomePage() {
   const currentPatterns = patternScreens[activePatternTab];
 
   return (
-    <div className="public-home-page mobbin-home">
+    <div className={`public-home-page mobbin-home${darkMode ? " is-dark" : ""}`}>
       <AuthRouteTransition active={routeTransitioning} />
       <header className="mobbin-home-nav reveal-nav">
         <Link to="/" className="mobbin-home-brand" aria-label="创新创业孵化载体管理平台首页">
           <BrandLogo />
           <strong>孵化平台</strong>
         </Link>
+        <button
+          className="mobbin-theme-toggle"
+          type="button"
+          aria-label={darkMode ? "切换到浅色模式" : "切换到深色模式"}
+          onClick={() => setDarkMode((v) => !v)}
+        >
+          {darkMode ? "☀️" : "🌙"}
+        </button>
         <nav aria-label="首页导航">
           <a href="#patterns" onClick={(e) => handleNavClick(e, "#patterns")}>业务库</a>
           <a href="#flows" onClick={(e) => handleNavClick(e, "#flows")}>流程</a>
