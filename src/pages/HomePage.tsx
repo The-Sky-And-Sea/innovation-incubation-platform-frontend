@@ -15,7 +15,6 @@ import {
   LoginOutlined,
   MoonFilled,
   SafetyCertificateOutlined,
-  SearchOutlined,
   SunFilled,
   TeamOutlined,
 } from "@ant-design/icons";
@@ -624,11 +623,6 @@ export default function HomePage() {
             <BrandLogo variant="mark" tone={isNight ? "night" : "default"} />
             <strong>{copy.brandName}</strong>
           </Link>
-          <label className="arco-search">
-            <SearchOutlined />
-            <span>{copy.search}</span>
-            <kbd>⌘ K</kbd>
-          </label>
           <nav className="arco-nav-links" aria-label={isEnglish ? "Home navigation" : "首页导航"}>
             <a href="#resources" className="arco-roll-link">
               <span className="arco-text-roller">
