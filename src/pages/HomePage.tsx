@@ -160,20 +160,13 @@ export default function HomePage() {
   const currentPatterns = patternScreens[activePatternTab];
 
   return (
-    <div className={`public-home-page mobbin-home${darkMode ? " is-dark" : ""}`}>
+    <div className="public-home-page mobbin-home">
       <AuthRouteTransition active={routeTransitioning} />
-      {animating && (
-        <div
-          className="theme-circle-overlay"
-          style={
-            {
-              "--cx": circlePos.cx,
-              "--cy": circlePos.cy,
-              background: darkMode ? "#ffffff" : "#141414",
-            } as React.CSSProperties
-          }
-        />
-      )}
+      <div
+        className={`theme-diff-overlay${darkMode ? " is-expanded" : ""}${animating ? " is-animating" : ""}`}
+        style={{ "--cx": circlePos.cx, "--cy": circlePos.cy } as React.CSSProperties}
+        onTransitionEnd={() => setAnimating(false)}
+      />
       <header className="mobbin-home-nav reveal-nav">
         <Link to="/" className="mobbin-home-brand" aria-label="创新创业孵化载体管理平台首页">
           <BrandLogo />
@@ -188,10 +181,7 @@ export default function HomePage() {
             const rect = (e.target as HTMLElement).getBoundingClientRect();
             setCirclePos({ cx: `${rect.left + rect.width / 2}px`, cy: `${rect.top + rect.height / 2}px` });
             setAnimating(true);
-            setTimeout(() => {
-              setDarkMode((v) => !v);
-              setTimeout(() => setAnimating(false), 100);
-            }, 550);
+            setDarkMode((v) => !v);
           }}
         >
           {darkMode ? "☀️" : "🌙"}

@@ -6312,22 +6312,6 @@ select {
   }
 }
 
-/* ── 深色/浅色模式切换同心圆扩散动画 ── */
-.theme-circle-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  pointer-events: none;
-  clip-path: circle(0 at var(--cx, 50%) var(--cy, 50%));
-  animation: themeCircleExpand 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-@keyframes themeCircleExpand {
-  to {
-    clip-path: circle(150% at var(--cx, 50%) var(--cy, 50%));
-  }
-}
-
 /* ── 深色/浅色模式切换按钮 ── */
 .mobbin-theme-toggle {
   width: 38px;
@@ -6351,225 +6335,23 @@ select {
   transform: scale(1.08);
 }
 
-/* ── 深色模式 ── */
-.mobbin-home.is-dark {
-  background: #141414;
-  color: #e0e0e0;
-}
-
-.mobbin-home.is-dark .mobbin-home-nav {
-  background: rgba(40, 40, 40, 0.92);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
-}
-
-.mobbin-home.is-dark .mobbin-home-brand {
-  color: #ffffff;
-}
-
-.mobbin-home.is-dark .mobbin-home-nav nav a {
-  color: #cccccc;
-}
-
-.mobbin-home.is-dark .mobbin-home-join {
+/* ── 深色模式：常驻 difference overlay，展开即反色 ── */
+.theme-diff-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
   background: #ffffff;
-  color: #141414 !important;
+  mix-blend-mode: difference;
+  clip-path: circle(0 at var(--cx, 50%) var(--cy, 50%));
 }
 
-.mobbin-home.is-dark .mobbin-theme-toggle {
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
+.theme-diff-overlay.is-animating {
+  transition: clip-path 0.55s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.mobbin-home.is-dark .mobbin-hero,
-.mobbin-home.is-dark .mobbin-product-stage,
-.mobbin-home.is-dark .mobbin-stats,
-.mobbin-home.is-dark .mobbin-patterns-showcase,
-.mobbin-home.is-dark .mobbin-flow-duo,
-.mobbin-home.is-dark .mobbin-creation,
-.mobbin-home.is-dark .mobbin-comments,
-.mobbin-home.is-dark .mobbin-final-cta {
-  background: #141414;
-}
-
-.mobbin-home.is-dark .mobbin-hero h1,
-.mobbin-home.is-dark .mobbin-stats strong,
-.mobbin-home.is-dark .mobbin-stats em,
-.mobbin-home.is-dark .mobbin-patterns-showcase h2,
-.mobbin-home.is-dark .mobbin-flow-duo h2,
-.mobbin-home.is-dark .mobbin-creation h2,
-.mobbin-home.is-dark .mobbin-comments h2,
-.mobbin-home.is-dark .mobbin-final-cta h2 {
-  color: #ffffff;
-}
-
-.mobbin-home.is-dark .mobbin-hero p {
-  color: #999999;
-}
-
-.mobbin-home.is-dark .mobbin-primary {
-  border-color: #ffffff;
-  background: #ffffff;
-  color: #141414;
-}
-
-.mobbin-home.is-dark .mobbin-secondary {
-  border-color: #444444;
-  background: #2a2a2a;
-  color: #ffffff;
-}
-
-.mobbin-home.is-dark .mobbin-trust {
-  color: #666666;
-}
-
-.mobbin-home.is-dark .mobbin-trust strong {
-  color: #777777;
-}
-
-.mobbin-home.is-dark .mobbin-product-stage {
-  background: #1a1a1a;
-}
-
-.mobbin-home.is-dark .mobbin-library-window {
-  background: rgba(30, 30, 30, 0.88);
-}
-
-.mobbin-home.is-dark .mobbin-library-columns strong {
-  color: #ffffff;
-}
-
-.mobbin-home.is-dark .mobbin-library-columns span {
-  color: #777777;
-}
-
-.mobbin-home.is-dark .mobbin-window-bar {
-  color: #ffffff;
-}
-
-.mobbin-home.is-dark .mobbin-window-search {
-  background: #2a2a2a;
-  color: #777777;
-}
-
-.mobbin-home.is-dark .mobbin-stats span {
-  color: #ffffff;
-}
-
-.mobbin-home.is-dark .mobbin-stats em {
-  color: #999999;
-}
-
-.mobbin-home.is-dark .mobbin-floating-icon {
-  border-color: #333333;
-  background: #1a1a1a;
-  color: #cccccc;
-}
-.mobbin-home.is-dark .mobbin-floating-icon.is-enterprise {
-  color: #4a90e2;
-}
-.mobbin-home.is-dark .mobbin-floating-icon.is-carrier {
-  color: #2db5a0;
-}
-.mobbin-home.is-dark .mobbin-floating-icon.is-government {
-  color: #e06070;
-}
-.mobbin-home.is-dark .mobbin-floating-icon.is-file {
-  color: #aaaaaa;
-}
-
-.mobbin-home.is-dark .mobbin-duo-grid h3,
-.mobbin-home.is-dark .mobbin-feature-row h3 {
-  color: #ffffff;
-}
-
-.mobbin-home.is-dark .mobbin-duo-grid p,
-.mobbin-home.is-dark .mobbin-feature-row p {
-  color: #999999;
-}
-
-.mobbin-home.is-dark .mobbin-comment-grid strong {
-  color: #ffffff;
-}
-
-.mobbin-home.is-dark .mobbin-comment-grid p {
-  color: #cccccc;
-}
-
-.mobbin-home.is-dark .mobbin-comment-grid article {
-  background: rgba(40, 40, 40, 0.8);
-  border-color: rgba(80, 80, 80, 0.6);
-}
-
-.mobbin-home.is-dark .mobbin-final-cta p {
-  color: #999999;
-}
-
-.mobbin-home.is-dark .mobbin-marquee span {
-  color: #ffffff;
-}
-
-.mobbin-home.is-dark .mobbin-marquee span::before {
-  background: #2a2a2a;
-  color: #ffffff;
-}
-
-.mobbin-home.is-dark .arco-section-kicker {
-  color: #888888;
-}
-
-.mobbin-home.is-dark .arco-resource-section h2,
-.mobbin-home.is-dark .arco-principles h3 {
-  color: #ffffff;
-}
-
-.mobbin-home.is-dark .arco-principles p {
-  color: #aaaaaa;
-}
-
-.mobbin-home.is-dark .arco-principles {
-  border-color: #333333;
-}
-
-.mobbin-home.is-dark .arco-principles article:hover {
-  background: #222222;
-  box-shadow: inset 0 0 0 1px #333333;
-}
-
-.mobbin-home.is-dark .hero-stroke-svg text {
-  fill: rgba(255, 255, 255, 0);
-  stroke: rgba(180, 200, 255, 0.8);
-}
-
-@keyframes heroStrokeAnimDark {
-  0% {
-    fill: rgba(255, 255, 255, 0);
-    stroke: rgba(180, 200, 255, 0.8);
-    stroke-dashoffset: 25%;
-    stroke-dasharray: 0 50%;
-    stroke-width: 0.3;
-  }
-  50% {
-    fill: rgba(255, 255, 255, 0);
-    stroke: rgba(180, 200, 255, 0.9);
-    stroke-width: 0.6;
-  }
-  70% {
-    fill: rgba(255, 255, 255, 0.02);
-    stroke: rgba(180, 200, 255, 0.7);
-    stroke-width: 1;
-  }
-  90%,
-  100% {
-    fill: rgba(255, 255, 255, 0.95);
-    stroke: rgba(180, 200, 255, 0);
-    stroke-dashoffset: -25%;
-    stroke-dasharray: 50% 0;
-    stroke-width: 0;
-  }
-}
-
-.mobbin-home.is-dark .hero-stroke-svg text {
-  animation-name: heroStrokeAnimDark;
+.theme-diff-overlay.is-expanded {
+  clip-path: circle(150% at var(--cx, 50%) var(--cy, 50%));
 }
 
 /* ── 首页背景纯白 ── */
