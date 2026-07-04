@@ -19,6 +19,7 @@ import { useEffect, useState } from "react";
 import { createBrowserRouter, Navigate, Outlet } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import HomePage from "../pages/HomePage";
+import DocsPage from "../pages/DocsPage";
 import LoginPage from "../pages/auth/LoginPage";
 import RegisterPage from "../pages/auth/RegisterPage";
 import AccountDeletionRequestPage from "../pages/AccountDeletionRequest";
@@ -129,6 +130,7 @@ function DashboardRedirect() {
 // 路由配置数组：按「守卫 → 角色 → 布局 → 页面」层次组织
 const router = createBrowserRouter([
   { path: "/", element: <HomePage /> },
+  { path: "/docs/:slug", element: <DocsPage /> },
   {
     element: <GuestGuard />,
     children: [

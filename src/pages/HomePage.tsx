@@ -13,7 +13,6 @@ import {
   FileDoneOutlined,
   FileSearchOutlined,
   LoginOutlined,
-  MenuOutlined,
   MoonFilled,
   SafetyCertificateOutlined,
   SearchOutlined,
@@ -495,12 +494,79 @@ const homeCopy = {
   },
 };
 
+const resourceCenterItems = [
+  {
+    title: "产品使用说明",
+    text: "快速了解三端角色、登录入口、工作台使用路径和常见办理顺序。",
+    icon: <FileDoneOutlined />,
+    href: "/docs/product-usage",
+    action: "查看流程",
+  },
+  {
+    title: "功能文档",
+    text: "按企业端、载体端、政务端整理功能说明，便于联调和演示。",
+    icon: <CodeOutlined />,
+    href: "/docs/feature-docs",
+    action: "查看文档",
+  },
+  {
+    title: "政策规范",
+    text: "汇总政策申报、审核口径、材料校验和账号治理相关规范。",
+    icon: <SafetyCertificateOutlined />,
+    href: "/docs/policy-rules",
+    action: "查看规范",
+  },
+  {
+    title: "模板资源",
+    text: "提供入驻协议、申报材料、绩效填报和通知公告模板入口。",
+    icon: <DatabaseOutlined />,
+    href: "/docs/templates",
+    action: "进入下载",
+  },
+  {
+    title: "FAQ与支持",
+    text: "收纳账号登录、材料上传、审批流转、演示环境的常见问题。",
+    icon: <BulbOutlined />,
+    href: "/docs/faq-support",
+    action: "获取支持",
+  },
+  {
+    title: "更新公告",
+    text: "查看最近页面、流程、演示账号和接口联调能力的更新记录。",
+    icon: <AppstoreOutlined />,
+    href: "/docs/release-notes",
+    action: "查看更新",
+  },
+];
+
+const resourceCardItems = [
+  {
+    label: "文档指南",
+    bgColor: "#1b2433",
+    textColor: "#ffffff",
+    links: [resourceCenterItems[0], resourceCenterItems[1]],
+  },
+  {
+    label: "规范资源",
+    bgColor: "#233243",
+    textColor: "#ffffff",
+    links: [resourceCenterItems[2], resourceCenterItems[3]],
+  },
+  {
+    label: "支持动态",
+    bgColor: "#26323f",
+    textColor: "#ffffff",
+    links: [resourceCenterItems[4], resourceCenterItems[5]],
+  },
+];
+
 export default function HomePage() {
   const [language, setLanguage] = useState<"zh" | "en">("zh");
   const [activePlatformIndex, setActivePlatformIndex] = useState(1);
   const [activeCaseIndex, setActiveCaseIndex] = useState(1);
   const [caseDirection, setCaseDirection] = useState<"prev" | "next">("next");
   const [themeMode, setThemeMode] = useState<"day" | "night">("day");
+  const [resourceCenterOpen, setResourceCenterOpen] = useState(false);
   const [dotOffset, setDotOffset] = useState({ x: 0, y: 0 });
   const isEnglish = language === "en";
   const isNight = themeMode === "night";
@@ -543,8 +609,16 @@ export default function HomePage() {
     <div className={`public-home-page arco-home ${isEnglish ? "is-english" : ""} ${isNight ? "is-night" : ""}`}>
       <header className="arco-home-header">
         <div className="arco-home-header-inner">
-          <button className="arco-menu-grid" aria-label={copy.menuLabel} type="button">
-            <MenuOutlined />
+          <button
+            className="arco-menu-grid"
+            aria-label="打开平台文档与资源中心"
+            aria-expanded={resourceCenterOpen}
+            aria-controls="home-resource-center"
+            type="button"
+            onClick={() => setResourceCenterOpen((current) => !current)}
+          >
+            <span className="arco-menu-line" />
+            <span className="arco-menu-line" />
           </button>
           <Link to="/" className="arco-brand" aria-label={copy.homeLabel}>
             <BrandLogo variant="mark" tone={isNight ? "night" : "default"} />
@@ -612,6 +686,53 @@ export default function HomePage() {
           </div>
         </div>
       </header>
+
+      <div
+        className={`arco-resource-center-layer${resourceCenterOpen ? " is-open" : ""}`}
+        aria-hidden={!resourceCenterOpen}
+      >
+        <button
+          className="arco-resource-center-backdrop"
+          type="button"
+          tabIndex={resourceCenterOpen ? 0 : -1}
+          aria-label="关闭平台文档与资源中心"
+          onClick={() => setResourceCenterOpen(false)}
+        />
+        <aside id="home-resource-center" className="arco-resource-center-panel" aria-label="平台文档与资源中心">
+          <div className="arco-resource-cardnav-top">
+            <button type="button" onClick={() => setResourceCenterOpen(false)} aria-label="关闭资源中心">
+              ×
+            </button>
+            <div className="arco-resource-cardnav-brand">
+              <BrandLogo variant="mark" tone={isNight ? "night" : "default"} />
+              <strong>平台资源中心</strong>
+            </div>
+            <Link to="/login" onClick={() => setResourceCenterOpen(false)}>
+              开始使用
+            </Link>
+          </div>
+
+          <div className="arco-resource-cardnav-content">
+            {resourceCardItems.map((group) => (
+              <section
+                key={group.label}
+                className="arco-resource-nav-card"
+                style={{ backgroundColor: group.bgColor, color: group.textColor }}
+              >
+                <strong>{group.label}</strong>
+                <div>
+                  {group.links.map((item) => (
+                    <Link key={item.title} to={item.href} onClick={() => setResourceCenterOpen(false)}>
+                      <ArrowRightOutlined />
+                      <span>{item.title}</span>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        </aside>
+      </div>
 
       <main>
         <section className="arco-hero">

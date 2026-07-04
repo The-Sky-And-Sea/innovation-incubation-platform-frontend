@@ -9,7 +9,6 @@ import {
   LockOutlined,
   MailOutlined,
   PhoneOutlined,
-  SafetyCertificateOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
 import { useAuthStore } from "../../store/authStore";
@@ -21,9 +20,10 @@ import Stepper, { Step } from "../../components/Stepper";
 const { Title, Text } = Typography;
 
 type RegisterField = keyof RegisterRequest;
+type RegisterableRole = Exclude<UserRole, "government">;
 
 const ROLE_META: Record<
-  UserRole,
+  RegisterableRole,
   {
     title: string;
     shortTitle: string;
@@ -40,32 +40,25 @@ const ROLE_META: Record<
     shortTitle: "载体",
     icon: <BankOutlined />,
   },
-  government: {
-    title: "政务注册",
-    shortTitle: "政务",
-    icon: <SafetyCertificateOutlined />,
-  },
 };
 
-const ROLE_FIELDS: Record<UserRole, RegisterField[]> = {
+const ROLE_FIELDS: Record<RegisterableRole, RegisterField[]> = {
   enterprise: ["enterprise_name", "enterprise_credit_code", "enterprise_industry", "enterprise_scale", "enterprise_address"],
   carrier: ["carrier_name", "carrier_type", "carrier_area"],
-  government: ["gov_name", "gov_department"],
 };
 
 const ALL_ROLE_FIELDS = Array.from(new Set(Object.values(ROLE_FIELDS).flat()));
 
 const STEP_LABELS = ["选择身份", "账号信息", "主体资料", "确认提交"];
 
-function getSubjectName(role: UserRole, values: Partial<RegisterRequest>) {
+function getSubjectName(role: RegisterableRole, values: Partial<RegisterRequest>) {
   if (role === "enterprise") return values.enterprise_name;
-  if (role === "carrier") return values.carrier_name;
-  return values.gov_name;
+  return values.carrier_name;
 }
 
 export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
-  const [role, setRole] = useState<UserRole>("enterprise");
+  const [role, setRole] = useState<RegisterableRole>("enterprise");
   const [routeTransitioning, setRouteTransitioning] = useState(false);
   const navigate = useNavigate();
   const register = useAuthStore((s) => s.register);
@@ -118,7 +111,7 @@ export default function RegisterPage() {
     }
   };
 
-  const changeRole = (nextRole: UserRole) => {
+  const changeRole = (nextRole: RegisterableRole) => {
     setRole(nextRole);
     form.resetFields(ALL_ROLE_FIELDS);
     setFormValues(form.getFieldsValue(true) as Partial<RegisterRequest>);
@@ -186,7 +179,7 @@ export default function RegisterPage() {
                   </div>
                 </div>
                 <div className="register-role-grid">
-                  {(Object.keys(ROLE_META) as UserRole[]).map((itemRole) => {
+                  {(Object.keys(ROLE_META) as RegisterableRole[]).map((itemRole) => {
                     const item = ROLE_META[itemRole];
                     return (
                       <Button
@@ -289,7 +282,7 @@ export default function RegisterPage() {
                       <Input prefix={<EnvironmentOutlined />} placeholder="请输入企业地址" size="large" />
                     </Form.Item>
                   </div>
-                ) : role === "carrier" ? (
+                ) : (
                   <>
                     <Form.Item name="carrier_name" label="载体名称" rules={[{ required: true, message: "请输入载体名称" }]}>
                       <Input prefix={<BankOutlined />} placeholder="请输入载体名称" size="large" />
@@ -306,15 +299,6 @@ export default function RegisterPage() {
                     </Form.Item>
                     <Form.Item name="carrier_area" label="所在区域" rules={[{ required: true, message: "请输入所在区域" }]}>
                       <Input prefix={<EnvironmentOutlined />} placeholder="请输入所在区域" size="large" />
-                    </Form.Item>
-                  </>
-                ) : (
-                  <>
-                    <Form.Item name="gov_name" label="政务人员姓名" rules={[{ required: true, message: "请输入政务人员姓名" }]}>
-                      <Input prefix={<SafetyCertificateOutlined />} placeholder="请输入政务人员姓名" size="large" />
-                    </Form.Item>
-                    <Form.Item name="gov_department" label="所属部门" rules={[{ required: true, message: "请输入所属部门" }]}>
-                      <Input prefix={<BankOutlined />} placeholder="如：工信科、科技局" size="large" />
                     </Form.Item>
                   </>
                 )}

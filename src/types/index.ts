@@ -19,6 +19,7 @@ export interface PaginatedData<T> {
 export type PaginatedResponse<T> = ApiResponse<PaginatedData<T>>;
 
 export type UserRole = "enterprise" | "carrier" | "government";
+export type RegisterableRole = Exclude<UserRole, "government">;
 
 export interface UserInfo {
   id: number;
@@ -38,7 +39,7 @@ export interface LoginRequest {
 
 export interface RegisterRequest {
   password: string;
-  role: UserRole;
+  role: RegisterableRole;
   phone: string;
   email?: string;
   enterprise_name?: string;
@@ -49,8 +50,6 @@ export interface RegisterRequest {
   carrier_name?: string;
   carrier_type?: string;
   carrier_area?: string;
-  gov_name?: string;
-  gov_department?: string;
 }
 
 export interface AuthData {

@@ -9,9 +9,11 @@ function normalizeUser(user: BackendUserInfo): UserInfo {
   };
 }
 
-// 后端登录接口统一用 credential 承载账号、手机号或统一社会信用代码。
 function buildLoginPayload(credential: string, password: string, role: UserRole) {
-  return { credential, password, role };
+  if (role === "enterprise") {
+    return { credit_code: credential, password, role };
+  }
+  return { phone: credential, password, role };
 }
 
 export async function loginAuth(
@@ -20,7 +22,10 @@ export async function loginAuth(
   role: UserRole,
 ): Promise<ApiResponse<AuthData>> {
   const { post } = await import("../utils/request");
-  const res = await post<{ token: string; user: BackendUserInfo }>("/auth/login", buildLoginPayload(credential, password, role));
+  const res = await post<{ token: string; user: BackendUserInfo }>(
+    "/auth/login",
+    buildLoginPayload(credential, password, role),
+  );
   return {
     ...res,
     data: {
@@ -44,6 +49,6 @@ export async function registerAuth(params: RegisterRequest): Promise<ApiResponse
 
 export async function getMe(): Promise<ApiResponse<UserInfo>> {
   const { get } = await import("../utils/request");
-  const res = await get<BackendUserInfo>("/auth/me");
+  const res = await get<BackendUserInfo>("/users/me");
   return { ...res, data: normalizeUser(res.data) };
 }

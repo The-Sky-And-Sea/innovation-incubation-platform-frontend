@@ -12,7 +12,12 @@
 import { API_BASE_URL } from "./config";
 import type { ApiResponse, FileInfo, FileLimit } from "../types";
 
-function normalizeFileInfo(file: FileInfo): FileInfo {
+type BackendFileInfo = FileInfo & {
+  name?: string;
+  uploaded_at?: string;
+};
+
+function normalizeFileInfo(file: BackendFileInfo): FileInfo {
   return {
     ...file,
     filename: file.filename || file.name || `file-${file.file_id}`,
