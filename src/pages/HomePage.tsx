@@ -117,6 +117,9 @@ export default function HomePage() {
   const navigate = useNavigate();
   const [routeTransitioning, setRouteTransitioning] = useState(false);
   const [activePatternTab, setActivePatternTab] = useState<PatternTab>("页面");
+  const [darkMode, setDarkMode] = useState(false);
+  const [animating, setAnimating] = useState(false);
+  const [circlePos, setCirclePos] = useState({ cx: "50%", cy: "50%" });
   const routeTimerRef = useRef<number | null>(null);
 
   /* 滚动触发浮现动画 */
@@ -159,11 +162,30 @@ export default function HomePage() {
   return (
     <div className="public-home-page mobbin-home">
       <AuthRouteTransition active={routeTransitioning} />
+      <div
+        className={`theme-diff-overlay${darkMode ? " is-expanded" : ""}${animating ? " is-animating" : ""}`}
+        style={{ "--cx": circlePos.cx, "--cy": circlePos.cy } as React.CSSProperties}
+        onTransitionEnd={() => setAnimating(false)}
+      />
       <header className="mobbin-home-nav reveal-nav">
         <Link to="/" className="mobbin-home-brand" aria-label="创新创业孵化载体管理平台首页">
           <BrandLogo />
           <strong>孵化平台</strong>
         </Link>
+        <button
+          className="mobbin-theme-toggle"
+          type="button"
+          aria-label={darkMode ? "切换到浅色模式" : "切换到深色模式"}
+          onClick={(e) => {
+            if (animating) return;
+            const rect = (e.target as HTMLElement).getBoundingClientRect();
+            setCirclePos({ cx: `${rect.left + rect.width / 2}px`, cy: `${rect.top + rect.height / 2}px` });
+            setAnimating(true);
+            setDarkMode((v) => !v);
+          }}
+        >
+          {darkMode ? "☀️" : "🌙"}
+        </button>
         <nav aria-label="首页导航">
           <a href="#patterns" onClick={(e) => handleNavClick(e, "#patterns")}>业务库</a>
           <a href="#flows" onClick={(e) => handleNavClick(e, "#flows")}>流程</a>

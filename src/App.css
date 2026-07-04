@@ -6312,6 +6312,48 @@ select {
   }
 }
 
+/* ── 深色/浅色模式切换按钮 ── */
+.mobbin-theme-toggle {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.06);
+  font-size: 18px;
+  cursor: pointer;
+  transition: background 180ms ease, transform 180ms ease;
+  flex: 0 0 auto;
+  padding: 0;
+  line-height: 1;
+}
+
+.mobbin-theme-toggle:hover {
+  background: rgba(0, 0, 0, 0.12);
+  transform: scale(1.08);
+}
+
+/* ── 深色模式：常驻 difference overlay，展开即反色 ── */
+.theme-diff-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background: #ffffff;
+  mix-blend-mode: difference;
+  clip-path: circle(0 at var(--cx, 50%) var(--cy, 50%));
+}
+
+.theme-diff-overlay.is-animating {
+  transition: clip-path 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-diff-overlay.is-expanded {
+  clip-path: circle(150% at var(--cx, 50%) var(--cy, 50%));
+}
+
 /* ── 首页背景纯白 ── */
 .mobbin-hero,
 .mobbin-product-stage,
