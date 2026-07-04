@@ -5597,10 +5597,11 @@ select {
 }
 
 .mobbin-footer {
-  display: flex;
-  flex-direction: column;
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 24px;
   align-items: center;
-  justify-content: center;
   min-height: 440px;
   padding: 82px max(28px, calc((100vw - 1180px) / 2)) 34px;
   border-radius: 34px 34px 0 0;
@@ -5614,10 +5615,84 @@ select {
   height: 0;
 }
 
+.mobbin-footer-left {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.mobbin-footer-contact {
+  font-size: 36px;
+  color: #ffffff;
+  font-weight: 700;
+  margin: 0;
+}
+
+.mobbin-footer-icons {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+
+.mobbin-footer-icon-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #a0a0a0;
+  text-decoration: none;
+  transition: background 180ms ease, color 180ms ease, transform 180ms ease;
+  cursor: pointer;
+}
+
+.mobbin-footer-icon-link svg {
+  width: 26px;
+  height: 26px;
+}
+
+a.mobbin-footer-icon-link:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+span.mobbin-footer-icon-link {
+  cursor: default;
+}
+
+.mobbin-footer-team {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mobbin-footer-team-name {
+  font-size: 28px;
+  font-weight: 700;
+  color: #8b8b8b;
+  letter-spacing: 0.04em;
+}
+
+.mobbin-footer-team-members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+}
+
+.mobbin-footer-team-members span {
+  font-size: 22px;
+  color: #666666;
+  font-weight: 500;
+}
+
 .mobbin-footer-animation {
   display: flex;
   align-items: center;
   justify-content: center;
+  justify-self: center;
 }
 
 .g-container {
@@ -5703,12 +5778,6 @@ select {
     0 0 8px 2px rgba(255, 255, 255, 0.6);
   transform: translate(0, -100px);
   filter: blur(4px);
-}
-
-.mobbin-footer-contact {
-  font-size: 18px;
-  color: #8b8b8b;
-  margin-top: 32px;
 }
 
 @keyframes mobbinIconPulse {
@@ -5866,8 +5935,25 @@ select {
   }
 
   .mobbin-footer {
+    grid-template-columns: 1fr;
+    gap: 40px;
     min-height: 360px;
     padding: 52px 24px 28px;
+  }
+
+  .mobbin-footer-animation {
+    justify-self: center;
+    order: 1;
+  }
+
+  .mobbin-footer-left {
+    order: 2;
+    align-items: center;
+    text-align: center;
+  }
+
+  .mobbin-footer-team-members {
+    justify-content: center;
   }
 }
 
