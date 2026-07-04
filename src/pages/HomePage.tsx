@@ -118,6 +118,8 @@ export default function HomePage() {
   const [routeTransitioning, setRouteTransitioning] = useState(false);
   const [activePatternTab, setActivePatternTab] = useState<PatternTab>("页面");
   const [darkMode, setDarkMode] = useState(false);
+  const [animating, setAnimating] = useState(false);
+  const [circlePos, setCirclePos] = useState({ cx: "50%", cy: "50%" });
   const routeTimerRef = useRef<number | null>(null);
 
   /* 滚动触发浮现动画 */
@@ -160,6 +162,18 @@ export default function HomePage() {
   return (
     <div className={`public-home-page mobbin-home${darkMode ? " is-dark" : ""}`}>
       <AuthRouteTransition active={routeTransitioning} />
+      {animating && (
+        <div
+          className="theme-circle-overlay"
+          style={
+            {
+              "--cx": circlePos.cx,
+              "--cy": circlePos.cy,
+              background: darkMode ? "#ffffff" : "#141414",
+            } as React.CSSProperties
+          }
+        />
+      )}
       <header className="mobbin-home-nav reveal-nav">
         <Link to="/" className="mobbin-home-brand" aria-label="创新创业孵化载体管理平台首页">
           <BrandLogo />
@@ -169,7 +183,16 @@ export default function HomePage() {
           className="mobbin-theme-toggle"
           type="button"
           aria-label={darkMode ? "切换到浅色模式" : "切换到深色模式"}
-          onClick={() => setDarkMode((v) => !v)}
+          onClick={(e) => {
+            if (animating) return;
+            const rect = (e.target as HTMLElement).getBoundingClientRect();
+            setCirclePos({ cx: `${rect.left + rect.width / 2}px`, cy: `${rect.top + rect.height / 2}px` });
+            setAnimating(true);
+            setTimeout(() => {
+              setDarkMode((v) => !v);
+              setTimeout(() => setAnimating(false), 100);
+            }, 550);
+          }}
         >
           {darkMode ? "☀️" : "🌙"}
         </button>
