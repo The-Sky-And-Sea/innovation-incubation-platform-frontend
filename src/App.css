@@ -6484,6 +6484,305 @@ span.mobbin-footer-icon-link {
   line-height: 1.55;
 }
 
+/* ── 场景接入轮播 ── */
+.arco-case-section {
+  min-height: calc(100vh - 72px);
+  padding: clamp(64px, 9vh, 94px) 24px clamp(54px, 7vh, 78px);
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  color: #fff;
+  text-align: center;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    #202a36;
+  background-size: 52px 52px;
+}
+
+.arco-case-section .arco-section-kicker,
+.arco-case-section h2 {
+  color: #fff;
+}
+
+.arco-case-section h2 {
+  margin-bottom: 38px;
+}
+
+.arco-case-carousel {
+  width: min(1360px, calc(100vw - 160px));
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 60px 1fr 60px;
+  align-items: center;
+  gap: 32px;
+}
+
+.arco-case-carousel button {
+  width: 60px;
+  height: 60px;
+  border: 0;
+  border-radius: 50%;
+  color: #1d2129;
+  background: #fff;
+  font-size: 38px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.arco-case-card {
+  min-height: min(58vh, 560px);
+  border-radius: var(--arco-radius);
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  background: #5d6978;
+  text-align: left;
+  transition: background 0.24s ease, box-shadow 0.24s ease;
+  animation: arcoCaseSlideNext 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.arco-case-card.is-prev {
+  animation-name: arcoCaseSlidePrev;
+}
+
+.arco-case-card.is-next {
+  animation-name: arcoCaseSlideNext;
+}
+
+.arco-case-card.is-enterprise { background: #5b6b80; }
+.arco-case-card.is-carrier { background: #526b73; }
+.arco-case-card.is-government { background: #654f5a; }
+
+.arco-case-screen {
+  padding: 48px 58px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+  color: #1d2129;
+  animation: arcoCaseScreenIn 420ms cubic-bezier(0.22, 1, 0.36, 1) 80ms both;
+}
+
+.case-screen-top,
+.case-screen-list article,
+.case-screen-footer {
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 14px 32px rgba(29, 33, 41, 0.08);
+}
+
+.case-screen-top {
+  min-height: 88px;
+  padding: 20px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.case-screen-top span,
+.case-screen-footer span {
+  color: #4e5969;
+  font-weight: 700;
+}
+
+.case-screen-top strong {
+  color: #165dff;
+  font-size: 34px;
+  line-height: 1;
+}
+
+.arco-case-card.is-carrier .case-screen-top strong,
+.arco-case-card.is-carrier .case-screen-list em {
+  color: #0e9f7f;
+}
+
+.arco-case-card.is-government .case-screen-top strong,
+.arco-case-card.is-government .case-screen-list em {
+  color: #c9354c;
+}
+
+.case-screen-list {
+  display: grid;
+  gap: 14px;
+}
+
+.case-screen-list article {
+  min-height: 118px;
+  padding: 20px 22px;
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.case-screen-list em {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: #165dff;
+  background: #e8f3ff;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.case-screen-list article strong {
+  display: block;
+  color: #1d2129;
+  font-size: 17px;
+}
+
+.case-screen-list article span {
+  height: 8px;
+  margin-top: 10px;
+  display: block;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(29, 33, 41, 0.1);
+}
+
+.case-screen-list article i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #165dff, #14c9c9);
+}
+
+.arco-case-card.is-government .case-screen-list article i {
+  background: linear-gradient(90deg, #c9354c, #ff7d00);
+}
+
+.case-screen-footer {
+  min-height: 52px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.case-screen-footer .anticon {
+  color: #165dff;
+  font-size: 28px;
+}
+
+.arco-case-card article {
+  padding: 70px 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  color: #1d2129;
+  background: #fff;
+  animation: arcoCaseTextIn 360ms cubic-bezier(0.22, 1, 0.36, 1) 120ms both;
+}
+
+.arco-case-card article .anticon {
+  color: var(--arco-blue);
+  font-size: 34px;
+}
+
+.arco-case-card.is-carrier article .anticon,
+.arco-case-card.is-carrier strong {
+  color: #0e9f7f;
+}
+
+.arco-case-card.is-government article .anticon,
+.arco-case-card.is-government strong {
+  color: #c9354c;
+}
+
+.arco-case-card h3 {
+  margin: 22px 0 18px;
+  font-size: 34px;
+  line-height: 1.24;
+}
+
+.arco-case-card p {
+  max-width: 34ch;
+  margin: 0;
+  color: #4e5969;
+  font-size: 18px;
+  line-height: 1.7;
+}
+
+.arco-case-card > article > strong {
+  display: block;
+  margin-top: clamp(32px, 5vh, 64px);
+  color: var(--arco-blue);
+  font-size: 36px;
+  line-height: 1;
+}
+
+.arco-case-card article > span {
+  display: block;
+  margin-top: 8px;
+  color: #4e5969;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.arco-case-card a {
+  height: 54px;
+  margin-top: 28px;
+  padding: 0 26px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #1d2129;
+  background: #f7f8fa;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.arco-case-dots {
+  margin-top: 24px;
+  display: inline-flex;
+  gap: 10px;
+}
+
+.arco-case-dots button {
+  width: 8px;
+  height: 8px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.42);
+  cursor: pointer;
+  transition: width 0.2s ease, background 0.2s ease;
+}
+
+.arco-case-dots button.is-active {
+  width: 24px;
+  background: #fff;
+}
+
+@keyframes arcoCaseSlideNext {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes arcoCaseSlidePrev {
+  from { opacity: 0; transform: translateX(-40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes arcoCaseScreenIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes arcoCaseTextIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
 /* ── Hero SVG 文字描边动画 ── */
 .hero-stroke-svg {
   width: min(780px, 90vw);
