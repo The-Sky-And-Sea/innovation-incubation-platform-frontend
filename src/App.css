@@ -6443,6 +6443,24 @@ select {
   color: #999999;
 }
 
+.mobbin-home.is-dark .mobbin-floating-icon {
+  border-color: #333333;
+  background: #1a1a1a;
+  color: #cccccc;
+}
+.mobbin-home.is-dark .mobbin-floating-icon.is-enterprise {
+  color: #4a90e2;
+}
+.mobbin-home.is-dark .mobbin-floating-icon.is-carrier {
+  color: #2db5a0;
+}
+.mobbin-home.is-dark .mobbin-floating-icon.is-government {
+  color: #e06070;
+}
+.mobbin-home.is-dark .mobbin-floating-icon.is-file {
+  color: #aaaaaa;
+}
+
 .mobbin-home.is-dark .mobbin-duo-grid h3,
 .mobbin-home.is-dark .mobbin-feature-row h3 {
   color: #ffffff;
