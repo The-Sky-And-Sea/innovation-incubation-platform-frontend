@@ -118,6 +118,8 @@ export default function HomePage() {
   const [routeTransitioning, setRouteTransitioning] = useState(false);
   const [activePatternTab, setActivePatternTab] = useState<PatternTab>("页面");
   const [darkMode, setDarkMode] = useState(false);
+  const [feedbackRating, setFeedbackRating] = useState(0);
+  const [feedbackHover, setFeedbackHover] = useState(0);
   const [animating, setAnimating] = useState(false);
   const [circlePos, setCirclePos] = useState({ cx: "50%", cy: "50%" });
   const routeTimerRef = useRef<number | null>(null);
@@ -485,17 +487,86 @@ export default function HomePage() {
       </main>
 
       <footer className="mobbin-footer">
-        <div>
-          <strong>孵化平台</strong>
-          <span>创新创业孵化载体管理平台</span>
+        <svg className="mobbin-footer-svg" width="0" height="0" aria-hidden="true">
+          <filter id="fractal" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+            <feTurbulence id="turbulence" type="fractalNoise" baseFrequency="0.02 0.02" numOctaves="5">
+              <animate
+                attributeName="baseFrequency"
+                dur="20s"
+                values="0.02 0.02;0.022 0.15;0.02 0.02"
+                repeatCount="indefinite" />
+            </feTurbulence>
+            <feDisplacementMap in="SourceGraphic" scale="15" />
+          </filter>
+        </svg>
+        <div className="mobbin-footer-left">
+          <p className="mobbin-footer-contact">联系我们</p>
+          <div className="mobbin-footer-icons">
+            <a
+              className="mobbin-footer-icon-link"
+              href="https://github.com/The-Sky-And-Sea/innovation-incubation-platform-frontend"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="GitHub"
+            >
+              <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
+              </svg>
+            </a>
+            <span className="mobbin-footer-icon-link" aria-label="邮箱">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
+                <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z" />
+              </svg>
+            </span>
+            <span className="mobbin-footer-icon-link" aria-label="微信">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
+                <path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18zm5.34 2.867c-1.797-.052-3.746.512-5.28 1.786-1.72 1.428-2.687 3.72-1.78 6.22.942 2.453 3.666 4.229 6.884 4.229.826 0 1.622-.12 2.361-.336a.722.722 0 0 1 .598.082l1.584.926a.272.272 0 0 0 .14.047c.134 0 .24-.111.24-.247 0-.06-.023-.12-.038-.177l-.327-1.233a.582.582 0 0 1-.023-.156.49.49 0 0 1 .201-.398C23.024 18.48 24 16.82 24 14.98c0-3.21-2.931-5.952-7.062-6.122zm-2.18 2.769c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.97-.982zm4.844 0c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.97-.982z" />
+              </svg>
+            </span>
+          </div>
+          <div className="mobbin-footer-team">
+            <span className="mobbin-footer-team-name">brain_404</span>
+            <div className="mobbin-footer-team-members">
+              <span>有手就行</span>
+              <span>没手也行</span>
+              <span>别人都行</span>
+              <span>就我不行</span>
+              <span>彳亍</span>
+            </div>
+          </div>
         </div>
-        <nav aria-label="页脚导航">
-          <a href="#patterns" onClick={(e) => handleNavClick(e, "#patterns")}>业务库</a>
-          <a href="#flows" onClick={(e) => handleNavClick(e, "#flows")}>流程</a>
-          <a href="#comments" onClick={(e) => handleNavClick(e, "#comments")}>反馈</a>
-          <a href="/login" onClick={handleLoginClick}>登录</a>
-        </nav>
-        <small>© 2026 Incubation Platform</small>
+        <div className="mobbin-footer-animation">
+          <div className="g-container">
+            <div className="g-top" />
+            <div className="g-bottom" />
+            <p>Innovati<span>o</span>n</p>
+          </div>
+        </div>
+        <div className="mobbin-footer-right">
+          <div className="mobbin-footer-eco">
+            <span className="mobbin-footer-section-title">更多生态产品</span>
+            <p className="mobbin-footer-eco-pending">敬请期待</p>
+          </div>
+          <div className="mobbin-footer-feedback">
+            <span className="mobbin-footer-section-title">体验反馈</span>
+            <div
+              className="mobbin-footer-stars"
+              onMouseLeave={() => setFeedbackHover(0)}
+            >
+              {[1, 2, 3, 4, 5].map((star) => (
+                <span
+                  key={star}
+                  className={`mobbin-footer-star${star <= (feedbackHover || feedbackRating) ? " is-active" : ""}`}
+                  onClick={() => setFeedbackRating(star)}
+                  onMouseEnter={() => setFeedbackHover(star)}
+                >
+                  ★
+                </span>
+              ))}
+            </div>
+          </div>
+          <small className="mobbin-footer-powered">Powered by Incubation Platform</small>
+        </div>
       </footer>
     </div>
   );
