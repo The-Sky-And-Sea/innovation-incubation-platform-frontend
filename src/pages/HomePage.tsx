@@ -273,7 +273,8 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="mobbin-product-stage" id="patterns" aria-label="平台业务库预览">
+        <section className="mobbin-product-stage reveal-section" id="patterns" aria-label="平台业务库预览">
+          <h2 className="mobbin-product-stage-heading reveal-heading">业务库</h2>
           <div className="mobbin-library-window">
             <div className="mobbin-window-bar">
               <div className="mobbin-mini-brand">

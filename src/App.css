@@ -5061,6 +5061,16 @@ select {
   background: #f2f2f2;
 }
 
+.mobbin-product-stage-heading {
+  text-align: center;
+  margin: 0 0 42px;
+  color: #101010;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  font-size: clamp(48px, 5.8vw, 72px);
+  line-height: 0.98;
+}
+
 .mobbin-library-window {
   min-height: 620px;
   padding: 24px 28px 0;
