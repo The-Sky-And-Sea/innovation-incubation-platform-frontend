@@ -346,11 +346,12 @@ export default function HomePage() {
           </div>
           <div className="reveal-body">
             <div className="mobbin-hero-actions">
-            <a href="/login" className="mobbin-primary" onClick={handleLoginClick}>
-              进入登录
-            </a>
+              <Link to="/login" className="mobbin-primary" onClick={handleLoginClick}>
+                <LoginOutlined />
+                登录平台
+              </Link>
               <Link to="/register" className="mobbin-secondary">
-                创建账号
+                注册账号
                 <ArrowRightOutlined />
               </Link>
             </div>
@@ -688,17 +689,6 @@ export default function HomePage() {
         <section className="mobbin-final-cta reveal-section">
           <h2 className="reveal-heading">别再让流程散在各处。</h2>
           <div className="reveal-body">
-            <p>先从统一入口登录，再进入企业、载体或政务端工作台。</p>
-            <div>
-              <Link to="/login" className="mobbin-primary">
-                <LoginOutlined />
-                登录平台
-              </Link>
-              <Link to="/register" className="mobbin-secondary">
-                注册账号
-                <ArrowRightOutlined />
-              </Link>
-            </div>
             <div className="mobbin-marquee" aria-hidden="true">
               <div>
                 {[...marqueeItems, ...marqueeItems].map((item, index) => (
