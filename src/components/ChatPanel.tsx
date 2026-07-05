@@ -1,14 +1,15 @@
 /**
- * 对话助手 Chat 共享组件
+ * 对话助手 Chat 共享组件（第二阶段：含 SSE 流式消息发送）
  *
- * 面向企业端和载体端，提供会话管理（CRUD）功能：
- * - 左侧会话列表（支持新建、删除、切换）
- * - 右侧消息展示区（会加载选中会话的全部消息）
+ * 面向企业端和载体端：
+ * - 左侧会话列表（新建、删除、切换）
+ * - 右侧消息展示区 + 消息输入框
+ * - SSE 流式接收 thinking / reply / error / done 事件
  *
- * 第二阶段将在此组件基础上添加 SSE 消息发送能力。
+ * 第三阶段将在此基础上添加编辑重发能力。
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Button,
   Card,
@@ -25,20 +26,93 @@ import {
 } from "antd";
 import {
   DeleteOutlined,
+  LoadingOutlined,
   MessageOutlined,
   PlusOutlined,
   RobotOutlined,
+  SendOutlined,
+  StopOutlined,
   UserOutlined,
+  BulbOutlined,
 } from "@ant-design/icons";
 import {
   createChatSession,
   deleteChatSession,
   getChatSession,
   getChatSessions,
+  sendChatMessage,
 } from "../api/chat";
 import type { ChatMessage, ChatSession } from "../types";
 
 const { Text, Paragraph } = Typography;
+const { TextArea } = Input;
+
+/** 流式消息气泡组件 — 实时渲染 thinking + reply */
+function StreamingBubble({
+  thinking,
+  reply,
+  loading,
+}: {
+  thinking: string;
+  reply: string;
+  loading: boolean;
+}) {
+  return (
+    <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: 16 }}>
+      <div
+        style={{
+          maxWidth: "70%",
+          padding: "10px 16px",
+          borderRadius: 12,
+          background: "#f0f2f5",
+          color: "#1f1f1f",
+          minWidth: 120,
+        }}
+      >
+        <div style={{ marginBottom: 4, fontSize: 12, opacity: 0.7 }}>
+          <Space size={4}>
+            {loading ? <LoadingOutlined /> : <RobotOutlined />}
+            <span>助手</span>
+            <span>·</span>
+            <span>回复中...</span>
+          </Space>
+        </div>
+        {thinking && (
+          <details open style={{ marginBottom: thinking && reply ? 8 : 0 }}>
+            <summary style={{ cursor: "pointer", fontSize: 12, opacity: 0.7, marginBottom: 4 }}>
+              <BulbOutlined style={{ marginRight: 4 }} />
+              思考过程
+            </summary>
+            <Paragraph
+              style={{
+                margin: 0,
+                whiteSpace: "pre-wrap",
+                fontSize: 13,
+                opacity: 0.75,
+                background: "#e6f0fa",
+                padding: "8px 12px",
+                borderRadius: 8,
+              }}
+            >
+              {thinking}
+            </Paragraph>
+          </details>
+        )}
+        {reply && (
+          <Paragraph style={{ margin: 0, whiteSpace: "pre-wrap" }}>
+            {reply}
+            {loading && <span className="streaming-cursor">▍</span>}
+          </Paragraph>
+        )}
+        {!thinking && !reply && loading && (
+          <Text type="secondary" style={{ fontSize: 13 }}>
+            正在思考...
+          </Text>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function ChatPanel() {
   // --- 会话列表状态 ---
@@ -54,6 +128,26 @@ export default function ChatPanel() {
   // --- 会话详情（消息列表） ---
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
+
+  // --- 发送消息 ---
+  const [inputValue, setInputValue] = useState("");
+  const [sending, setSending] = useState(false);
+  const [streamingThinking, setStreamingThinking] = useState("");
+  const [streamingReply, setStreamingReply] = useState("");
+  const [awaitingReply, setAwaitingReply] = useState(false);
+
+  // --- Refs ---
+  const abortRef = useRef<AbortController | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  /** 自动滚动到底部 */
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, streamingThinking, streamingReply, awaitingReply, scrollToBottom]);
 
   /** 加载会话列表 */
   const loadSessions = useCallback(async () => {
@@ -85,8 +179,15 @@ export default function ChatPanel() {
     }
   }, []);
 
-  /** 切换会话 */
+  /** 切换会话（取消当前发送） */
   const handleSelectSession = (sessionId: number) => {
+    // 如果正在发送，中止
+    abortRef.current?.abort();
+    setSending(false);
+    setAwaitingReply(false);
+    setStreamingThinking("");
+    setStreamingReply("");
+
     setActiveSessionId(sessionId);
     loadMessages(sessionId);
   };
@@ -105,7 +206,6 @@ export default function ChatPanel() {
       setNewTitle("");
       setCreateModalOpen(false);
       await loadSessions();
-      // 自动选中新创建的会话
       if (res.data?.id) {
         setActiveSessionId(res.data.id);
         loadMessages(res.data.id);
@@ -123,12 +223,86 @@ export default function ChatPanel() {
       await deleteChatSession(sessionId);
       message.success("会话已删除");
       if (activeSessionId === sessionId) {
+        abortRef.current?.abort();
         setActiveSessionId(null);
         setMessages([]);
+        setSending(false);
+        setAwaitingReply(false);
+        setStreamingThinking("");
+        setStreamingReply("");
       }
       await loadSessions();
     } catch {
       message.error("删除会话失败");
+    }
+  };
+
+  /** 发送消息 */
+  const handleSend = async () => {
+    const trimmed = inputValue.trim();
+    if (!trimmed || !activeSessionId || sending) return;
+
+    setSending(true);
+    setInputValue("");
+    setStreamingThinking("");
+    setStreamingReply("");
+    setAwaitingReply(true);
+
+    // 不需要在这里手动添加 user 消息到列表，因为重载消息时会从后端获取
+    try {
+      const controller = await sendChatMessage(
+        activeSessionId,
+        { content: trimmed },
+        {
+          onThinking: (chunk) => {
+            setStreamingThinking((prev) => prev + chunk);
+          },
+          onReply: (content) => {
+            setAwaitingReply(false);
+            setStreamingReply(content);
+          },
+          onError: (msg) => {
+            message.error(msg);
+          },
+          onDone: () => {
+            setSending(false);
+            setAwaitingReply(false);
+            // 重载消息列表获取完整对话历史
+            if (activeSessionId) {
+              loadMessages(activeSessionId);
+              // 同时刷新会话列表（更新 last_message_at 和 message_count）
+              loadSessions();
+            }
+            abortRef.current = null;
+          },
+        },
+      );
+      abortRef.current = controller;
+    } catch (err) {
+      message.error((err as Error).message || "发送失败");
+      setSending(false);
+      setAwaitingReply(false);
+    }
+  };
+
+  /** 停止生成 */
+  const handleStop = () => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setSending(false);
+    setAwaitingReply(false);
+    // 重载消息列表
+    if (activeSessionId) {
+      loadMessages(activeSessionId);
+      loadSessions();
+    }
+  };
+
+  /** 按 Enter 发送（Shift+Enter 换行） */
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
     }
   };
 
@@ -150,8 +324,19 @@ export default function ChatPanel() {
       {/* ========== 左侧：会话列表 ========== */}
       <Card
         className="chat-session-sidebar"
-        style={{ width: 280, flexShrink: 0, display: "flex", flexDirection: "column" }}
-        bodyStyle={{ flex: 1, display: "flex", flexDirection: "column", padding: 12, overflow: "hidden" }}
+        style={{
+          width: 280,
+          flexShrink: 0,
+          display: "flex",
+          flexDirection: "column",
+        }}
+        bodyStyle={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          padding: 12,
+          overflow: "hidden",
+        }}
         title={
           <Space>
             <MessageOutlined />
@@ -176,7 +361,11 @@ export default function ChatPanel() {
               image={Empty.PRESENTED_IMAGE_SIMPLE}
               style={{ marginTop: 40 }}
             >
-              <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateModalOpen(true)}>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => setCreateModalOpen(true)}
+              >
                 创建第一个会话
               </Button>
             </Empty>
@@ -192,8 +381,12 @@ export default function ChatPanel() {
                     padding: "8px 12px",
                     borderRadius: 8,
                     marginBottom: 4,
-                    background: activeSessionId === item.id ? "#e6f4ff" : "transparent",
-                    border: activeSessionId === item.id ? "1px solid #1677ff" : "1px solid transparent",
+                    background:
+                      activeSessionId === item.id ? "#e6f4ff" : "transparent",
+                    border:
+                      activeSessionId === item.id
+                        ? "1px solid #1677ff"
+                        : "1px solid transparent",
                   }}
                   actions={[
                     <Popconfirm
@@ -224,10 +417,16 @@ export default function ChatPanel() {
                         {item.message_count || 0}
                       </Tag>
                     }
-                    title={<Text ellipsis style={{ maxWidth: 160 }}>{item.title}</Text>}
+                    title={
+                      <Text ellipsis style={{ maxWidth: 160 }}>
+                        {item.title}
+                      </Text>
+                    }
                     description={
                       <Text type="secondary" style={{ fontSize: 12 }}>
-                        {item.last_message_at ? formatTime(item.last_message_at) : formatTime(item.created_at)}
+                        {item.last_message_at
+                          ? formatTime(item.last_message_at)
+                          : formatTime(item.created_at)}
                       </Text>
                     }
                   />
@@ -238,10 +437,20 @@ export default function ChatPanel() {
         </Spin>
       </Card>
 
-      {/* ========== 右侧：消息展示区 ========== */}
+      {/* ========== 右侧：消息展示区 + 输入框 ========== */}
       <Card
-        style={{ flex: 1, display: "flex", flexDirection: "column" }}
-        bodyStyle={{ flex: 1, display: "flex", flexDirection: "column", padding: 16, overflow: "hidden" }}
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+        }}
+        bodyStyle={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          padding: "16px 16px 0 16px",
+          overflow: "hidden",
+        }}
         title={
           activeSession ? (
             <Space>
@@ -257,65 +466,156 @@ export default function ChatPanel() {
           )
         }
       >
-        {!activeSessionId ? (
-          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Empty description="选择一个会话或创建新会话开始对话">
-              <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateModalOpen(true)}>
-                新建会话
-              </Button>
-            </Empty>
-          </div>
-        ) : messagesLoading ? (
-          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Spin tip="加载消息中..." />
-          </div>
-        ) : messages.length === 0 ? (
-          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Empty description="暂无消息，发送第一条消息开始对话" />
-          </div>
-        ) : (
-          <div style={{ flex: 1, overflowY: "auto", paddingRight: 8 }}>
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                style={{
-                  display: "flex",
-                  justifyContent: msg.role === "user" ? "flex-end" : "flex-start",
-                  marginBottom: 16,
-                }}
-              >
+        {/* 消息列表区域 */}
+        <div style={{ flex: 1, overflowY: "auto", paddingBottom: 8, paddingRight: 4 }}>
+          {!activeSessionId ? (
+            <div
+              style={{
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Empty description="选择一个会话或创建新会话开始对话">
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => setCreateModalOpen(true)}
+                >
+                  新建会话
+                </Button>
+              </Empty>
+            </div>
+          ) : messagesLoading ? (
+            <div
+              style={{
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Spin tip="加载消息中..." />
+            </div>
+          ) : messages.length === 0 && !awaitingReply ? (
+            <div
+              style={{
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Empty description="发送第一条消息，开始与助手对话" />
+            </div>
+          ) : (
+            <>
+              {messages.map((msg) => (
                 <div
+                  key={msg.id}
                   style={{
-                    maxWidth: "70%",
-                    padding: "10px 16px",
-                    borderRadius: 12,
-                    background: msg.role === "user" ? "#1677ff" : "#f0f2f5",
-                    color: msg.role === "user" ? "#fff" : "#1f1f1f",
+                    display: "flex",
+                    justifyContent: msg.role === "user" ? "flex-end" : "flex-start",
+                    marginBottom: 16,
                   }}
                 >
-                  <div style={{ marginBottom: 4, fontSize: 12, opacity: 0.7 }}>
-                    <Space size={4}>
-                      {msg.role === "user" ? <UserOutlined /> : <RobotOutlined />}
-                      <span>{msg.role === "user" ? "我" : "助手"}</span>
-                      <span>·</span>
-                      <span>{formatTime(msg.created_at)}</span>
-                    </Space>
-                  </div>
-                  <Paragraph style={{ margin: 0, whiteSpace: "pre-wrap" }}>
-                    {msg.content}
-                  </Paragraph>
-                  {msg.state && Object.keys(msg.state).length > 0 && (
-                    <div style={{ marginTop: 8, fontSize: 12, opacity: 0.7 }}>
-                      <Text style={{ color: msg.role === "user" ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.45)" }}>
-                        上下文: {JSON.stringify(msg.state)}
-                      </Text>
+                  <div
+                    style={{
+                      maxWidth: "70%",
+                      padding: "10px 16px",
+                      borderRadius: 12,
+                      background: msg.role === "user" ? "#1677ff" : "#f0f2f5",
+                      color: msg.role === "user" ? "#fff" : "#1f1f1f",
+                    }}
+                  >
+                    <div style={{ marginBottom: 4, fontSize: 12, opacity: 0.7 }}>
+                      <Space size={4}>
+                        {msg.role === "user" ? <UserOutlined /> : <RobotOutlined />}
+                        <span>{msg.role === "user" ? "我" : "助手"}</span>
+                        <span>·</span>
+                        <span>{formatTime(msg.created_at)}</span>
+                      </Space>
                     </div>
-                  )}
+                    <Paragraph style={{ margin: 0, whiteSpace: "pre-wrap" }}>
+                      {msg.content}
+                    </Paragraph>
+                    {msg.state && Object.keys(msg.state).length > 0 && (
+                      <div style={{ marginTop: 8, fontSize: 12, opacity: 0.7 }}>
+                        <Text
+                          style={{
+                            color:
+                              msg.role === "user"
+                                ? "rgba(255,255,255,0.7)"
+                                : "rgba(0,0,0,0.45)",
+                          }}
+                        >
+                          上下文: {JSON.stringify(msg.state)}
+                        </Text>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+
+              {/* 流式回复气泡 */}
+              {awaitingReply && (
+                <StreamingBubble
+                  thinking={streamingThinking}
+                  reply={streamingReply}
+                  loading={sending}
+                />
+              )}
+
+              <div ref={messagesEndRef} />
+            </>
+          )}
+        </div>
+
+        {/* 输入区域 */}
+        <div
+          style={{
+            padding: "12px 0",
+            borderTop: "1px solid #f0f0f0",
+            display: "flex",
+            gap: 8,
+            alignItems: "flex-end",
+            background: "#fff",
+          }}
+        >
+          <TextArea
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={
+              activeSessionId
+                ? "输入消息，Enter 发送，Shift+Enter 换行"
+                : "请先选择或创建会话"
+            }
+            disabled={!activeSessionId || sending}
+            autoSize={{ minRows: 1, maxRows: 4 }}
+            style={{ flex: 1 }}
+          />
+          {sending ? (
+            <Button
+              type="primary"
+              danger
+              icon={<StopOutlined />}
+              onClick={handleStop}
+            >
+              停止
+            </Button>
+          ) : (
+            <Button
+              type="primary"
+              icon={<SendOutlined />}
+              onClick={handleSend}
+              disabled={!activeSessionId || !inputValue.trim()}
+            >
+              发送
+            </Button>
+          )}
+        </div>
       </Card>
 
       {/* ========== 新建会话弹窗 ========== */}

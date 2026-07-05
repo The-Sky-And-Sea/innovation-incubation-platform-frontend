@@ -14,8 +14,10 @@ import type {
   ApiResponse,
   ChatCreateRequest,
   ChatMessage,
+  ChatSendRequest,
   ChatSession,
 } from "../types";
+import { ssePost, type SseCallbacks } from "../utils/sse";
 
 /** 创建会话 */
 export async function createChatSession(
@@ -47,4 +49,24 @@ export async function deleteChatSession(
 ): Promise<ApiResponse<null>> {
   const { del } = await import("../utils/request");
   return del(`/chat/sessions/${id}`);
+}
+
+/**
+ * 发送消息（SSE 流式）
+ *
+ * POST /chat/sessions/:id/messages
+ * Content-Type: text/event-stream
+ *
+ * @returns AbortController 用于中断请求
+ */
+export function sendChatMessage(
+  sessionId: number,
+  data: ChatSendRequest,
+  callbacks: SseCallbacks,
+): Promise<AbortController> {
+  return ssePost(
+    `/chat/sessions/${sessionId}/messages`,
+    data,
+    callbacks,
+  );
 }
