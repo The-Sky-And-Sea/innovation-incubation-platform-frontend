@@ -1,8 +1,9 @@
-import { Fragment, useState, type CSSProperties, type MouseEvent } from "react";
+import { Fragment, useEffect, useState, type CSSProperties, type MouseEvent } from "react";
 import { Link } from "react-router-dom";
 import {
   ApiOutlined,
   AppstoreOutlined,
+  ArrowUpOutlined,
   ArrowRightOutlined,
   AuditOutlined,
   BankOutlined,
@@ -12,8 +13,10 @@ import {
   DatabaseOutlined,
   FileDoneOutlined,
   FileSearchOutlined,
+  LeftOutlined,
   LoginOutlined,
   MoonFilled,
+  RightOutlined,
   SafetyCertificateOutlined,
   SunFilled,
   TeamOutlined,
@@ -26,7 +29,7 @@ const designPrinciples = [
   { title: "一致", text: "统一规则保证三端协作口径一致", tone: "blue" },
   { title: "有序", text: "把申报、审核和通知整理成清晰流程", tone: "green" },
   { title: "清晰", text: "减少重复填报，让用户只关注下一步", tone: "cyan" },
-  { title: "开放", text: "为 API、Mock 和联调保留稳定入口", tone: "teal" },
+  { title: "开放", text: "为接口服务和系统接入保留稳定入口", tone: "teal" },
 ];
 
 const platformTabs = [
@@ -132,6 +135,20 @@ const caseSlides = [
     statLabel: "主流程串联",
     link: "/enterprise/dashboard",
     bars: ["82%", "64%", "74%"],
+    screenTitle: "申报办理台",
+    queue: ["企业信息完善", "材料上传复用", "政策匹配申报"],
+    chips: ["入驻状态", "文件管理", "政策申报"],
+    insight: "已同步载体初审、材料完整度和政策申报进度",
+    status: "企业办理链路",
+    leadMetric: "82%",
+    leadLabel: "资料完整度",
+    supporting: [
+      ["待补材料", "2 项"],
+      ["可申报政策", "5 条"],
+      ["平均办理", "4.8h"],
+    ],
+    checklist: ["统一身份登录", "企业资料维护", "附件材料复用", "政策匹配申报"],
+    result: "从首次入驻到政策申报保持同一份企业档案，后续材料不再反复提交。",
   },
   {
     tone: "carrier",
@@ -142,6 +159,20 @@ const caseSlides = [
     statLabel: "核心页面接入",
     link: "/carrier/dashboard",
     bars: ["76%", "88%", "58%"],
+    screenTitle: "载体协同台",
+    queue: ["入驻初审", "变更复核", "绩效填报"],
+    chips: ["待审企业", "变更事项", "绩效任务"],
+    insight: "集中查看企业材料、审核意见和绩效提交状态",
+    status: "载体运营链路",
+    leadMetric: "18",
+    leadLabel: "待处理事项",
+    supporting: [
+      ["初审队列", "7 家"],
+      ["变更复核", "3 项"],
+      ["绩效进度", "88%"],
+    ],
+    checklist: ["入驻初审", "企业档案核验", "变更材料复核", "绩效填报归档"],
+    result: "把企业材料、审核意见和载体服务记录放在同一个运营视图里。",
   },
   {
     tone: "government",
@@ -152,6 +183,20 @@ const caseSlides = [
     statLabel: "监管事项覆盖",
     link: "/gov/dashboard",
     bars: ["68%", "90%", "72%"],
+    screenTitle: "政务监管台",
+    queue: ["政策发布", "申报终审", "通知监管"],
+    chips: ["政策管理", "终审队列", "账号治理"],
+    insight: "按风险、时限和办理结果跟踪跨端协同事项",
+    status: "政务监管链路",
+    leadMetric: "12+",
+    leadLabel: "监管事项覆盖",
+    supporting: [
+      ["待终审", "9 件"],
+      ["政策发布", "4 条"],
+      ["通知触达", "96%"],
+    ],
+    checklist: ["政策发布", "申报终审", "账号治理", "通知监管"],
+    result: "政务端不只看结果，也能追踪政策、申报、通知和账号治理的闭环状态。",
   },
 ];
 
@@ -188,7 +233,7 @@ const enDesignPrinciples = [
   { title: "agreement", text: "Shared rules keep all three roles aligned", tone: "blue" },
   { title: "rhythm", text: "Applications, reviews, and notices move in clear steps", tone: "green" },
   { title: "clarity", text: "Less repeated input, more focus on the next action", tone: "cyan" },
-  { title: "open", text: "Stable entries for APIs, mocks, and integration work", tone: "teal" },
+  { title: "open", text: "Stable entries for interface services and system access", tone: "teal" },
 ];
 
 const enPlatformTabs = [
@@ -294,6 +339,20 @@ const enCaseSlides = [
     statLabel: "core flows connected",
     link: "/enterprise/dashboard",
     bars: ["82%", "64%", "74%"],
+    screenTitle: "Application desk",
+    queue: ["Profile completion", "File reuse", "Policy application"],
+    chips: ["Entry status", "Files", "Policies"],
+    insight: "Carrier review, file completeness, and policy progress stay in sync.",
+    status: "Enterprise service path",
+    leadMetric: "82%",
+    leadLabel: "profile completeness",
+    supporting: [
+      ["Missing files", "2"],
+      ["Matched policies", "5"],
+      ["Avg. handling", "4.8h"],
+    ],
+    checklist: ["Unified sign-in", "Profile maintenance", "File reuse", "Policy application"],
+    result: "The same enterprise profile carries onboarding and policy application without repeated file submission.",
   },
   {
     tone: "carrier",
@@ -304,6 +363,20 @@ const enCaseSlides = [
     statLabel: "core pages connected",
     link: "/carrier/dashboard",
     bars: ["76%", "88%", "58%"],
+    screenTitle: "Carrier desk",
+    queue: ["Entry review", "Change review", "Performance filing"],
+    chips: ["Review queue", "Changes", "Performance"],
+    insight: "Enterprise files, review comments, and filing states are centralized.",
+    status: "Carrier operation path",
+    leadMetric: "18",
+    leadLabel: "pending items",
+    supporting: [
+      ["Entry queue", "7"],
+      ["Change reviews", "3"],
+      ["Performance", "88%"],
+    ],
+    checklist: ["Entry review", "File verification", "Change review", "Performance archive"],
+    result: "Enterprise files, review comments, and service records are kept in one carrier operation view.",
   },
   {
     tone: "government",
@@ -314,6 +387,20 @@ const enCaseSlides = [
     statLabel: "governance items covered",
     link: "/gov/dashboard",
     bars: ["68%", "90%", "72%"],
+    screenTitle: "Governance desk",
+    queue: ["Policy publishing", "Final review", "Notice supervision"],
+    chips: ["Policies", "Final review", "Accounts"],
+    insight: "Cross-role items are tracked by risk, deadline, and handling result.",
+    status: "Government governance path",
+    leadMetric: "12+",
+    leadLabel: "governance items",
+    supporting: [
+      ["Final reviews", "9"],
+      ["Policies", "4"],
+      ["Notice reach", "96%"],
+    ],
+    checklist: ["Policy publishing", "Final review", "Account governance", "Notice supervision"],
+    result: "Government users can trace the full loop of policy, application, notice, and account governance.",
   },
 ];
 
@@ -382,16 +469,16 @@ const homeCopy = {
     fileReuse: "文件复用",
     fileReuseText: "一次上传，多处引用",
     trustLabel: "来自核心业务场景的信任",
-    quickStart: "快速上手",
-    resourcesTitle: "完善的设计开发资源",
-    designResource: "设计资源",
-    designResourceText: "使用孵化平台页面规范，帮助你创建一致、清晰的三端业务体验。",
-    designItems: ["入驻申请页面", "审核队列组件", "材料上传与复用", "政策发布流程"],
-    devResource: "开发资源",
-    devResourceText: "接口、Mock、Docker 和页面状态都已围绕联调前准备整理。",
-    devItems: ["API 服务层", "Docker 后端服务", "Mock 环境切换", "数据归档模型"],
-    designLinks: ["设计原则", "样式指南", "组件用法"],
-    devLinks: ["Web React", "联调准备", "演示账号"],
+    quickStart: "资源中心",
+    resourcesTitle: "平台规范与接入能力",
+    designResource: "业务规范",
+    designResourceText: "围绕企业端、载体端和政务端的办理流程，沉淀统一的页面口径和操作规范。",
+    designItems: ["入驻申请规范", "审核队列规范", "材料复用规范", "政策发布规范"],
+    devResource: "接入能力",
+    devResourceText: "围绕接口服务、运行环境、权限身份和数据归档，提供稳定的系统接入支撑。",
+    devItems: ["接口服务管理", "后端服务支撑", "环境配置管理", "数据归档模型"],
+    designLinks: ["业务规则", "页面规范", "流程说明"],
+    devLinks: ["接口服务", "接入准备", "账号说明"],
     platformKicker: "工具平台",
     platformTitle: "灵活丰富的生态平台",
     realTime: "实时同步",
@@ -408,7 +495,7 @@ const homeCopy = {
     journeyTitle: "即刻开启你的体验旅程",
     enterWorkspace: "进入工作台",
     contact: "联系我们",
-    contactText: "把前端演示、接口联调和三端权限逐步接入真实环境。",
+    contactText: "将业务办理、系统接口和三端权限逐步接入正式运行环境。",
     footerDesign: "设计",
     footerComponents: "组件",
     footerProducts: "生态产品",
@@ -416,7 +503,7 @@ const homeCopy = {
     footerDesignLinks: ["设计规范", "设计原则", "页面模式"],
     footerComponentLinks: ["组件索引", "快速开始", "场景实践"],
     footerProductLinks: ["企业工作台", "载体工作台", "政务工作台"],
-    footerResourceLinks: ["API 文档", "Mock 环境", "Docker 联调"],
+    footerResourceLinks: ["接口文档", "环境配置", "接入说明"],
   },
   en: {
     menuLabel: "Open platform menu",
@@ -455,16 +542,16 @@ const homeCopy = {
     fileReuse: "File reuse",
     fileReuseText: "Upload once, reuse anywhere",
     trustLabel: "Trusted across core scenarios",
-    quickStart: "Quick start",
-    resourcesTitle: "Design and development resources",
-    designResource: "Design resources",
-    designResourceText: "Use the platform page patterns to create consistent, clear three-role business experiences.",
-    designItems: ["Onboarding page", "Review queue component", "File upload and reuse", "Policy publishing flow"],
-    devResource: "Development resources",
-    devResourceText: "APIs, mocks, Docker, and page states are prepared for integration.",
-    devItems: ["API service layer", "Docker backend service", "Mock environment switch", "Archive data model"],
-    designLinks: ["Design principles", "Style guide", "Component usage"],
-    devLinks: ["Web React", "Integration prep", "Demo accounts"],
+    quickStart: "Resource center",
+    resourcesTitle: "Platform standards and access capabilities",
+    designResource: "Business standards",
+    designResourceText: "Unified page rules and operating standards are organized around enterprise, carrier, and government workflows.",
+    designItems: ["Entry application standard", "Review queue standard", "File reuse standard", "Policy publishing standard"],
+    devResource: "Access capabilities",
+    devResourceText: "Interface services, runtime environments, identity permissions, and archive models support stable system access.",
+    devItems: ["Interface service management", "Backend service support", "Environment configuration", "Archive data model"],
+    designLinks: ["Business rules", "Page standards", "Flow guide"],
+    devLinks: ["Interface services", "Access preparation", "Account guide"],
     platformKicker: "Tool platform",
     platformTitle: "Flexible ecosystem capabilities",
     realTime: "Live sync",
@@ -481,15 +568,15 @@ const homeCopy = {
     journeyTitle: "Start your workspace journey",
     enterWorkspace: "Enter workspace",
     contact: "Contact us",
-    contactText: "Connect the frontend demo, API integration, and role permissions to a real environment step by step.",
+    contactText: "Connect business workflows, system interfaces, and role permissions to a formal operating environment.",
     footerDesign: "Design",
     footerComponents: "Components",
     footerProducts: "Products",
     footerResources: "Resources",
     footerDesignLinks: ["Design spec", "Design principles", "Page patterns"],
-    footerComponentLinks: ["Component index", "Quick start", "Scenario practice"],
+    footerComponentLinks: ["Component index", "Access guide", "Scenario practice"],
     footerProductLinks: ["Enterprise workspace", "Carrier workspace", "Government workspace"],
-    footerResourceLinks: ["API docs", "Mock environment", "Docker integration"],
+    footerResourceLinks: ["Interface docs", "Environment setup", "Access guide"],
   },
 };
 
@@ -503,7 +590,7 @@ const resourceCenterItems = [
   },
   {
     title: "功能文档",
-    text: "按企业端、载体端、政务端整理功能说明，便于联调和演示。",
+    text: "按企业端、载体端、政务端整理功能说明，便于理解业务流程与操作边界。",
     icon: <CodeOutlined />,
     href: "/docs/feature-docs",
     action: "查看文档",
@@ -531,7 +618,7 @@ const resourceCenterItems = [
   },
   {
     title: "更新公告",
-    text: "查看最近页面、流程、演示账号和接口联调能力的更新记录。",
+    text: "查看近期页面、业务流程、账号权限和接口服务能力的更新记录。",
     icon: <AppstoreOutlined />,
     href: "/docs/release-notes",
     action: "查看更新",
@@ -567,6 +654,7 @@ export default function HomePage() {
   const [themeMode, setThemeMode] = useState<"day" | "night">("day");
   const [resourceCenterOpen, setResourceCenterOpen] = useState(false);
   const [dotOffset, setDotOffset] = useState({ x: 0, y: 0 });
+  const [showBackHome, setShowBackHome] = useState(false);
   const isEnglish = language === "en";
   const isNight = themeMode === "night";
   const copy = homeCopy[language];
@@ -577,6 +665,19 @@ export default function HomePage() {
   const currentPortalCards = isEnglish ? enPortalCards : portalCards;
   const activePlatform = currentPlatformTabs[activePlatformIndex];
   const activeCase = currentCaseSlides[activeCaseIndex];
+
+  useEffect(() => {
+    const updateBackHomeVisibility = () => {
+      setShowBackHome(window.scrollY > 8);
+    };
+
+    updateBackHomeVisibility();
+    window.addEventListener("scroll", updateBackHomeVisibility, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", updateBackHomeVisibility);
+    };
+  }, []);
 
   const switchCase = (direction: number) => {
     setCaseDirection(direction < 0 ? "prev" : "next");
@@ -604,6 +705,36 @@ export default function HomePage() {
     });
   };
 
+  const scrollBackHome = () => {
+    const startY = window.scrollY;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      window.scrollTo(0, 0);
+      window.history.replaceState(null, "", window.location.pathname);
+      setShowBackHome(false);
+      return;
+    }
+
+    const duration = Math.min(520, Math.max(260, startY * 0.28));
+    const startedAt = performance.now();
+    const easeOutCubic = (progress: number) => 1 - Math.pow(1 - progress, 3);
+
+    const animate = (currentTime: number) => {
+      const progress = Math.min(1, (currentTime - startedAt) / duration);
+      window.scrollTo(0, Math.round(startY * (1 - easeOutCubic(progress))));
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+        return;
+      }
+
+      window.history.replaceState(null, "", window.location.pathname);
+      setShowBackHome(false);
+    };
+
+    requestAnimationFrame(animate);
+  };
+
   return (
     <div className={`public-home-page arco-home ${isEnglish ? "is-english" : ""} ${isNight ? "is-night" : ""}`}>
       <header className="arco-home-header">
@@ -624,6 +755,12 @@ export default function HomePage() {
             <strong>{copy.brandName}</strong>
           </Link>
           <nav className="arco-nav-links" aria-label={isEnglish ? "Home navigation" : "首页导航"}>
+            <a href="#home" className="arco-roll-link">
+              <span className="arco-text-roller">
+                <span>首页</span>
+                <span>Home</span>
+              </span>
+            </a>
             <a href="#resources" className="arco-roll-link">
               <span className="arco-text-roller">
                 <span>业务库</span>
@@ -637,6 +774,12 @@ export default function HomePage() {
               </span>
             </a>
             <a href="#cases" className="arco-roll-link">
+              <span className="arco-text-roller">
+                <span>场景接入</span>
+                <span>Scenarios</span>
+              </span>
+            </a>
+            <a href="#journey" className="arco-roll-link">
               <span className="arco-text-roller">
                 <span>三端工作台</span>
                 <span>Workspaces</span>
@@ -729,7 +872,7 @@ export default function HomePage() {
       </div>
 
       <main>
-        <section className="arco-hero">
+        <section className="arco-hero" id="home">
           <div className="arco-hero-copy">
             <div className="home-hero-logo-reveal" aria-label={copy.heroBrand}>
               <span className="home-hero-logo-mark">
@@ -999,38 +1142,61 @@ export default function HomePage() {
           <h2>{copy.caseTitle}</h2>
           <div className="arco-case-carousel">
             <button type="button" aria-label={copy.prevCase} onClick={() => switchCase(-1)}>
-              ‹
+              <LeftOutlined />
             </button>
             <div className={`arco-case-card is-${activeCase.tone} is-${caseDirection}`} key={activeCase.title}>
               <div className="arco-case-screen">
                 <div className="case-screen-top">
-                  <span>{activeCase.title}</span>
-                  <strong>{activeCase.stat}</strong>
+                  <div>
+                    <span>{activeCase.screenTitle}</span>
+                    <em>{activeCase.status}</em>
+                  </div>
+                  <strong>{activeCase.leadMetric}</strong>
+                </div>
+                <div className="case-screen-metrics">
+                  {activeCase.supporting.map(([name, value]) => (
+                    <div key={name}>
+                      <span>{name}</span>
+                      <strong>{value}</strong>
+                    </div>
+                  ))}
                 </div>
                 <div className="case-screen-list">
-                  {activeCase.bars.slice(0, 2).map((width, index) => (
-                    <article key={width}>
+                  {activeCase.queue.map((item, index) => (
+                    <article key={item}>
                       <em>{String(index + 1).padStart(2, "0")}</em>
                       <div>
-                        <strong>{[copy.realTime, copy.tracking, activeCase.statLabel][index]}</strong>
+                        <strong>{item}</strong>
                         <span>
-                          <i style={{ width }} />
+                          <i style={{ width: activeCase.bars[index] }} />
                         </span>
                       </div>
                     </article>
                   ))}
                 </div>
                 <div className="case-screen-footer">
-                  <span>{copy.viewWorkspace}</span>
-                  <ArrowRightOutlined />
+                  <span>{activeCase.insight}</span>
                 </div>
               </div>
-              <article>
+              <article className="case-detail-panel">
                 {activeCase.icon}
                 <h3>{activeCase.title}</h3>
                 <p>{activeCase.text}</p>
-                <strong>{activeCase.stat}</strong>
-                <span>{activeCase.statLabel}</span>
+                <div className="case-detail-tags">
+                  {activeCase.chips.map((chip) => (
+                    <span key={chip}>{chip}</span>
+                  ))}
+                </div>
+                <div className="case-detail-metric">
+                  <strong>{activeCase.leadMetric}</strong>
+                  <span>{activeCase.leadLabel}</span>
+                </div>
+                <div className="case-detail-checklist">
+                  {activeCase.checklist.map((item) => (
+                    <span key={item}>{item}</span>
+                  ))}
+                </div>
+                <p className="case-detail-result">{activeCase.result}</p>
                 <Link to={activeCase.link}>
                   {copy.viewWorkspace}
                   <ArrowRightOutlined />
@@ -1038,7 +1204,7 @@ export default function HomePage() {
               </article>
             </div>
             <button type="button" aria-label={copy.nextCase} onClick={() => switchCase(1)}>
-              ›
+              <RightOutlined />
             </button>
           </div>
           <div className="arco-case-dots" aria-label={copy.caseProgress}>
@@ -1122,6 +1288,14 @@ export default function HomePage() {
           <small>GIP UED & 架构前端 © 2026</small>
         </div>
       </footer>
+      <button
+        type="button"
+        className={`arco-back-home ${showBackHome ? "is-visible" : ""}`}
+        aria-label={isEnglish ? "Back to homepage top" : "Back to home top"}
+        onClick={scrollBackHome}
+      >
+        <ArrowUpOutlined />
+      </button>
     </div>
   );
 }

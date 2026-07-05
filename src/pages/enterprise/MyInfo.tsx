@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Card, Typography, Descriptions, message, Skeleton, Tag, Button, Modal, Form, Input, Select, Space, Alert } from "antd";
+import { Card, Typography, Descriptions, message, Skeleton, Tag, Button, Modal, Form, Input, Select, Space, Alert, Progress } from "antd";
 import {
   IdcardOutlined,
   BankOutlined,
@@ -33,6 +33,8 @@ export default function EnterpriseMyInfo() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [hasActiveIncubation, setHasActiveIncubation] = useState(false);
+  const [incubationTotal, setIncubationTotal] = useState(0);
+  const [latestIncubation, setLatestIncubation] = useState<any>(null);
   const [form] = Form.useForm<EnterpriseInfo>();
 
   useEffect(() => {
@@ -47,6 +49,8 @@ export default function EnterpriseMyInfo() {
           (item: any) => item.status === "approved" && item.incubate_status === "in_incubation",
         );
         setHasActiveIncubation(active);
+        setIncubationTotal(incRes.data.total ?? incRes.data.list.length);
+        setLatestIncubation(incRes.data.list[0] ?? null);
       })
       .catch(() => message.error("加载企业信息失败"))
       .finally(() => setLoading(false));
@@ -62,6 +66,22 @@ export default function EnterpriseMyInfo() {
       setEditModalOpen(true);
     }
   };
+
+  const profileFields = enterprise
+    ? [
+      enterprise.name,
+      enterprise.credit_code,
+      enterprise.industry,
+      enterprise.scale,
+      enterprise.address,
+      enterprise.legal_person,
+      enterprise.contact_name,
+      enterprise.contact_phone,
+    ]
+    : [];
+  const completionPercent = profileFields.length
+    ? Math.round((profileFields.filter(Boolean).length / profileFields.length) * 100)
+    : 0;
 
   const handleSubmit = async () => {
     try {
@@ -167,6 +187,34 @@ export default function EnterpriseMyInfo() {
           style={{ marginBottom: 16 }}
         />
       )}
+
+      <Card className="info-overview-card" style={{ marginBottom: 16 }}>
+        <div className="info-overview-grid">
+          <section className="info-overview-lead">
+            <span className="info-overview-icon"><BankOutlined /></span>
+            <div>
+              <Typography.Text type="secondary">当前企业</Typography.Text>
+              <strong>{enterprise.name}</strong>
+              <small>{enterprise.credit_code || "暂无统一社会信用代码"}</small>
+            </div>
+          </section>
+          <section className="info-overview-metrics">
+            <div>
+              <span>资料完整度</span>
+              <Progress percent={completionPercent} strokeColor="#1f78d8" />
+            </div>
+            <div>
+              <span>入驻状态</span>
+              <Tag color={hasActiveIncubation ? "green" : "orange"}>{hasActiveIncubation ? "已入驻" : "未入驻"}</Tag>
+              <small>
+                {latestIncubation?.incubate_start && latestIncubation?.incubate_end
+                  ? `${latestIncubation.incubate_start} 至 ${latestIncubation.incubate_end}`
+                  : `共 ${incubationTotal} 条入驻记录`}
+              </small>
+            </div>
+          </section>
+        </div>
+      </Card>
 
       <Card
         title={

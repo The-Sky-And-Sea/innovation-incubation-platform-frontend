@@ -20,6 +20,8 @@ import {
   Select,
   Space,
   Skeleton,
+  Tag,
+  Progress,
 } from "antd";
 import {
   SettingOutlined,
@@ -29,7 +31,7 @@ import {
   UserOutlined,
   PhoneOutlined,
 } from "@ant-design/icons";
-import { getCarrierInfo, updateCarrierInfo } from "../../api/carrier";
+import { getCarrierInfo, getCarrierIncubationList, getPendingIncubationList, updateCarrierInfo } from "../../api/carrier";
 import type { CarrierInfo as CarrierInfoType } from "../../types";
 
 const { Title } = Typography;
@@ -40,13 +42,21 @@ export default function CarrierInfoPage() {
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [incubationTotal, setIncubationTotal] = useState(0);
+  const [pendingTotal, setPendingTotal] = useState(0);
   const [form] = Form.useForm<CarrierInfoType>();
 
   const fetchInfo = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await getCarrierInfo();
+      const [res, incubationRes, pendingRes] = await Promise.all([
+        getCarrierInfo(),
+        getCarrierIncubationList(1, 1),
+        getPendingIncubationList(1, 1),
+      ]);
       setInfo(res.data);
+      setIncubationTotal(incubationRes.data.total ?? incubationRes.data.list.length);
+      setPendingTotal(pendingRes.data.total ?? pendingRes.data.list.length);
     } catch {
       message.error("加载载体信息失败");
     } finally {
@@ -84,7 +94,7 @@ export default function CarrierInfoPage() {
       <div>
         <Title level={3}>
           <SettingOutlined style={{ marginRight: 8 }} />
-          基础信息
+          载体信息
         </Title>
         <Card>
           <Skeleton active paragraph={{ rows: 6 }} />
@@ -97,8 +107,33 @@ export default function CarrierInfoPage() {
     <div>
       <Title level={3}>
         <SettingOutlined style={{ marginRight: 8 }} />
-        基础信息
+        载体信息
       </Title>
+
+      <Card className="info-overview-card" style={{ marginBottom: 16 }}>
+        <div className="info-overview-grid">
+          <section className="info-overview-lead">
+            <span className="info-overview-icon"><BankOutlined /></span>
+            <div>
+              <Typography.Text type="secondary">当前载体</Typography.Text>
+              <strong>{info?.name || "载体信息"}</strong>
+              <small>{info?.type || "暂无载体类型"}</small>
+            </div>
+          </section>
+          <section className="info-overview-metrics">
+            <div>
+              <span>服务能力</span>
+              <strong>{incubationTotal} 家</strong>
+              <Progress percent={Math.min(100, incubationTotal * 8)} showInfo={false} strokeColor="#11a992" />
+            </div>
+            <div>
+              <span>审核状态</span>
+              <Tag color={pendingTotal > 0 ? "orange" : "green"}>{pendingTotal} 条待审核</Tag>
+              <small>入驻审核、变更审核建议及时处理。</small>
+            </div>
+          </section>
+        </div>
+      </Card>
 
       <Card
         title={
@@ -154,6 +189,14 @@ export default function CarrierInfoPage() {
 
           <Descriptions.Item label="简介" span={2}>
             {info?.description || "-"}
+          </Descriptions.Item>
+
+          <Descriptions.Item label="特色领域" span={2}>
+            {info?.specialty_fields?.length ? (
+              <Space wrap>
+                {info.specialty_fields.map((field) => <Tag key={field}>{field}</Tag>)}
+              </Space>
+            ) : "-"}
           </Descriptions.Item>
         </Descriptions>
       </Card>

@@ -7,7 +7,6 @@ import {
   DatabaseOutlined,
   FileDoneOutlined,
   SafetyCertificateOutlined,
-  SearchOutlined,
 } from "@ant-design/icons";
 import { Link, Navigate, useParams } from "react-router-dom";
 import BrandLogo from "../components/BrandLogo";
@@ -172,10 +171,6 @@ export default function DocsPage() {
           <BrandLogo variant="mark" />
           <strong>孵化平台用户指南</strong>
         </Link>
-        <label className="docs-search">
-          <SearchOutlined />
-          <span>搜索文档、规范、模板</span>
-        </label>
         <Link to="/login" className="docs-login-link">
           进入平台
         </Link>

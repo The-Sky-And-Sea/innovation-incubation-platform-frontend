@@ -17,6 +17,7 @@
 
 import { useEffect, useState } from "react";
 import { createBrowserRouter, Navigate, Outlet } from "react-router-dom";
+import InfoPageLayout from "../layouts/InfoPageLayout";
 import MainLayout from "../layouts/MainLayout";
 import HomePage from "../pages/HomePage";
 import DocsPage from "../pages/DocsPage";
@@ -48,6 +49,7 @@ import GovCarrierSearch from "../pages/gov/CarrierSearch";
 import GovDashboard from "../pages/gov/Dashboard";
 import GovEnterpriseSearch from "../pages/gov/EnterpriseSearch";
 import GovIncubationCompletion from "../pages/gov/IncubationCompletion";
+import GovInfoPage from "../pages/gov/GovInfo";
 import GovPerformanceManagement from "../pages/gov/PerformanceManagement";
 import GovPolicyManagement from "../pages/gov/PolicyManagement";
 import { useAuthStore } from "../store/authStore";
@@ -149,10 +151,22 @@ const router = createBrowserRouter([
         element: <RoleGuard roles={["enterprise"]} />,
         children: [
           {
+            path: "/enterprise/info",
+            element: (
+              <InfoPageLayout
+                title="企业信息"
+                subtitle="查看和维护当前企业资料"
+                backPath="/enterprise/dashboard"
+                accent="#1f78d8"
+              >
+                <EnterpriseMyInfo />
+              </InfoPageLayout>
+            ),
+          },
+          {
             element: <MainLayout />,
             children: [
               { path: "/enterprise/dashboard", element: <EnterpriseDashboard /> },
-              { path: "/enterprise/info", element: <EnterpriseMyInfo /> },
               { path: "/enterprise/files", element: <EnterpriseFileManagement /> },
               { path: "/enterprise/carriers", element: <EnterpriseCarrierList /> },
               { path: "/enterprise/incubation", element: <IncubationApplyPage /> },
@@ -176,6 +190,19 @@ const router = createBrowserRouter([
         element: <RoleGuard roles={["carrier"]} />,
         children: [
           {
+            path: "/carrier/info",
+            element: (
+              <InfoPageLayout
+                title="载体信息"
+                subtitle="查看和维护当前载体资料"
+                backPath="/carrier/dashboard"
+                accent="#11a992"
+              >
+                <CarrierInfoPage />
+              </InfoPageLayout>
+            ),
+          },
+          {
             element: <MainLayout />,
             children: [
               { path: "/carrier/dashboard", element: <CarrierDashboard /> },
@@ -185,7 +212,6 @@ const router = createBrowserRouter([
               { path: "/carrier/policies", element: <CarrierPolicyList /> },
               { path: "/carrier/applications", element: <CarrierApplicationReview /> },
               { path: "/carrier/performances", element: <CarrierPerformanceSubmit /> },
-              { path: "/carrier/info", element: <CarrierInfoPage /> },
               { path: "/carrier/appeals", element: <AppealsPage /> },
               { path: "/carrier/account-deletion", element: <AccountDeletionRequestPage /> },
               { path: "/carrier/notifications", element: <NotificationCenter /> },
@@ -201,6 +227,19 @@ const router = createBrowserRouter([
       {
         element: <RoleGuard roles={["government"]} />,
         children: [
+          {
+            path: "/gov/info",
+            element: (
+              <InfoPageLayout
+                title="政务信息"
+                subtitle="查看当前政务账号资料"
+                backPath="/gov/dashboard"
+                accent="#d63b5c"
+              >
+                <GovInfoPage />
+              </InfoPageLayout>
+            ),
+          },
           {
             element: <MainLayout />,
             children: [

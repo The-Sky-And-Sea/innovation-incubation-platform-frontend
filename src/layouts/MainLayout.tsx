@@ -29,7 +29,6 @@ import {
   LogoutOutlined,
   SafetyCertificateOutlined,
   SearchOutlined,
-  SettingOutlined,
   TeamOutlined,
   ThunderboltOutlined,
   TrophyOutlined,
@@ -64,7 +63,6 @@ interface CommandAction {
 const roleMenuMap: Record<UserRole, MenuItem[]> = {
   enterprise: [
     { key: "/enterprise/dashboard", icon: <DashboardOutlined />, label: "企业工作台" },
-    { key: "/enterprise/info", icon: <IdcardOutlined />, label: "企业信息" },
     { key: "/enterprise/files", icon: <UploadOutlined />, label: "文件管理" },
     { key: "/enterprise/carriers", icon: <BankOutlined />, label: "载体浏览" },
     { key: "/enterprise/incubation", icon: <HomeOutlined />, label: "企业入驻" },
@@ -79,7 +77,6 @@ const roleMenuMap: Record<UserRole, MenuItem[]> = {
     { key: "/carrier/dashboard", icon: <DashboardOutlined />, label: "载体工作台" },
     { key: "/carrier/incubation", icon: <AuditOutlined />, label: "入驻审核" },
     { key: "/carrier/enterprises", icon: <TeamOutlined />, label: "入驻企业" },
-    { key: "/carrier/info", icon: <SettingOutlined />, label: "基础信息" },
     { key: "/carrier/changes", icon: <FormOutlined />, label: "变更审核" },
     { key: "/carrier/policies", icon: <FileTextOutlined />, label: "政策申报" },
     { key: "/carrier/applications", icon: <InboxOutlined />, label: "企业申报审核" },
@@ -247,6 +244,18 @@ export default function MainLayout() {
       : role === "carrier"
         ? "/carrier/notifications"
         : "/gov/notifications";
+  const profilePath =
+    role === "enterprise"
+      ? "/enterprise/info"
+      : role === "carrier"
+        ? "/carrier/info"
+        : "/gov/info";
+  const profileLabel =
+    role === "enterprise"
+      ? "企业信息"
+      : role === "carrier"
+        ? "载体信息"
+        : "政务信息";
 
   return (
     <Layout
@@ -322,9 +331,13 @@ export default function MainLayout() {
                 items: [
                   { key: "role", label: `当前角色：${roleMeta.label}`, disabled: true },
                   { type: "divider" as const },
+                  { key: "profile", icon: <IdcardOutlined />, label: profileLabel },
                   { key: "logout", icon: <LogoutOutlined />, label: "退出登录", danger: true },
                 ],
                 onClick: ({ key }) => {
+                  if (key === "profile") {
+                    navigate(profilePath);
+                  }
                   if (key === "logout") {
                     logout();
                     navigate("/login");

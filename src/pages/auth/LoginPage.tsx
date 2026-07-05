@@ -89,9 +89,12 @@ export default function LoginPage() {
       setRouteTransitioning(true);
       routeTimerRef.current = window.setTimeout(() => navigate("/dashboard"), 300);
     } catch (err) {
-      const errorMessage = (err as Error).message || "";
+      const error = err as Error & { code?: number };
+      const errorMessage = error.message || "";
       setAuthError(
-        errorMessage.includes("不能为空") || errorMessage.includes("至少")
+        error.code === 10103 ||
+          errorMessage.includes("不能为空") ||
+          errorMessage.includes("至少")
           ? errorMessage
           : "账号或密码错误，请重新输入。",
       );
