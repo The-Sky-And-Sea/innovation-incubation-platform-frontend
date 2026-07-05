@@ -17,7 +17,7 @@ import type {
   ChatSendRequest,
   ChatSession,
 } from "../types";
-import { ssePost, type SseCallbacks } from "../utils/sse";
+import { ssePost, ssePut, type SseCallbacks } from "../utils/sse";
 
 /** 创建会话 */
 export async function createChatSession(
@@ -66,6 +66,28 @@ export function sendChatMessage(
 ): Promise<AbortController> {
   return ssePost(
     `/chat/sessions/${sessionId}/messages`,
+    data,
+    callbacks,
+  );
+}
+
+/**
+ * 编辑重发消息（SSE 流式）
+ *
+ * PUT /chat/sessions/:id/messages/:messageId
+ * 只允许编辑会话中最后一条 role=user 的消息。
+ * 成功后后端会软删旧消息并插入新消息。
+ *
+ * @returns AbortController 用于中断请求
+ */
+export function editChatMessage(
+  sessionId: number,
+  messageId: number,
+  data: ChatSendRequest,
+  callbacks: SseCallbacks,
+): Promise<AbortController> {
+  return ssePut(
+    `/chat/sessions/${sessionId}/messages/${messageId}`,
     data,
     callbacks,
   );

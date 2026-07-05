@@ -25,7 +25,9 @@ import {
   message,
 } from "antd";
 import {
+  BulbOutlined,
   DeleteOutlined,
+  EditOutlined,
   LoadingOutlined,
   MessageOutlined,
   PlusOutlined,
@@ -33,11 +35,11 @@ import {
   SendOutlined,
   StopOutlined,
   UserOutlined,
-  BulbOutlined,
 } from "@ant-design/icons";
 import {
   createChatSession,
   deleteChatSession,
+  editChatMessage,
   getChatSession,
   getChatSessions,
   sendChatMessage,
@@ -135,6 +137,10 @@ export default function ChatPanel() {
   const [streamingThinking, setStreamingThinking] = useState("");
   const [streamingReply, setStreamingReply] = useState("");
   const [awaitingReply, setAwaitingReply] = useState(false);
+
+  // --- 编辑重发 ---
+  const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
+  const [editingContent, setEditingContent] = useState("");
 
   // --- Refs ---
   const abortRef = useRef<AbortController | null>(null);
@@ -295,6 +301,89 @@ export default function ChatPanel() {
     if (activeSessionId) {
       loadMessages(activeSessionId);
       loadSessions();
+    }
+  };
+
+  /** 获取最后一条 user 消息（用于判断是否可编辑） */
+  const lastUserMessage = [...messages].reverse().find((m) => m.role === "user") || null;
+
+  /** 进入编辑模式 */
+  const handleStartEdit = (msg: ChatMessage) => {
+    setEditingMessageId(msg.id);
+    setEditingContent(msg.content);
+    setInputValue(msg.content);
+  };
+
+  /** 取消编辑 */
+  const handleCancelEdit = () => {
+    setEditingMessageId(null);
+    setEditingContent("");
+    setInputValue("");
+  };
+
+  /** 提交编辑重发 */
+  const handleEditSubmit = async () => {
+    const trimmed = editingContent.trim();
+    if (!trimmed || !activeSessionId || !editingMessageId || sending) return;
+
+    // 内容没变，直接取消
+    const originalMsg = messages.find((m) => m.id === editingMessageId);
+    if (originalMsg && trimmed === originalMsg.content) {
+      handleCancelEdit();
+      return;
+    }
+
+    setSending(true);
+    setEditingMessageId(null);
+    setEditingContent("");
+    setInputValue("");
+    setStreamingThinking("");
+    setStreamingReply("");
+    setAwaitingReply(true);
+
+    try {
+      const controller = await editChatMessage(
+        activeSessionId,
+        editingMessageId,
+        { content: trimmed },
+        {
+          onThinking: (chunk) => {
+            setStreamingThinking((prev) => prev + chunk);
+          },
+          onReply: (content) => {
+            setAwaitingReply(false);
+            setStreamingReply(content);
+          },
+          onError: (msg) => {
+            message.error(msg);
+          },
+          onDone: () => {
+            setSending(false);
+            setAwaitingReply(false);
+            if (activeSessionId) {
+              loadMessages(activeSessionId);
+              loadSessions();
+            }
+            abortRef.current = null;
+          },
+        },
+      );
+      abortRef.current = controller;
+    } catch (err) {
+      message.error((err as Error).message || "编辑失败");
+      setSending(false);
+      setAwaitingReply(false);
+    }
+  };
+
+  /** 编辑模式下 Enter 提交编辑 */
+  const handleEditKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleEditSubmit();
+    }
+    if (e.key === "Escape") {
+      handleCancelEdit();
     }
   };
 
@@ -511,52 +600,72 @@ export default function ChatPanel() {
             </div>
           ) : (
             <>
-              {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  style={{
-                    display: "flex",
-                    justifyContent: msg.role === "user" ? "flex-end" : "flex-start",
-                    marginBottom: 16,
-                  }}
-                >
+              {messages.map((msg) => {
+                const isLastUserMsg =
+                  msg.role === "user" && lastUserMessage?.id === msg.id && !sending;
+                return (
                   <div
+                    key={msg.id}
                     style={{
-                      maxWidth: "70%",
-                      padding: "10px 16px",
-                      borderRadius: 12,
-                      background: msg.role === "user" ? "#1677ff" : "#f0f2f5",
-                      color: msg.role === "user" ? "#fff" : "#1f1f1f",
+                      display: "flex",
+                      justifyContent: msg.role === "user" ? "flex-end" : "flex-start",
+                      marginBottom: 16,
+                      alignItems: isLastUserMsg ? "center" : undefined,
+                      gap: isLastUserMsg ? 4 : undefined,
                     }}
                   >
-                    <div style={{ marginBottom: 4, fontSize: 12, opacity: 0.7 }}>
-                      <Space size={4}>
-                        {msg.role === "user" ? <UserOutlined /> : <RobotOutlined />}
-                        <span>{msg.role === "user" ? "我" : "助手"}</span>
-                        <span>·</span>
-                        <span>{formatTime(msg.created_at)}</span>
-                      </Space>
-                    </div>
-                    <Paragraph style={{ margin: 0, whiteSpace: "pre-wrap" }}>
-                      {msg.content}
-                    </Paragraph>
-                    {msg.state && Object.keys(msg.state).length > 0 && (
-                      <div style={{ marginTop: 8, fontSize: 12, opacity: 0.7 }}>
-                        <Text
-                          style={{
-                            color:
-                              msg.role === "user"
-                                ? "rgba(255,255,255,0.7)"
-                                : "rgba(0,0,0,0.45)",
-                          }}
-                        >
-                          上下文: {JSON.stringify(msg.state)}
-                        </Text>
-                      </div>
+                    {isLastUserMsg && (
+                      <Button
+                        type="text"
+                        size="small"
+                        icon={<EditOutlined />}
+                        onClick={() => handleStartEdit(msg)}
+                        style={{
+                          order: -1,
+                          fontSize: 12,
+                          color: "#8c8c8c",
+                        }}
+                        title="编辑此消息并重新发送"
+                      />
                     )}
+                    <div
+                      style={{
+                        maxWidth: "70%",
+                        padding: "10px 16px",
+                        borderRadius: 12,
+                        background: msg.role === "user" ? "#1677ff" : "#f0f2f5",
+                        color: msg.role === "user" ? "#fff" : "#1f1f1f",
+                      }}
+                    >
+                      <div style={{ marginBottom: 4, fontSize: 12, opacity: 0.7 }}>
+                        <Space size={4}>
+                          {msg.role === "user" ? <UserOutlined /> : <RobotOutlined />}
+                          <span>{msg.role === "user" ? "我" : "助手"}</span>
+                          <span>·</span>
+                          <span>{formatTime(msg.created_at)}</span>
+                        </Space>
+                      </div>
+                      <Paragraph style={{ margin: 0, whiteSpace: "pre-wrap" }}>
+                        {msg.content}
+                      </Paragraph>
+                      {msg.state && Object.keys(msg.state).length > 0 && (
+                        <div style={{ marginTop: 8, fontSize: 12, opacity: 0.7 }}>
+                          <Text
+                            style={{
+                              color:
+                                msg.role === "user"
+                                  ? "rgba(255,255,255,0.7)"
+                                  : "rgba(0,0,0,0.45)",
+                            }}
+                          >
+                            上下文: {JSON.stringify(msg.state)}
+                          </Text>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
 
               {/* 流式回复气泡 */}
               {awaitingReply && (
@@ -583,37 +692,67 @@ export default function ChatPanel() {
             background: "#fff",
           }}
         >
-          <TextArea
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={
-              activeSessionId
-                ? "输入消息，Enter 发送，Shift+Enter 换行"
-                : "请先选择或创建会话"
-            }
-            disabled={!activeSessionId || sending}
-            autoSize={{ minRows: 1, maxRows: 4 }}
-            style={{ flex: 1 }}
-          />
-          {sending ? (
-            <Button
-              type="primary"
-              danger
-              icon={<StopOutlined />}
-              onClick={handleStop}
-            >
-              停止
-            </Button>
+          {editingMessageId !== null ? (
+            <>
+              <TextArea
+                value={inputValue}
+                onChange={(e) => {
+                  setInputValue(e.target.value);
+                  setEditingContent(e.target.value);
+                }}
+                onKeyDown={handleEditKeyDown}
+                placeholder="编辑消息，Enter 提交，Escape 取消"
+                disabled={sending}
+                autoSize={{ minRows: 1, maxRows: 4 }}
+                style={{ flex: 1 }}
+              />
+              <Button onClick={handleCancelEdit} disabled={sending}>
+                取消
+              </Button>
+              <Button
+                type="primary"
+                icon={<SendOutlined />}
+                onClick={handleEditSubmit}
+                disabled={!inputValue.trim() || sending}
+              >
+                重发
+              </Button>
+            </>
           ) : (
-            <Button
-              type="primary"
-              icon={<SendOutlined />}
-              onClick={handleSend}
-              disabled={!activeSessionId || !inputValue.trim()}
-            >
-              发送
-            </Button>
+            <>
+              <TextArea
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={
+                  activeSessionId
+                    ? "输入消息，Enter 发送，Shift+Enter 换行"
+                    : "请先选择或创建会话"
+                }
+                disabled={!activeSessionId || sending}
+                autoSize={{ minRows: 1, maxRows: 4 }}
+                style={{ flex: 1 }}
+              />
+              {sending ? (
+                <Button
+                  type="primary"
+                  danger
+                  icon={<StopOutlined />}
+                  onClick={handleStop}
+                >
+                  停止
+                </Button>
+              ) : (
+                <Button
+                  type="primary"
+                  icon={<SendOutlined />}
+                  onClick={handleSend}
+                  disabled={!activeSessionId || !inputValue.trim()}
+                >
+                  发送
+                </Button>
+              )}
+            </>
           )}
         </div>
       </Card>

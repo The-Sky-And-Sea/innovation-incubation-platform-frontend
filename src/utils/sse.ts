@@ -25,8 +25,9 @@ export interface SseCallbacks {
   onDone?: () => void;
 }
 
-/** SSE POST 请求（用于 Chat 发送消息） */
-export async function ssePost(
+/** SSE 通用请求（支持 POST / PUT） */
+async function sseRequest(
+  method: "POST" | "PUT",
   url: string,
   body: unknown,
   callbacks: SseCallbacks,
@@ -35,7 +36,7 @@ export async function ssePost(
   const token = localStorage.getItem("token");
 
   const response = await fetch(`${API_BASE_URL}${url}`, {
-    method: "POST",
+    method,
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -118,6 +119,24 @@ export async function ssePost(
   })();
 
   return controller;
+}
+
+/** SSE POST 请求（用于 Chat 发送消息） */
+export function ssePost(
+  url: string,
+  body: unknown,
+  callbacks: SseCallbacks,
+): Promise<AbortController> {
+  return sseRequest("POST", url, body, callbacks);
+}
+
+/** SSE PUT 请求（用于 Chat 编辑重发） */
+export function ssePut(
+  url: string,
+  body: unknown,
+  callbacks: SseCallbacks,
+): Promise<AbortController> {
+  return sseRequest("PUT", url, body, callbacks);
 }
 
 interface SseEvent {
