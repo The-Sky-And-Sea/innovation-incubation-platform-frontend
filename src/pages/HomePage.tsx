@@ -650,22 +650,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* 大块 4: 从入口到办理 */}
-        <section className="mobbin-creation reveal-section">
-          <h2 className="reveal-heading">从入口到办理。</h2>
-          <div className="reveal-body">
-            <div className="mobbin-feature-row">
-              {featureCards.map((feature) => (
-                <article key={feature.title}>
-                  <div>{feature.icon}</div>
-                  <h3>{feature.title}</h3>
-                  <p>{feature.text}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
         <section className="mobbin-comments reveal-section" id="comments">
           <h2 className="reveal-heading">平台用户会怎么使用。</h2>
           <div className="reveal-body">
