@@ -233,6 +233,7 @@ export default function HomePage() {
         <nav aria-label="首页导航">
           <a href="#patterns" onClick={(e) => handleNavClick(e, "#patterns")}>业务库</a>
           <a href="#flows" onClick={(e) => handleNavClick(e, "#flows")}>流程</a>
+          <a href="#cases" onClick={(e) => handleNavClick(e, "#cases")}>场景接入</a>
           <a href="#comments" onClick={(e) => handleNavClick(e, "#comments")}>反馈</a>
           <a href="/login" onClick={handleLoginClick}>登录</a>
           <Link to="/register" className="mobbin-home-join">
@@ -442,7 +443,7 @@ export default function HomePage() {
         </section>
 
         {/* 场景接入 */}
-        <section className="arco-case-section">
+        <section className="arco-case-section" id="cases">
           <span className="arco-section-kicker">场景接入</span>
           <h2>三端协同接入场景</h2>
           <div className="arco-case-carousel">
