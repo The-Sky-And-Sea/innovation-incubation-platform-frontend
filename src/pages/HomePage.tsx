@@ -2,10 +2,12 @@ import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ApiOutlined,
+  AppstoreOutlined,
   ArrowRightOutlined,
   AuditOutlined,
   BankOutlined,
   BellOutlined,
+  BulbOutlined,
   CheckCircleOutlined,
   CloudServerOutlined,
   CodeOutlined,
@@ -111,6 +113,93 @@ const quoteCards = [
   { name: "平台维护人员", role: "统一入口", text: "登录、注册和三端权限清晰，演示时更容易说明平台价值。" },
 ];
 
+const platformTabs = [
+  {
+    title: "企业服务",
+    text: "入驻、材料、政策申报",
+    icon: <TeamOutlined />,
+    badge: "企业端最佳实践",
+    headline: "企业服务链路开箱即用",
+    role: "enterprise",
+    flow: ["资料完善", "材料上传", "政策申报", "进度追踪"],
+    metrics: [
+      ["入驻状态", "1 项"],
+      ["政策申报", "5 条"],
+      ["材料完整度", "68%"],
+    ],
+  },
+  {
+    title: "载体协同",
+    text: "审核、变更、绩效任务",
+    icon: <BankOutlined />,
+    badge: "载体端最佳实践",
+    headline: "把审核任务集中到一个工作台",
+    role: "carrier",
+    flow: ["入驻初审", "变更审核", "绩效填报", "政策协同"],
+    metrics: [
+      ["待审核事项", "128"],
+      ["材料复用率", "82%"],
+      ["平均响应", "4.8h"],
+    ],
+  },
+  {
+    title: "政务治理",
+    text: "政策、终审、通知监管",
+    icon: <SafetyCertificateOutlined />,
+    badge: "政务端最佳实践",
+    headline: "监管、流转、决策同步推进",
+    role: "government",
+    flow: ["政策发布", "申报终审", "账号治理", "通知监管"],
+    metrics: [
+      ["待终审申报", "7 件"],
+      ["风险提醒", "2 条"],
+      ["业务健康度", "86%"],
+    ],
+  },
+  {
+    title: "数据归档",
+    text: "文件复用与结果留痕",
+    icon: <DatabaseOutlined />,
+    badge: "数据归档能力",
+    headline: "文件、申报和审核结果自动留痕",
+    role: "archive",
+    flow: ["文件入库", "多处复用", "结果留痕", "统一归档"],
+    metrics: [
+      ["文件复用", "24 个"],
+      ["结果留痕", "100%"],
+      ["归档场景", "6 类"],
+    ],
+  },
+  {
+    title: "智能辅助",
+    text: "政策匹配与材料建议",
+    icon: <BulbOutlined />,
+    badge: "智能辅助能力",
+    headline: "政策检索和材料建议更贴近办理",
+    role: "assistant",
+    flow: ["政策检索", "条件匹配", "材料建议", "补正提示"],
+    metrics: [
+      ["政策匹配", "10 条"],
+      ["建议命中", "6 项"],
+      ["补正提示", "3 类"],
+    ],
+  },
+  {
+    title: "更多",
+    text: "持续扩展业务模块",
+    icon: <AppstoreOutlined />,
+    badge: "开放扩展能力",
+    headline: "为后续业务模块保留统一扩展入口",
+    role: "extension",
+    flow: ["模块接入", "权限配置", "接口预留", "持续扩展"],
+    metrics: [
+      ["模块扩展", "持续"],
+      ["接口预留", "稳定"],
+      ["角色权限", "清晰"],
+    ],
+  },
+];
+
 const caseSlides = [
   {
     tone: "enterprise",
@@ -150,6 +239,7 @@ export default function HomePage() {
   const navigate = useNavigate();
   const [routeTransitioning, setRouteTransitioning] = useState(false);
   const [activePatternTab, setActivePatternTab] = useState<PatternTab>("页面");
+  const [activePlatformIndex, setActivePlatformIndex] = useState(0);
   const [activeCaseIndex, setActiveCaseIndex] = useState(0);
   const [caseDirection, setCaseDirection] = useState<"prev" | "next">("next");
   const [darkMode, setDarkMode] = useState(false);
@@ -194,6 +284,7 @@ export default function HomePage() {
     routeTimerRef.current = window.setTimeout(() => navigate("/login"), 520);
   };
 
+  const activePlatform = platformTabs[activePlatformIndex];
   const activeCase = caseSlides[activeCaseIndex];
 
   const switchCase = (direction: number) => {
@@ -439,6 +530,58 @@ export default function HomePage() {
                   </div>
                 </article>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 工具平台 - 灵活丰富的生态平台 */}
+        <section className="arco-ecosystem-section" id="ecosystem">
+          <span className="arco-section-kicker">工具平台</span>
+          <h2>灵活丰富的生态平台</h2>
+          <div className="arco-platform-tabs">
+            {platformTabs.map((tab, index) => (
+              <button
+                type="button"
+                key={tab.title}
+                className={index === activePlatformIndex ? "is-active" : ""}
+                onClick={() => setActivePlatformIndex(index)}
+              >
+                <div>{tab.icon}</div>
+                <strong>{tab.title}</strong>
+                <span>{tab.text}</span>
+              </button>
+            ))}
+          </div>
+          <div className="arco-ecosystem-panel">
+            <div
+              key={`dashboard-${activePlatform.title}`}
+              className={`arco-dashboard-preview is-${activePlatform.role}`}
+            >
+              <span className="arco-preview-label">{activePlatform.badge}</span>
+              <h3>{activePlatform.headline}</h3>
+              <div className="arco-dashboard-grid">
+                {activePlatform.metrics.map(([label, value], idx) => (
+                  <article key={label} className={idx === 2 ? "wide" : ""}>
+                    <span>{label}</span>
+                    <strong>{value}</strong>
+                    <em>实时</em>
+                  </article>
+                ))}
+              </div>
+            </div>
+            <div className={`arco-flow-preview is-${activePlatform.role}`}>
+              <div key={`flow-heading-${activePlatform.title}`} className="arco-flow-heading">
+                <span>{activePlatform.title}</span>
+                <strong>{activePlatform.badge}</strong>
+              </div>
+              <ol key={`flow-steps-${activePlatform.title}`} className="arco-flow-steps">
+                {activePlatform.flow.map((step, idx) => (
+                  <li key={step}>
+                    <em>{String(idx + 1).padStart(2, "0")}</em>
+                    <span>{step}</span>
+                  </li>
+                ))}
+              </ol>
             </div>
           </div>
         </section>

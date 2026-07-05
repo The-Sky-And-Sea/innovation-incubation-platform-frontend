@@ -38,6 +38,7 @@
   --arco-muted: #86909c;
   --arco-radius: 8px;
   --arco-soft: #f2f3f5;
+  --arco-section-tint: rgba(232, 240, 248, 0.58);
   --arco-text: #1d2129;
   font-family:
     "Inter",
@@ -6492,6 +6493,278 @@ span.mobbin-footer-icon-link {
   margin: 0;
   color: #4e5969;
   line-height: 1.55;
+}
+
+/* ── 工具平台生态区块 ── */
+.arco-ecosystem-section {
+  --arco-section-tint: rgba(232, 240, 248, 0.58);
+  position: relative;
+  width: min(1280px, calc(100vw - 48px));
+  margin: 0 auto;
+  padding: 112px 24px;
+  text-align: center;
+  background: var(--arco-section-tint);
+  box-shadow: 0 0 0 100vmax var(--arco-section-tint);
+  clip-path: inset(0 -100vmax);
+}
+
+.arco-ecosystem-section h2 {
+  margin: 8px 0 64px;
+  color: #1d2129;
+  font-size: clamp(34px, 3.2vw, 48px);
+  line-height: 1.2;
+  font-weight: 500;
+}
+
+.arco-platform-tabs {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 18px;
+  border-bottom: 1px solid #e5e6eb;
+}
+
+.arco-platform-tabs button {
+  position: relative;
+  border: 0;
+  border-radius: 4px 4px 0 0;
+  padding: 18px 10px 30px;
+  background: transparent;
+  color: inherit;
+  text-align: center;
+  cursor: pointer;
+  font: inherit;
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+.arco-platform-tabs button::after {
+  content: "";
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  bottom: -1px;
+  height: 3px;
+  background: transparent;
+}
+
+.arco-platform-tabs button.is-active::after {
+  background: var(--arco-blue);
+}
+
+.arco-platform-tabs div {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #a9b0bb;
+  font-size: 28px;
+  transition: color 180ms ease, transform 180ms ease;
+}
+
+.arco-platform-tabs button.is-active div {
+  color: var(--arco-blue);
+}
+
+.arco-platform-tabs strong,
+.arco-platform-tabs span {
+  display: block;
+}
+
+.arco-platform-tabs strong {
+  margin-bottom: 6px;
+  color: #a9b0bb;
+  font-size: 18px;
+  transition: color 180ms ease;
+}
+
+.arco-platform-tabs span {
+  color: #a9b0bb;
+  transition: color 180ms ease;
+}
+
+.arco-platform-tabs button.is-active strong {
+  color: #1d2129;
+}
+
+.arco-platform-tabs button.is-active span {
+  color: #4e5969;
+}
+
+.arco-platform-tabs button:hover div,
+.arco-platform-tabs button:focus-visible div {
+  color: var(--arco-blue);
+  transform: translateY(-2px);
+}
+
+.arco-platform-tabs button:hover,
+.arco-platform-tabs button:focus-visible {
+  background: #f7f8fa;
+}
+
+.arco-platform-tabs button:hover strong,
+.arco-platform-tabs button:focus-visible strong {
+  color: #1d2129;
+}
+
+.arco-platform-tabs button:hover span,
+.arco-platform-tabs button:focus-visible span {
+  color: #4e5969;
+}
+
+.arco-ecosystem-panel {
+  padding-top: 54px;
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 54px;
+  text-align: left;
+}
+
+.arco-dashboard-preview {
+  min-height: 420px;
+  padding: 42px;
+  background: #f4f7fb;
+  transform-origin: top center;
+  animation: arcoDashboardFlipDown 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.arco-preview-label {
+  color: #4e5969;
+  font-weight: 700;
+}
+
+.arco-dashboard-preview h3 {
+  margin: 22px 0 30px;
+  font-size: 34px;
+  font-weight: 500;
+}
+
+.arco-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.arco-dashboard-grid article {
+  min-height: 126px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 22px;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(29, 33, 41, 0.06);
+}
+
+.arco-dashboard-grid article.wide {
+  grid-column: 1 / -1;
+}
+
+.arco-dashboard-grid span,
+.arco-dashboard-grid em {
+  display: block;
+  color: #86909c;
+  font-style: normal;
+}
+
+.arco-dashboard-grid strong {
+  display: block;
+  margin: 10px 0 6px;
+  font-size: 36px;
+  font-weight: 500;
+}
+
+.arco-flow-preview {
+  min-height: 420px;
+  padding: 34px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  color: #1d2129;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(244, 248, 253, 0.96)), #ffffff;
+  border: 1px solid #e5eaf2;
+  border-radius: 4px;
+}
+
+.arco-flow-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  animation: arcoFlowSlideIn 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.arco-flow-heading span,
+.arco-flow-heading strong {
+  display: block;
+}
+
+.arco-flow-heading span {
+  color: #165dff;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.arco-flow-heading strong {
+  max-width: 260px;
+  color: #4e5969;
+  font-size: 15px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.arco-flow-steps {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+  list-style: none;
+  animation: arcoFlowSlideIn 340ms cubic-bezier(0.22, 1, 0.36, 1) 40ms both;
+}
+
+.arco-flow-steps li {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 16px;
+  align-items: center;
+  min-height: 56px;
+  border-radius: 8px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.62);
+  transition: background 180ms ease, transform 180ms ease;
+  cursor: default;
+}
+
+.arco-flow-steps li:hover {
+  background: rgba(22, 93, 255, 0.06);
+  transform: translateX(4px);
+}
+
+.arco-flow-steps em {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: #165dff;
+  background: #e8f3ff;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.arco-flow-steps span {
+  color: #1d2129;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+@keyframes arcoDashboardFlipDown {
+  from { opacity: 0; transform: rotateX(12deg) translateY(-18px); }
+  to { opacity: 1; transform: rotateX(0) translateY(0); }
+}
+
+@keyframes arcoFlowSlideIn {
+  from { opacity: 0; transform: translateX(28px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 /* ── 场景接入轮播 ── */
