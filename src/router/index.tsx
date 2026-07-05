@@ -27,6 +27,7 @@ import NotificationCenter from "../pages/Notifications";
 import CarrierApplicationReview from "../pages/carrier/ApplicationReview";
 import CarrierChangeReview from "../pages/carrier/ChangeReview";
 import CarrierDashboard from "../pages/carrier/Dashboard";
+import CarrierChat from "../pages/carrier/Chat";
 import CarrierInfoPage from "../pages/carrier/CarrierInfo";
 import CarrierIncubationReview from "../pages/carrier/IncubationReview";
 import CarrierPerformanceSubmit from "../pages/carrier/PerformanceSubmit";
@@ -39,6 +40,7 @@ import EnterpriseFileManagement from "../pages/enterprise/FileManagement";
 import EnterpriseIncubationManagement from "../pages/enterprise/IncubationManagement";
 import EnterpriseMyInfo from "../pages/enterprise/MyInfo";
 import EnterprisePolicyList from "../pages/enterprise/PolicyList";
+import EnterpriseChat from "../pages/enterprise/Chat";
 import GovAccountDeletion from "../pages/gov/AccountDeletion";
 import GovApplicationReview from "../pages/gov/ApplicationReview";
 import GovCarrierSearch from "../pages/gov/CarrierSearch";
@@ -157,6 +159,7 @@ const router = createBrowserRouter([
               { path: "/enterprise/ai-assist", element: <EnterpriseAiAssist /> },
               { path: "/enterprise/appeals", element: <AppealsPage /> },
               { path: "/enterprise/account-deletion", element: <AccountDeletionRequestPage /> },
+              { path: "/enterprise/chat", element: <EnterpriseChat /> },
               { path: "/enterprise/notifications", element: <NotificationCenter /> },
             ],
           },
@@ -182,6 +185,7 @@ const router = createBrowserRouter([
               { path: "/carrier/info", element: <CarrierInfoPage /> },
               { path: "/carrier/appeals", element: <AppealsPage /> },
               { path: "/carrier/account-deletion", element: <AccountDeletionRequestPage /> },
+              { path: "/carrier/chat", element: <CarrierChat /> },
               { path: "/carrier/notifications", element: <NotificationCenter /> },
             ],
           },

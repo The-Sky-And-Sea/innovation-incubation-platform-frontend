@@ -38,7 +38,7 @@ export interface LoginRequest {
 
 export interface RegisterRequest {
   password: string;
-  role: "enterprise" | "carrier";
+  role: "enterprise" | "carrier" | "government";
   phone: string;
   email?: string;
   enterprise_name?: string;
@@ -49,6 +49,8 @@ export interface RegisterRequest {
   carrier_name?: string;
   carrier_type?: string;
   carrier_area?: string;
+  gov_name?: string;
+  gov_department?: string;
 }
 
 export interface AuthData {
@@ -267,9 +269,11 @@ export interface AccountDeletion {
 export interface FileInfo {
   file_id: number;
   filename: string;
+  name?: string;
   mime_type: string;
   size: number;
   created_at?: string;
+  uploaded_at?: string;
 }
 
 export interface FileLimit {
@@ -307,6 +311,33 @@ export interface Notification {
   target_id: number;
   is_read: boolean;
   created_at: string;
+}
+
+export interface ChatSession {
+  id: number;
+  title: string;
+  message_count: number;
+  last_message_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ChatMessage {
+  id: number;
+  session_id: number;
+  role: "user" | "assistant";
+  content: string;
+  state?: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface ChatCreateRequest {
+  title: string;
+}
+
+export interface ChatSendRequest {
+  content: string;
+  state?: Record<string, unknown>;
 }
 
 export const ERROR_CODE_MAP: Record<number, string> = {

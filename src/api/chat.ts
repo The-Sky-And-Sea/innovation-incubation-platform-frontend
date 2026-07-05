@@ -1,0 +1,50 @@
+/**
+ * 对话助手 Chat API 层
+ *
+ * 接口：
+ * - POST   /chat/sessions             创建会话
+ * - GET    /chat/sessions              会话列表
+ * - GET    /chat/sessions/:id          会话详情（含消息列表）
+ * - DELETE /chat/sessions/:id          删除会话
+ * - POST   /chat/sessions/:id/messages 发送消息（SSE 流式，第二阶段实现）
+ * - PUT    /chat/sessions/:id/messages/:messageId 编辑重发（第三阶段实现）
+ */
+
+import type {
+  ApiResponse,
+  ChatCreateRequest,
+  ChatMessage,
+  ChatSession,
+} from "../types";
+
+/** 创建会话 */
+export async function createChatSession(
+  data: ChatCreateRequest,
+): Promise<ApiResponse<ChatSession>> {
+  const { post } = await import("../utils/request");
+  return post("/chat/sessions", data);
+}
+
+/** 获取会话列表（按 last_message_at DESC 排序） */
+export async function getChatSessions(): Promise<
+  ApiResponse<ChatSession[]>
+> {
+  const { get } = await import("../utils/request");
+  return get("/chat/sessions");
+}
+
+/** 获取会话详情（含全部消息列表） */
+export async function getChatSession(
+  id: number,
+): Promise<ApiResponse<ChatSession & { messages: ChatMessage[] }>> {
+  const { get } = await import("../utils/request");
+  return get(`/chat/sessions/${id}`);
+}
+
+/** 删除会话（软删除） */
+export async function deleteChatSession(
+  id: number,
+): Promise<ApiResponse<null>> {
+  const { del } = await import("../utils/request");
+  return del(`/chat/sessions/${id}`);
+}
