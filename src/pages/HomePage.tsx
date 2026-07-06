@@ -8,11 +8,14 @@ import {
   AuditOutlined,
   BankOutlined,
   BulbOutlined,
+  CheckCircleOutlined,
   CloudServerOutlined,
   CodeOutlined,
   DatabaseOutlined,
   FileDoneOutlined,
   FileSearchOutlined,
+  OrderedListOutlined,
+  PartitionOutlined,
   LeftOutlined,
   LoginOutlined,
   MoonFilled,
@@ -26,10 +29,10 @@ import BrandLogo from "../components/BrandLogo";
 const trustLogos = ["孵化服务", "企业服务", "载体协同", "政务治理", "数据归档", "智能辅助"];
 
 const designPrinciples = [
-  { title: "一致", text: "统一规则保证三端协作口径一致", tone: "blue" },
-  { title: "有序", text: "把申报、审核和通知整理成清晰流程", tone: "green" },
-  { title: "清晰", text: "减少重复填报，让用户只关注下一步", tone: "cyan" },
-  { title: "开放", text: "为接口服务和系统接入保留稳定入口", tone: "teal" },
+  { title: "一致", text: "统一规则保证三端协作口径一致", tone: "blue", icon: <CheckCircleOutlined /> },
+  { title: "有序", text: "把申报、审核和通知整理成清晰流程", tone: "green", icon: <OrderedListOutlined /> },
+  { title: "清晰", text: "减少重复填报，让用户只关注下一步", tone: "cyan", icon: <PartitionOutlined /> },
+  { title: "开放", text: "为接口服务和系统接入保留稳定入口", tone: "teal", icon: <ApiOutlined /> },
 ];
 
 const platformTabs = [
@@ -230,10 +233,10 @@ const portalCards = [
 const enTrustLogos = ["Incubation", "Enterprise", "Carrier", "Government", "Archive", "AI Assist"];
 
 const enDesignPrinciples = [
-  { title: "agreement", text: "Shared rules keep all three roles aligned", tone: "blue" },
-  { title: "rhythm", text: "Applications, reviews, and notices move in clear steps", tone: "green" },
-  { title: "clarity", text: "Less repeated input, more focus on the next action", tone: "cyan" },
-  { title: "open", text: "Stable entries for interface services and system access", tone: "teal" },
+  { title: "agreement", text: "Shared rules keep all three roles aligned", tone: "blue", icon: <CheckCircleOutlined /> },
+  { title: "rhythm", text: "Applications, reviews, and notices move in clear steps", tone: "green", icon: <OrderedListOutlined /> },
+  { title: "clarity", text: "Less repeated input, more focus on the next action", tone: "cyan", icon: <PartitionOutlined /> },
+  { title: "open", text: "Stable entries for interface services and system access", tone: "teal", icon: <ApiOutlined /> },
 ];
 
 const enPlatformTabs = [
@@ -679,6 +682,39 @@ export default function HomePage() {
     };
   }, []);
 
+  useEffect(() => {
+    const revealItems = Array.from(document.querySelectorAll<HTMLElement>(".arco-scroll-reveal"));
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (prefersReducedMotion || !("IntersectionObserver" in window)) {
+      revealItems.forEach((item) => item.classList.add("is-visible"));
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) {
+            return;
+          }
+
+          entry.target.classList.add("is-visible");
+          observer.unobserve(entry.target);
+        });
+      },
+      {
+        rootMargin: "0px 0px -18% 0px",
+        threshold: 0.16,
+      },
+    );
+
+    revealItems.forEach((item) => observer.observe(item));
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
   const switchCase = (direction: number) => {
     setCaseDirection(direction < 0 ? "prev" : "next");
     setActiveCaseIndex((current) => (current + direction + currentCaseSlides.length) % currentCaseSlides.length);
@@ -703,6 +739,46 @@ export default function HomePage() {
       x: Number((-xRatio * maxShift).toFixed(2)),
       y: Number((-yRatio * maxShift).toFixed(2)),
     });
+  };
+
+  const replaySectionReveal = (sectionId: string) => {
+    const target = document.getElementById(sectionId);
+    if (!target || !target.classList.contains("arco-scroll-reveal")) {
+      return;
+    }
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      target.classList.add("is-visible");
+      return;
+    }
+
+    target.classList.remove("is-visible");
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        target.classList.add("is-visible");
+      });
+    });
+  };
+
+  const handleSectionNavClick = (event: MouseEvent<HTMLAnchorElement>, sectionId: string) => {
+    event.preventDefault();
+
+    const target = document.getElementById(sectionId);
+    if (!target) {
+      return;
+    }
+
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const targetHash = `#${sectionId}`;
+    const updateHistory = window.location.hash === targetHash ? window.history.replaceState : window.history.pushState;
+
+    updateHistory.call(window.history, null, "", targetHash);
+    target.scrollIntoView({
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+      block: "start",
+    });
+
+    window.setTimeout(() => replaySectionReveal(sectionId), prefersReducedMotion ? 0 : 340);
   };
 
   const scrollBackHome = () => {
@@ -761,25 +837,25 @@ export default function HomePage() {
                 <span>Home</span>
               </span>
             </a>
-            <a href="#resources" className="arco-roll-link">
+            <a href="#resources" className="arco-roll-link" onClick={(event) => handleSectionNavClick(event, "resources")}>
               <span className="arco-text-roller">
                 <span>业务库</span>
                 <span>Library</span>
               </span>
             </a>
-            <a href="#ecosystem" className="arco-roll-link">
+            <a href="#ecosystem" className="arco-roll-link" onClick={(event) => handleSectionNavClick(event, "ecosystem")}>
               <span className="arco-text-roller">
                 <span>流程</span>
                 <span>Flows</span>
               </span>
             </a>
-            <a href="#cases" className="arco-roll-link">
+            <a href="#cases" className="arco-roll-link" onClick={(event) => handleSectionNavClick(event, "cases")}>
               <span className="arco-text-roller">
                 <span>场景接入</span>
                 <span>Scenarios</span>
               </span>
             </a>
-            <a href="#journey" className="arco-roll-link">
+            <a href="#journey" className="arco-roll-link" onClick={(event) => handleSectionNavClick(event, "journey")}>
               <span className="arco-text-roller">
                 <span>三端工作台</span>
                 <span>Workspaces</span>
@@ -1005,7 +1081,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="arco-resource-section" id="resources">
+        <section className="arco-resource-section arco-scroll-reveal" id="resources">
           <span className="arco-section-kicker">{copy.quickStart}</span>
           <h2>{copy.resourcesTitle}</h2>
           <div className="arco-resource-grid">
@@ -1072,7 +1148,9 @@ export default function HomePage() {
           <div className="arco-principles">
             {currentDesignPrinciples.map((item) => (
               <article key={item.title} className={`is-${item.tone}`}>
-                <i />
+                <span className="arco-principle-icon" aria-hidden="true">
+                  {item.icon}
+                </span>
                 <div>
                   <h3>{item.title}</h3>
                   <p>{item.text}</p>
@@ -1082,7 +1160,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="arco-ecosystem-section" id="ecosystem">
+        <section className="arco-ecosystem-section arco-scroll-reveal" id="ecosystem">
           <span className="arco-section-kicker">{copy.platformKicker}</span>
           <h2>{copy.platformTitle}</h2>
           <div className="arco-platform-tabs">
@@ -1137,7 +1215,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="arco-case-section" id="cases">
+        <section className="arco-case-section arco-scroll-reveal" id="cases">
           <span className="arco-section-kicker">{copy.caseKicker}</span>
           <h2>{copy.caseTitle}</h2>
           <div className="arco-case-carousel">
@@ -1220,7 +1298,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="arco-journey-section" id="journey">
+        <section className="arco-journey-section arco-scroll-reveal" id="journey">
           <span className="arco-section-kicker">{copy.journeyKicker}</span>
           <h2>{copy.journeyTitle}</h2>
           <div className="arco-journey-grid">

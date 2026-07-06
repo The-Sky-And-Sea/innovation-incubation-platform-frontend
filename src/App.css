@@ -12639,9 +12639,13 @@ select {
 }
 
 .arco-principles article {
+  --principle-accent: #165dff;
+  --principle-accent-soft: rgba(22, 93, 255, 0.1);
+  --principle-accent-line: rgba(22, 93, 255, 0.24);
   display: flex;
   align-items: flex-start;
   gap: 18px;
+  position: relative;
   border-radius: 10px;
   padding: 12px;
   margin: -12px;
@@ -12652,38 +12656,91 @@ select {
     transform 180ms ease;
 }
 
+.arco-principle-icon::after {
+  position: absolute;
+  left: 8px;
+  bottom: -12px;
+  width: 34px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--principle-accent);
+  opacity: 0.72;
+  content: "";
+  transform-origin: left center;
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
 .arco-principles article:hover {
   background: #f7faff;
   box-shadow: inset 0 0 0 1px #e5efff;
   transform: translateY(-2px);
 }
 
-.arco-principles i {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
+.arco-principles article:hover .arco-principle-icon::after {
+  opacity: 1;
+  transform: scaleX(1.32);
+}
+
+.arco-principle-icon {
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--principle-accent-line);
+  border-radius: 14px;
   flex: 0 0 auto;
-  background: var(--arco-blue);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--principle-accent);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.58)),
+    var(--principle-accent-soft);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 8px 18px rgba(15, 45, 78, 0.06);
   transition:
+    border-color 180ms ease,
+    color 180ms ease,
     box-shadow 180ms ease,
     transform 180ms ease;
 }
 
-.arco-principles article:hover i {
-  box-shadow: 0 10px 18px rgba(22, 93, 255, 0.16);
-  transform: scale(1.06);
+.arco-principle-icon .anticon {
+  font-size: 24px;
 }
 
-.arco-principles .is-green i {
-  background: #14c9c9;
+.arco-principles article:hover .arco-principle-icon {
+  border-color: var(--principle-accent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 12px 22px rgba(22, 93, 255, 0.14);
+  transform: translateY(-1px);
 }
 
-.arco-principles .is-cyan i {
-  background: linear-gradient(135deg, #165dff 0 50%, #14c9c9 50%);
+.arco-principles .is-blue {
+  --principle-accent: #165dff;
+  --principle-accent-soft: rgba(22, 93, 255, 0.1);
+  --principle-accent-line: rgba(22, 93, 255, 0.24);
 }
 
-.arco-principles .is-teal i {
-  background: linear-gradient(90deg, #165dff 0 50%, #00b42a 50%);
+.arco-principles .is-green {
+  --principle-accent: #08917f;
+  --principle-accent-soft: rgba(8, 145, 127, 0.1);
+  --principle-accent-line: rgba(8, 145, 127, 0.24);
+}
+
+.arco-principles .is-cyan {
+  --principle-accent: #0b7fab;
+  --principle-accent-soft: rgba(11, 127, 171, 0.1);
+  --principle-accent-line: rgba(11, 127, 171, 0.24);
+}
+
+.arco-principles .is-teal {
+  --principle-accent: #178a3d;
+  --principle-accent-soft: rgba(23, 138, 61, 0.1);
+  --principle-accent-line: rgba(23, 138, 61, 0.24);
 }
 
 .arco-principles h3 {
@@ -14188,6 +14245,23 @@ select {
   background: rgba(30, 41, 59, 0.78);
 }
 
+.arco-home.is-night .arco-principle-icon {
+  border-color: color-mix(in srgb, var(--principle-accent) 34%, rgba(148, 163, 184, 0.22));
+  background:
+    linear-gradient(180deg, rgba(30, 41, 59, 0.92), rgba(15, 23, 42, 0.76)),
+    color-mix(in srgb, var(--principle-accent) 16%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 10px 22px rgba(0, 0, 0, 0.18);
+}
+
+.arco-home.is-night .arco-principles article:hover .arco-principle-icon {
+  border-color: color-mix(in srgb, var(--principle-accent) 64%, #ffffff);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 14px 28px rgba(0, 0, 0, 0.24);
+}
+
 .arco-home.is-night .arco-footer-workspace-grid a > .anticon {
   color: #ffffff;
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24);
@@ -14228,10 +14302,6 @@ select {
 .arco-hero-copy,
 .arco-hero-visual,
 .arco-trust-row,
-.arco-resource-section,
-.arco-ecosystem-section,
-.arco-case-section,
-.arco-journey-section,
 .arco-footer {
   animation: arcoFadeUp 0.58s cubic-bezier(0.2, 0.9, 0.2, 1) both;
 }
@@ -14242,6 +14312,56 @@ select {
 
 .arco-trust-row {
   animation-delay: 0.16s;
+}
+
+.arco-scroll-reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  filter: blur(8px);
+  transition:
+    opacity 520ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    transform 520ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    filter 520ms ease;
+  will-change: opacity, transform, filter;
+}
+
+.arco-scroll-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+.arco-scroll-reveal .arco-section-kicker,
+.arco-scroll-reveal h2,
+.arco-scroll-reveal :where(.arco-resource-card, .arco-principles, .arco-platform-tabs, .arco-ecosystem-panel, .arco-case-carousel, .arco-case-dots, .arco-journey-grid article) {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 460ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    transform 460ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.arco-scroll-reveal.is-visible .arco-section-kicker,
+.arco-scroll-reveal.is-visible h2,
+.arco-scroll-reveal.is-visible :where(.arco-resource-card, .arco-principles, .arco-platform-tabs, .arco-ecosystem-panel, .arco-case-carousel, .arco-case-dots, .arco-journey-grid article) {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.arco-scroll-reveal.is-visible h2 {
+  transition-delay: 70ms;
+}
+
+.arco-scroll-reveal.is-visible :where(.arco-resource-card, .arco-platform-tabs, .arco-case-carousel, .arco-journey-grid article:nth-child(1)) {
+  transition-delay: 130ms;
+}
+
+.arco-scroll-reveal.is-visible :where(.arco-resource-card:nth-child(2), .arco-principles, .arco-ecosystem-panel, .arco-case-dots, .arco-journey-grid article:nth-child(2)) {
+  transition-delay: 190ms;
+}
+
+.arco-scroll-reveal.is-visible .arco-journey-grid article:nth-child(3) {
+  transition-delay: 250ms;
 }
 
 @keyframes arcoFadeUp {
@@ -14436,6 +14556,16 @@ select {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .arco-scroll-reveal,
+  .arco-scroll-reveal .arco-section-kicker,
+  .arco-scroll-reveal h2,
+  .arco-scroll-reveal :where(.arco-resource-card, .arco-principles, .arco-platform-tabs, .arco-ecosystem-panel, .arco-case-carousel, .arco-case-dots, .arco-journey-grid article) {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
+  }
+
   .arco-hero-visual::before {
     animation: none;
   }
