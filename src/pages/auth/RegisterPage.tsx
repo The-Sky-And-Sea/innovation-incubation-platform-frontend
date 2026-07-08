@@ -15,8 +15,8 @@ import { useAuthStore } from "../../store/authStore";
 import type { RegisterRequest, UserRole } from "../../types";
 import AuthRouteTransition from "../../components/AuthRouteTransition";
 import BrandLogo from "../../components/BrandLogo";
+import LoginAnimatedBackground from "../../components/LoginAnimatedBackground";
 import Stepper, { Step } from "../../components/Stepper";
-import { CREDIT_CODE_MESSAGE, CREDIT_CODE_PATTERN, ENTERPRISE_INDUSTRIES, ENTERPRISE_SCALES } from "../../constants/enterprise";
 
 const { Title, Text } = Typography;
 
@@ -44,10 +44,7 @@ const ROLE_META: Record<
 };
 
 const ROLE_FIELDS: Record<RegisterableRole, RegisterField[]> = {
-  enterprise: [
-    "enterprise_name", "enterprise_credit_code", "enterprise_industry", "enterprise_scale",
-    "enterprise_address", "enterprise_legal_person", "enterprise_contact_name",
-  ],
+  enterprise: ["enterprise_name", "enterprise_credit_code", "enterprise_industry", "enterprise_scale", "enterprise_address"],
   carrier: ["carrier_name", "carrier_type", "carrier_area"],
 };
 
@@ -129,6 +126,7 @@ export default function RegisterPage() {
 
   return (
     <div className="auth-register-page">
+      <LoginAnimatedBackground />
       <AuthRouteTransition active={routeTransitioning} />
       <Link className="auth-home-link" to="/">
         <ArrowLeftOutlined />
@@ -189,7 +187,8 @@ export default function RegisterPage() {
                       <Button
                         key={itemRole}
                         className={`register-role-card ${role === itemRole ? "is-active" : ""}`}
-                        type={role === itemRole ? "primary" : "default"}
+                        type="default"
+                        aria-pressed={role === itemRole}
                         icon={item.icon}
                         onClick={() => changeRole(itemRole)}
                       >
@@ -250,7 +249,7 @@ export default function RegisterPage() {
 
                 {role === "enterprise" ? (
                   <div className="register-form-grid">
-                    <Form.Item name="enterprise_name" label="企业名称" rules={[{ required: true, whitespace: true, message: "请输入企业名称" }]}>
+                    <Form.Item name="enterprise_name" label="企业名称" rules={[{ required: true, message: "请输入企业名称" }]}>
                       <Input prefix={<BankOutlined />} placeholder="请输入企业名称" size="large" />
                     </Form.Item>
                     <Form.Item
@@ -260,8 +259,8 @@ export default function RegisterPage() {
                         { required: true, message: "请输入统一社会信用代码" },
                         { len: 18, message: "统一社会信用代码必须为 18 位" },
                         {
-                          pattern: CREDIT_CODE_PATTERN,
-                          message: CREDIT_CODE_MESSAGE,
+                          pattern: /^[0-9A-Z]{18}$/,
+                          message: "由 18 位数字或大写字母组成",
                         },
                       ]}
                     >
@@ -272,43 +271,18 @@ export default function RegisterPage() {
                         maxLength={18}
                       />
                     </Form.Item>
-                    <Form.Item name="enterprise_industry" label="所属行业" rules={[{ required: true, message: "请选择所属行业" }]}>
-                      <Select
-                        size="large"
-                        showSearch
-                        optionFilterProp="label"
-                        placeholder="请选择所属行业"
-                        options={ENTERPRISE_INDUSTRIES.map((item) => ({ label: item, value: item }))}
-                      />
+                    <Form.Item name="enterprise_industry" label="所属行业" rules={[{ required: true, message: "请输入所属行业" }]}>
+                      <Input prefix={<TeamOutlined />} placeholder="如：信息技术、生物医药" size="large" />
                     </Form.Item>
-                    <Form.Item name="enterprise_scale" label="企业规模" rules={[{ required: true, message: "请选择企业规模" }]}>
+                    <Form.Item name="enterprise_scale" label="企业规模">
                       <Select
                         size="large"
                         placeholder="请选择企业规模"
-                        options={ENTERPRISE_SCALES.map((item) => ({ label: item, value: item }))}
+                        options={["大型", "中型", "小型", "微型"].map((item) => ({ label: item, value: item }))}
                       />
                     </Form.Item>
-                    <Form.Item
-                      className="register-form-span"
-                      name="enterprise_address"
-                      label="企业地址"
-                      rules={[{ required: true, whitespace: true, message: "请输入企业地址" }]}
-                    >
+                    <Form.Item className="register-form-span" name="enterprise_address" label="企业地址">
                       <Input prefix={<EnvironmentOutlined />} placeholder="请输入企业地址" size="large" />
-                    </Form.Item>
-                    <Form.Item
-                      name="enterprise_legal_person"
-                      label="法定代表人"
-                      rules={[{ required: true, whitespace: true, message: "请输入法定代表人" }]}
-                    >
-                      <Input prefix={<TeamOutlined />} placeholder="请输入法定代表人姓名" size="large" />
-                    </Form.Item>
-                    <Form.Item
-                      name="enterprise_contact_name"
-                      label="联系人"
-                      rules={[{ required: true, whitespace: true, message: "请输入联系人" }]}
-                    >
-                      <Input prefix={<TeamOutlined />} placeholder="请输入联系人姓名" size="large" />
                     </Form.Item>
                   </div>
                 ) : (
