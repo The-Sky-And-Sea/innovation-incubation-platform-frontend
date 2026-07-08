@@ -193,6 +193,8 @@ export default function MainLayout() {
   const location = useLocation();
   const { user, logout } = useAuthStore();
   const unreadCount = useNotificationStore((state) => state.unreadCount);
+  const startNotificationPolling = useNotificationStore((state) => state.startPolling);
+  const stopNotificationPolling = useNotificationStore((state) => state.stopPolling);
 
   const role = (user?.role || "enterprise") as UserRole;
   const roleMeta = ROLE_META[role];
@@ -214,6 +216,16 @@ export default function MainLayout() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  useEffect(() => {
+    const userId = user?.user_id || user?.id;
+    if (!userId) {
+      stopNotificationPolling();
+      return;
+    }
+    startNotificationPolling(userId);
+    return () => stopNotificationPolling();
+  }, [startNotificationPolling, stopNotificationPolling, user?.id, user?.user_id]);
 
   const commandActions = useMemo<CommandAction[]>(() => {
     if (role === "government") return GOV_COMMANDS;
@@ -315,7 +327,7 @@ export default function MainLayout() {
               <kbd>Ctrl K</kbd>
             </Button>
             <Tag className="sync-tag" icon={<ClockCircleOutlined />}>
-              今日 20:30 已同步
+              今日 00:00 已同步
             </Tag>
             <Badge count={unreadCount} size="small" offset={[-2, 2]}>
               <Button

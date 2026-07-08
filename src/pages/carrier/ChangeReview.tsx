@@ -14,8 +14,11 @@ import {
   message,
   Alert,
   Empty,
+  Space,
 } from "antd";
 import {
+  ArrowRightOutlined,
+  FileOutlined,
   FormOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
@@ -23,7 +26,7 @@ import type { ColumnsType } from "antd/es/table";
 import AuditReview from "../../components/AuditReview";
 import { getPendingChangeList, reviewChange } from "../../api/changes";
 import type { ChangeRecord, ChangeType, AuditStatus } from "../../types";
-import { describeBusinessData } from "../../utils/businessDisplay";
+import { downloadFile } from "../../api/files";
 
 const { Title } = Typography;
 
@@ -57,6 +60,47 @@ export default function CarrierChangeReview() {
     fetchList(1, pagination.pageSize);
   };
 
+  const openFile = async (fileId: number) => {
+    try {
+      const url = await downloadFile(fileId);
+      window.open(url, "_blank", "noopener,noreferrer");
+      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (error) {
+      message.error((error as Error).message || "文件打开失败");
+    }
+  };
+
+  const renderFileButton = (value: Record<string, unknown>, isNew: boolean) => {
+    const id = Number(value[isNew ? "new_file_id" : "file_id"] || 0);
+    const filename = String(value[isNew ? "new_filename" : "filename"] || (isNew ? "新文件" : "旧文件"));
+    return id > 0 ? (
+      <Button type="link" size="small" icon={<FileOutlined />} onClick={() => openFile(id)}>
+        {filename}
+      </Button>
+    ) : <span>-</span>;
+  };
+
+  const renderValueChange = (_: unknown, record: ChangeRecord) => {
+    if (record.change_type === "入孵协议文件") {
+      return (
+        <Space size={4}>
+          {renderFileButton(record.old_value || {}, false)}
+          <ArrowRightOutlined />
+          {renderFileButton(record.new_value || {}, true)}
+        </Space>
+      );
+    }
+    const oldValue = record.old_value?.value;
+    const newValue = record.new_value?.value;
+    return (
+      <Space size={8}>
+        <span>{oldValue == null || oldValue === "" ? "-" : String(oldValue)}</span>
+        <ArrowRightOutlined style={{ color: "#1677ff" }} />
+        <strong>{newValue == null || newValue === "" ? "-" : String(newValue)}</strong>
+      </Space>
+    );
+  };
+
   const columns: ColumnsType<ChangeRecord> = [
     { title: "编号", dataIndex: "id", key: "id", width: 60 },
     {
@@ -75,18 +119,16 @@ export default function CarrierChangeReview() {
     },
     {
       title: "变更说明",
-      dataIndex: "change_content",
-      key: "change_content",
+      key: "change_description",
       width: 200,
       ellipsis: true,
+      render: (_, record) => record.change_type,
     },
     {
-      title: "新值",
-      dataIndex: "new_value",
-      key: "new_value",
-      width: 120,
-      ellipsis: true,
-      render: (v: Record<string, unknown>) => describeBusinessData(v),
+      title: "变更内容",
+      key: "value_change",
+      width: 320,
+      render: renderValueChange,
     },
     {
       title: "提交时间",

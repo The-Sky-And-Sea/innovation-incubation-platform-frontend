@@ -47,6 +47,8 @@ export interface RegisterRequest {
   enterprise_industry?: string;
   enterprise_scale?: string;
   enterprise_address?: string;
+  enterprise_legal_person?: string;
+  enterprise_contact_name?: string;
   carrier_name?: string;
   carrier_type?: string;
   carrier_area?: string;

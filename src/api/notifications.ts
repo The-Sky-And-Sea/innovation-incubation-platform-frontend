@@ -52,7 +52,7 @@ export function pushNotification(
 }
 
 export function subscribeNotificationStream(
-  onNotification: (notification: Notification) => void,
+  onNotification: (notification: Notification | Notification[]) => void,
   onError?: (error: unknown) => void,
 ): () => void {
   const controller = new AbortController();

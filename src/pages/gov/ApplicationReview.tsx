@@ -10,14 +10,12 @@ import { describeBusinessData } from "../../utils/businessDisplay";
 
 const { Title, Text } = Typography;
 
-const completionTasks = [
-  {
-    id: 201,
-    enterprise: "测试科技有限公司",
-    carrier: "天河软件园孵化器",
-    period: "2025-01-01 ~ 2026-06-30",
-  },
-];
+const completionTasks: Array<{
+  id: number;
+  enterprise: string;
+  carrier: string;
+  period: string;
+}> = [];
 
 export default function GovApplicationReview() {
   const [apps, setApps] = useState<PolicyApplication[]>([]);

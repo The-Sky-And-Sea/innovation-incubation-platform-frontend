@@ -27,6 +27,10 @@ function mergeNotification(list: Notification[], item: Notification) {
   return [item, ...list];
 }
 
+function mergeNotifications(list: Notification[], items: Notification[]) {
+  return items.reduce((nextList, item) => mergeNotification(nextList, item), list);
+}
+
 export const useNotificationStore = create<NotificationState>((set, get) => ({
   list: [],
   unreadCount: 0,
@@ -39,10 +43,12 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     get().refresh(userId);
 
     const unsubscribe = subscribeNotificationStream(
-      (notification) => {
-        if (notification.user_id !== userId) return;
+      (payload) => {
+        const notifications = Array.isArray(payload) ? payload : [payload];
+        const userNotifications = notifications.filter((notification) => notification.user_id === userId);
+        if (userNotifications.length === 0) return;
         set((state) => {
-          const nextList = mergeNotification(state.list, notification);
+          const nextList = mergeNotifications(state.list, userNotifications);
           return {
             list: nextList,
             unreadCount: nextList.filter((item) => !item.is_read).length,

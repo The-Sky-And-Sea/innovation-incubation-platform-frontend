@@ -11,17 +11,22 @@ import {
   Input,
   Empty,
   Alert,
+  Descriptions,
 } from "antd";
 import {
   AuditOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
+  DownloadOutlined,
+  EyeOutlined,
   RollbackOutlined,
   ReloadOutlined,
   FileTextOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { getPendingIncubationList, reviewIncubation } from "../../api/carrier";
+import { downloadFile } from "../../api/files";
+import { triggerBrowserDownload } from "../../utils/download";
 import type { IncubationRecord, AuditAction } from "../../types";
 
 const { Title, Text } = Typography;
@@ -38,6 +43,7 @@ export default function CarrierIncubationReview() {
   const [records, setRecords] = useState<IncubationRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
+  const [detailRecord, setDetailRecord] = useState<IncubationRecord | null>(null);
 
   // 审核弹窗
   const [reviewModal, setReviewModal] = useState<{
@@ -94,6 +100,19 @@ export default function CarrierIncubationReview() {
     }
   };
 
+  const handleDownloadAgreement = async (record: IncubationRecord) => {
+    if (!record.agreement_file_id) {
+      message.warning("该申请未关联协议文件");
+      return;
+    }
+    try {
+      const url = await downloadFile(record.agreement_file_id);
+      triggerBrowserDownload(url, `入孵协议-${record.enterprise?.name || record.enterprise_id}`);
+    } catch (err) {
+      message.error((err as Error).message || "下载协议文件失败");
+    }
+  };
+
   const columns: ColumnsType<IncubationRecord> = [
     { title: "编号", dataIndex: "id", key: "id", width: 60 },
     {
@@ -128,9 +147,16 @@ export default function CarrierIncubationReview() {
     {
       title: "操作",
       key: "action",
-      width: 240,
+      width: 320,
       render: (_, record) => (
         <Space wrap size={[4, 4]}>
+          <Button
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => setDetailRecord(record)}
+          >
+            详情
+          </Button>
           {reviewActions.map((ra) => (
             <Button
               key={ra.action}
@@ -194,6 +220,84 @@ export default function CarrierIncubationReview() {
           locale={{ emptyText: <Empty description="暂无待审核申请" /> }}
         />
       </Card>
+
+      <Modal
+        title="入驻申请详情"
+        open={!!detailRecord}
+        onCancel={() => setDetailRecord(null)}
+        footer={
+          <Space>
+            <Button onClick={() => setDetailRecord(null)}>关闭</Button>
+            {detailRecord && (
+              <Button icon={<DownloadOutlined />} onClick={() => handleDownloadAgreement(detailRecord)}>
+                下载协议文件
+              </Button>
+            )}
+          </Space>
+        }
+        width={820}
+      >
+        <Descriptions column={2} bordered size="middle">
+          <Descriptions.Item label="申请编号">{detailRecord?.id ?? "-"}</Descriptions.Item>
+          <Descriptions.Item label="审核状态">
+            <Tag color="processing">待审核</Tag>
+          </Descriptions.Item>
+          <Descriptions.Item label="企业名称" span={2}>
+            {detailRecord?.enterprise?.name || "-"}
+          </Descriptions.Item>
+          <Descriptions.Item label="统一社会信用代码">
+            {detailRecord?.enterprise?.credit_code || "-"}
+          </Descriptions.Item>
+          <Descriptions.Item label="所属行业">
+            {detailRecord?.enterprise?.industry || "-"}
+          </Descriptions.Item>
+          <Descriptions.Item label="企业规模">
+            {detailRecord?.enterprise?.scale || "-"}
+          </Descriptions.Item>
+          <Descriptions.Item label="法定代表人">
+            {detailRecord?.enterprise?.legal_person || "-"}
+          </Descriptions.Item>
+          <Descriptions.Item label="联系人">
+            {detailRecord?.enterprise?.contact_name || "-"}
+          </Descriptions.Item>
+          <Descriptions.Item label="联系电话">
+            {detailRecord?.enterprise?.contact_phone || "-"}
+          </Descriptions.Item>
+          <Descriptions.Item label="企业地址" span={2}>
+            {detailRecord?.enterprise?.address || "-"}
+          </Descriptions.Item>
+          <Descriptions.Item label="申请载体">
+            {detailRecord?.carrier?.name || `载体 #${detailRecord?.carrier_id || "-"}`}
+          </Descriptions.Item>
+          <Descriptions.Item label="载体区域">
+            {detailRecord?.carrier?.area || "-"}
+          </Descriptions.Item>
+          <Descriptions.Item label="入孵开始时间">
+            {detailRecord?.incubate_start || "-"}
+          </Descriptions.Item>
+          <Descriptions.Item label="入孵结束时间">
+            {detailRecord?.incubate_end || "-"}
+          </Descriptions.Item>
+          <Descriptions.Item label="协议文件">
+            {detailRecord?.agreement_file_id ? (
+              <Button
+                type="link"
+                size="small"
+                icon={<DownloadOutlined />}
+                onClick={() => handleDownloadAgreement(detailRecord)}
+              >
+                文件 ID: {detailRecord.agreement_file_id}
+              </Button>
+            ) : "-"}
+          </Descriptions.Item>
+          <Descriptions.Item label="提交时间">
+            {detailRecord?.created_at ? new Date(detailRecord.created_at).toLocaleString("zh-CN") : "-"}
+          </Descriptions.Item>
+          <Descriptions.Item label="更新时间">
+            {detailRecord?.updated_at ? new Date(detailRecord.updated_at).toLocaleString("zh-CN") : "-"}
+          </Descriptions.Item>
+        </Descriptions>
+      </Modal>
 
       {/* 审核意见弹窗 */}
       <Modal

@@ -9,7 +9,7 @@
  * 后续扩展：政策管理、申报审核、绩效考核、账号注销管理
  */
 
-import type { ApiResponse, EnterpriseInfo, CarrierInfo } from "../types";
+import type { ApiResponse, EnterpriseInfo, CarrierInfo, IncubationRecord } from "../types";
 
 /**
  * 企业检索（按关键词搜索名称/信用代码/行业）
@@ -73,4 +73,27 @@ export async function deleteCarrier(id: number): Promise<ApiResponse<null>> {
 export async function govCompleteIncubation(id: number): Promise<ApiResponse<null>> {
   const { post } = await import("../utils/request");
   return post(`/gov/incubations/${id}/complete`);
+}
+
+export async function getCompletableIncubations(
+  page = 1,
+  page_size = 20,
+): Promise<ApiResponse<{ list: IncubationRecord[]; total: number; page: number; page_size: number }>> {
+  const { get } = await import("../utils/request");
+  return get("/gov/incubations/completable", { page: String(page), page_size: String(page_size) });
+}
+
+export async function getGovIncubations(
+  page = 1,
+  page_size = 20,
+  keyword = "",
+  category = "all",
+): Promise<ApiResponse<{ list: IncubationRecord[]; total: number; page: number; page_size: number }>> {
+  const { get } = await import("../utils/request");
+  return get("/gov/incubations", {
+    page: String(page),
+    page_size: String(page_size),
+    keyword,
+    category,
+  });
 }

@@ -3,7 +3,7 @@
  *
  * 对应后端接口：
  * - GET   /carrier/incubations/pending       待审核入驻列表（分页）
- * - GET   /carrier/incubations               本载体下所有入驻记录
+ * - GET   /carrier/incubations               本载体下已审核通过的入驻记录
  * - POST  /carrier/incubations/:id/review    审核通过/拒绝/退回
  * - POST  /carrier/incubations/:id/complete  孵化毕业
  * - POST  /carrier/incubations/:id/terminate 提前结束入驻
@@ -27,7 +27,7 @@ export async function getPendingIncubationList(
   });
 }
 
-// 列出本载体下所有入驻记录
+// 列出本载体下已审核通过、正式入驻的记录
 export async function getCarrierIncubationList(
   page = 1,
   page_size = 20,

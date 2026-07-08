@@ -1,7 +1,7 @@
 /**
  * 载体端 - 入驻企业管理
  *
- * 展示入驻在本载体下的所有企业，可对在孵企业发起"提前结束入驻"
+ * 仅展示已通过入驻审核的企业，可对在孵企业发起"提前结束入驻"
  */
 
 import { useState, useEffect, useCallback } from "react";
@@ -18,11 +18,13 @@ import {
   Empty,
   Alert,
   Form,
+  Descriptions,
 } from "antd";
 import {
   TeamOutlined,
   ReloadOutlined,
   StopOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import {
@@ -55,6 +57,7 @@ export default function CarrierEnterprises() {
   const [records, setRecords] = useState<IncubationRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
+  const [detailRecord, setDetailRecord] = useState<IncubationRecord | null>(null);
 
   // 提前结束弹窗
   const [terminateModal, setTerminateModal] = useState<{
@@ -69,11 +72,13 @@ export default function CarrierEnterprises() {
     setLoading(true);
     try {
       const res = await getCarrierIncubationList(page, pageSize);
-      setRecords(res.data.list);
+      // 后端只应返回已通过记录；这里保留防御过滤，避免旧服务数据误入正式企业列表。
+      const approvedRecords = res.data.list.filter((record) => record.status === "approved");
+      setRecords(approvedRecords);
       setPagination({
         current: res.data.page,
         pageSize: res.data.page_size,
-        total: res.data.total,
+        total: res.data.total - (res.data.list.length - approvedRecords.length),
       });
     } catch {
       message.error("加载入驻企业列表失败");
@@ -155,20 +160,29 @@ export default function CarrierEnterprises() {
     {
       title: "操作",
       key: "action",
-      width: 160,
+      width: 190,
       fixed: "right",
       render: (_, r) => {
         const isInIncubation = r.status === "approved" && r.incubate_status === "in_incubation";
         return (
-          <Button
-            size="small"
-            danger
-            icon={<StopOutlined />}
-            disabled={!isInIncubation}
-            onClick={() => openTerminate(r)}
-          >
-            提前结束
-          </Button>
+          <Space>
+            <Button
+              size="small"
+              icon={<EyeOutlined />}
+              onClick={() => setDetailRecord(r)}
+            >
+              查看
+            </Button>
+            <Button
+              size="small"
+              danger
+              icon={<StopOutlined />}
+              disabled={!isInIncubation}
+              onClick={() => openTerminate(r)}
+            >
+              提前结束
+            </Button>
+          </Space>
         );
       },
     },
@@ -186,7 +200,7 @@ export default function CarrierEnterprises() {
         showIcon
         style={{ marginBottom: 16 }}
         message="入驻企业管理"
-        description="展示所有入驻本载体的企业记录。对于仍在孵的企业，可发起「提前结束」操作（需填写原因），结束后企业可重新提交入驻申请。"
+        description="仅展示已通过入驻审核、正式入驻本载体的企业。待审核申请请在「入驻审核」中处理；对于仍在孵的企业，可发起「提前结束」操作。"
       />
 
       <Card
@@ -219,6 +233,51 @@ export default function CarrierEnterprises() {
           locale={{ emptyText: <Empty description="暂无入驻企业" /> }}
         />
       </Card>
+
+      <Modal
+        title="企业基本信息"
+        open={!!detailRecord}
+        onCancel={() => setDetailRecord(null)}
+        footer={null}
+        width={720}
+      >
+        <Descriptions column={2} bordered size="middle">
+          <Descriptions.Item label="企业名称" span={2}>
+            {detailRecord?.enterprise?.name || `企业 #${detailRecord?.enterprise_id}`}
+          </Descriptions.Item>
+          <Descriptions.Item label="统一社会信用代码">
+            {detailRecord?.enterprise?.credit_code || "-"}
+          </Descriptions.Item>
+          <Descriptions.Item label="所属行业">
+            {detailRecord?.enterprise?.industry || "-"}
+          </Descriptions.Item>
+          <Descriptions.Item label="企业规模">
+            {detailRecord?.enterprise?.scale || "-"}
+          </Descriptions.Item>
+          <Descriptions.Item label="法定代表人">
+            {detailRecord?.enterprise?.legal_person || "-"}
+          </Descriptions.Item>
+          <Descriptions.Item label="联系人">
+            {detailRecord?.enterprise?.contact_name || "-"}
+          </Descriptions.Item>
+          <Descriptions.Item label="联系电话">
+            {detailRecord?.enterprise?.contact_phone || "-"}
+          </Descriptions.Item>
+          <Descriptions.Item label="企业地址" span={2}>
+            {detailRecord?.enterprise?.address || "-"}
+          </Descriptions.Item>
+          <Descriptions.Item label="入孵时间">
+            {detailRecord ? `${detailRecord.incubate_start} ~ ${detailRecord.incubate_end}` : "-"}
+          </Descriptions.Item>
+          <Descriptions.Item label="孵化状态">
+            {detailRecord ? (
+              <Tag color={incubateMap[detailRecord.incubate_status || "in_incubation"]?.color || "default"}>
+                {incubateMap[detailRecord.incubate_status || "in_incubation"]?.label || detailRecord.incubate_status}
+              </Tag>
+            ) : "-"}
+          </Descriptions.Item>
+        </Descriptions>
+      </Modal>
 
       {/* 提前结束入驻 弹窗 */}
       <Modal

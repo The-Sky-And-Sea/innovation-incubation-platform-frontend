@@ -19,35 +19,37 @@ import {
   Select,
   DatePicker,
   Button,
-  Space,
   message,
   Alert,
   Upload,
+  Empty,
+  Tag,
 } from "antd";
 import {
   PlusOutlined,
   DeleteOutlined,
   FileTextOutlined,
-  UploadOutlined,
-  CheckCircleOutlined,
   InfoCircleOutlined,
   ArrowLeftOutlined,
 } from "@ant-design/icons";
 import type { UploadFile } from "antd/es/upload/interface";
 import Stepper, { Step } from "../../components/Stepper";
+import Folder from "../../components/Folder";
 import { submitIncubation, getIncubationList, getIncubationDicts, type DictItem } from "../../api/incubation";
 import { getCarrierList } from "../../api/carriers";
 import { getMyEnterpriseInfo } from "../../api/enterprise";
 import { uploadFileAction } from "../../api/files";
 import type { CarrierInfo } from "../../types";
+import { formatFileSize } from "../../utils/format";
 import dayjs from "dayjs";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
+const INCUBATE_STATUS = "in_incubation";
 
 // 步骤标签
-const STEP_LABELS = ["填报说明", "公司简介", "入孵情况", "入驻材料", "完成"];
+const STEP_LABELS = ["填报说明", "公司简介", "入孵情况", "入驻材料"];
 
 // 租房信息类型
 interface RentInfo {
@@ -85,12 +87,79 @@ interface IncubationApplyForm {
   rent_info?: RentInfo[];
 }
 
+const PERSONNEL_FIELDS = [
+  ["management_count", "管理人数"],
+  ["high_education_count", "大专及以上学历人数"],
+  ["insurance_count", "参保人数"],
+  ["research_count", "研究人数"],
+  ["training_count", "参加园区培训人数"],
+] as const;
+
+function findExcessPersonnel(values: IncubationApplyForm): string | undefined {
+  const employeeCount = Number(values.employee_count);
+  return PERSONNEL_FIELDS.find(([field]) => Number(values[field] ?? 0) > employeeCount)?.[1];
+}
+
+function UploadedFileDetails({
+  files,
+  onRemove,
+}: {
+  files: UploadFile[];
+  onRemove: (file: UploadFile) => void;
+}) {
+  return (
+    <Card size="small" title={`已上传文件详细信息（${files.length}）`} style={{ height: "100%" }}>
+      {files.length === 0 ? (
+        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="无" />
+      ) : (
+        <div style={{ maxHeight: 250, overflowY: "auto", paddingRight: 4 }}>
+          {files.map((file) => {
+            const response = file.response as { file_id?: number; size?: number } | undefined;
+            const fileId = response?.file_id;
+            const extension = file.name.includes(".") ? file.name.split(".").pop()?.toUpperCase() : "文件";
+            return (
+              <div
+                key={file.uid}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "minmax(120px, 1fr) auto auto auto auto auto",
+                  gap: 10,
+                  alignItems: "center",
+                  minHeight: 48,
+                  padding: "8px 4px",
+                  borderBottom: "1px solid #edf1f5",
+                }}
+              >
+                <Text strong ellipsis title={file.name}>{file.name}</Text>
+                <Tag color="blue" style={{ marginInlineEnd: 0 }}>{extension}</Tag>
+                <Text type="secondary" style={{ whiteSpace: "nowrap" }}>
+                  {formatFileSize(file.size ?? response?.size ?? 0)}
+                </Text>
+                <Tag color="success" style={{ marginInlineEnd: 0 }}>上传成功</Tag>
+                <Text type="secondary" style={{ whiteSpace: "nowrap" }}>ID: {fileId ?? "-"}</Text>
+                <Button
+                  danger
+                  type="text"
+                  size="small"
+                  icon={<DeleteOutlined />}
+                  aria-label={`删除 ${file.name}`}
+                  onClick={() => onRemove(file)}
+                />
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Card>
+  );
+}
+
 // 表单验证规则
 const validationRules: Record<number, string[]> = {
   2: ["credit_code", "name", "registered_address", "office_address",
        "registered_capital", "registration_date", "enterprise_nature",
        "founding_category", "industry_category", "main_business"],
-  3: ["carrier_id", "incubate_status", "employee_count", "management_count",
+  3: ["carrier_id", "incubate_status", "incubate_start", "incubate_end", "employee_count", "management_count",
        "high_education_count", "insurance_count", "research_count"],
   4: [], // 文件在提交时单独验证
 };
@@ -98,9 +167,9 @@ const validationRules: Record<number, string[]> = {
 export default function IncubationWizardPage() {
   const navigate = useNavigate();
   const [form] = Form.useForm<IncubationApplyForm>();
-  const [currentStep, setCurrentStep] = useState(1);
   const [formValues, setFormValues] = useState<IncubationApplyForm>({});
   const [submitting, setSubmitting] = useState(false);
+  const incubateStart = Form.useWatch("incubate_start", form);
 
   // 载体列表
   const [carriers, setCarriers] = useState<CarrierInfo[]>([]);
@@ -110,7 +179,6 @@ export default function IncubationWizardPage() {
   const [foundingCategories, setFoundingCategories] = useState<DictItem[]>([]);
   const [industryCategories, setIndustryCategories] = useState<DictItem[]>([]);
   const [highTechFields, setHighTechFields] = useState<DictItem[]>([]);
-  const [incubateStatuses, setIncubateStatuses] = useState<DictItem[]>([]);
 
   // 租房信息列表
   const [rentList, setRentList] = useState<RentInfo[]>([]);
@@ -138,7 +206,6 @@ export default function IncubationWizardPage() {
       setFoundingCategories(d.founding_categories);
       setIndustryCategories(d.industry_categories);
       setHighTechFields(d.high_tech_fields);
-      setIncubateStatuses(d.incubate_statuses);
     } catch {
       // 静默失败
     }
@@ -158,15 +225,6 @@ export default function IncubationWizardPage() {
       // 静默失败
     }
   }, [form]);
-
-  // 提交后刷新记录
-  const fetchRecords = useCallback(async () => {
-    try {
-      await getIncubationList(1, 10);
-    } catch {
-      // 静默失败
-    }
-  }, []);
 
   useEffect(() => {
     loadCarriers();
@@ -207,6 +265,26 @@ export default function IncubationWizardPage() {
         const value = values[field as keyof IncubationApplyForm];
         if (value === undefined || value === null || value === "") {
           message.warning("请完善必填信息");
+          return false;
+        }
+      }
+      if (step === 2 && dayjs(values.registration_date).isAfter(dayjs().subtract(1, "month"), "day")) {
+        message.warning("注册时间不得晚于上个月的今天");
+        return false;
+      }
+      if (step === 3) {
+        if (dayjs(values.incubate_start).isBefore(dayjs(), "day")) {
+          message.warning("入驻开始时间不得早于今天");
+          return false;
+        }
+        const minimumEnd = dayjs(values.incubate_start).add(1, "month");
+        if (dayjs(values.incubate_end).isBefore(minimumEnd, "day")) {
+          message.warning("入驻结束时间至少应在开始时间一个月后");
+          return false;
+        }
+        const excessPersonnel = findExcessPersonnel(values);
+        if (excessPersonnel) {
+          message.warning(`${excessPersonnel}不得多于员工总数`);
           return false;
         }
       }
@@ -285,18 +363,35 @@ export default function IncubationWizardPage() {
         return;
       }
 
+      const minimumEnd = dayjs(allValues.incubate_start).add(1, "month");
+      if (dayjs(allValues.incubate_start).isBefore(dayjs(), "day")) {
+        message.warning("入驻开始时间不得早于今天");
+        setSubmitting(false);
+        return;
+      }
+      if (dayjs(allValues.incubate_end).isBefore(minimumEnd, "day")) {
+        message.warning("入驻结束时间至少应在开始时间一个月后");
+        setSubmitting(false);
+        return;
+      }
+      const excessPersonnel = findExcessPersonnel(allValues);
+      if (excessPersonnel) {
+        message.warning(`${excessPersonnel}不得多于员工总数`);
+        setSubmitting(false);
+        return;
+      }
+
       await submitIncubation({
         carrier_id: allValues.carrier_id!,
-        incubate_start: allValues.incubate_start || dayjs().format("YYYY-MM-DD"),
-        incubate_end: allValues.incubate_end || dayjs().add(1, 'year').format("YYYY-MM-DD"),
+        incubate_start: dayjs(allValues.incubate_start).format("YYYY-MM-DD"),
+        incubate_end: dayjs(allValues.incubate_end).format("YYYY-MM-DD"),
         agreement_file_id: agreementFileIds[0],
         credit_code: allValues.credit_code,
         enterprise_name: allValues.name,
       });
 
       message.success("入驻申请已提交，请等待载体审核");
-      await fetchRecords();
-      setCurrentStep(5);
+      navigate("/enterprise/incubation", { replace: true });
     } catch (err) {
       message.error((err as Error).message || "提交失败");
     } finally {
@@ -319,8 +414,7 @@ export default function IncubationWizardPage() {
       <Card title={<><InfoCircleOutlined style={{ marginRight: 8 }} />入驻平台申请</>}>
         <Stepper
           labels={STEP_LABELS}
-          initialStep={currentStep}
-          onStepChange={setCurrentStep}
+          initialStep={1}
           beforeNext={validateStep}
           onFinalStepCompleted={handleSubmit}
           backButtonText="上一步"
@@ -405,9 +499,22 @@ export default function IncubationWizardPage() {
                 <Form.Item
                   name="registration_date"
                   label="注册时间"
-                  rules={[{ required: true, message: "请选择注册时间" }]}
+                  rules={[
+                    { required: true, message: "请选择注册时间" },
+                    {
+                      validator(_, value) {
+                        if (!value || !dayjs(value).isAfter(dayjs().subtract(1, "month"), "day")) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(new Error("注册时间不得晚于上个月的今天"));
+                      },
+                    },
+                  ]}
                 >
-                  <DatePicker style={{ width: "100%" }} />
+                  <DatePicker
+                    style={{ width: "100%" }}
+                    disabledDate={(current) => current.isAfter(dayjs().subtract(1, "month"), "day")}
+                  />
                 </Form.Item>
 
                 <Form.Item
@@ -500,12 +607,11 @@ export default function IncubationWizardPage() {
               <Form.Item
                 name="incubate_status"
                 label="孵化状态"
-                rules={[{ required: true, message: "请选择孵化状态" }]}
+                initialValue={INCUBATE_STATUS}
+                rules={[{ required: true }]}
               >
-                <Select placeholder="请选择">
-                  {incubateStatuses.map(s => (
-                    <Option key={s.value} value={s.value}>{s.label}</Option>
-                  ))}
+                <Select disabled>
+                  <Option value={INCUBATE_STATUS}>在孵企业</Option>
                 </Select>
               </Form.Item>
 
@@ -515,15 +621,42 @@ export default function IncubationWizardPage() {
                   label="入驻开始时间"
                   rules={[{ required: true, message: "请选择入驻开始时间" }]}
                 >
-                  <DatePicker style={{ width: "100%" }} />
+                  <DatePicker
+                    style={{ width: "100%" }}
+                    disabledDate={(current) => current.isBefore(dayjs(), "day")}
+                    onChange={(value) => {
+                      const end = form.getFieldValue("incubate_end");
+                      if (value && end && dayjs(end).isBefore(value.add(1, "month"), "day")) {
+                        form.setFieldValue("incubate_end", undefined);
+                      }
+                    }}
+                  />
                 </Form.Item>
 
                 <Form.Item
                   name="incubate_end"
                   label="入驻结束时间"
-                  rules={[{ required: true, message: "请选择入驻结束时间" }]}
-                >
-                  <DatePicker style={{ width: "100%" }} />
+                  dependencies={["incubate_start"]}
+                  rules={[
+                    { required: true, message: "请选择入驻结束时间" },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        const start = getFieldValue("incubate_start");
+                        if (!value || !start || !dayjs(value).isBefore(dayjs(start).add(1, "month"), "day")) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(new Error("结束时间至少应在开始时间一个月后"));
+                      },
+                    }),
+                  ]}
+              >
+                  <DatePicker
+                    style={{ width: "100%" }}
+                    disabled={!incubateStart}
+                    disabledDate={(current) =>
+                      !incubateStart || current.isBefore(dayjs(incubateStart).add(1, "month"), "day")
+                    }
+                  />
                 </Form.Item>
               </div>
 
@@ -531,19 +664,88 @@ export default function IncubationWizardPage() {
                 <Form.Item name="employee_count" label="员工总数" rules={[{ required: true, message: "请输入" }]}>
                   <Input type="number" placeholder="0" />
                 </Form.Item>
-                <Form.Item name="management_count" label="管理人数" rules={[{ required: true, message: "请输入" }]}>
+                <Form.Item
+                  name="management_count"
+                  label="管理人数"
+                  dependencies={["employee_count"]}
+                  rules={[
+                    { required: true, message: "请输入" },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        return value === undefined || value === "" || Number(value) <= Number(getFieldValue("employee_count"))
+                          ? Promise.resolve()
+                          : Promise.reject(new Error("管理人数不得多于员工总数"));
+                      },
+                    }),
+                  ]}
+                >
                   <Input type="number" placeholder="0" />
                 </Form.Item>
-                <Form.Item name="high_education_count" label="大专及以上学历人数" rules={[{ required: true, message: "请输入" }]}>
+                <Form.Item
+                  name="high_education_count"
+                  label="大专及以上学历人数"
+                  dependencies={["employee_count"]}
+                  rules={[
+                    { required: true, message: "请输入" },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        return value === undefined || value === "" || Number(value) <= Number(getFieldValue("employee_count"))
+                          ? Promise.resolve()
+                          : Promise.reject(new Error("大专及以上学历人数不得多于员工总数"));
+                      },
+                    }),
+                  ]}
+                >
                   <Input type="number" placeholder="0" />
                 </Form.Item>
-                <Form.Item name="insurance_count" label="参保人数" rules={[{ required: true, message: "请输入" }]}>
+                <Form.Item
+                  name="insurance_count"
+                  label="参保人数"
+                  dependencies={["employee_count"]}
+                  rules={[
+                    { required: true, message: "请输入" },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        return value === undefined || value === "" || Number(value) <= Number(getFieldValue("employee_count"))
+                          ? Promise.resolve()
+                          : Promise.reject(new Error("参保人数不得多于员工总数"));
+                      },
+                    }),
+                  ]}
+                >
                   <Input type="number" placeholder="0" />
                 </Form.Item>
-                <Form.Item name="research_count" label="研究人数" rules={[{ required: true, message: "请输入" }]}>
+                <Form.Item
+                  name="research_count"
+                  label="研究人数"
+                  dependencies={["employee_count"]}
+                  rules={[
+                    { required: true, message: "请输入" },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        return value === undefined || value === "" || Number(value) <= Number(getFieldValue("employee_count"))
+                          ? Promise.resolve()
+                          : Promise.reject(new Error("研究人数不得多于员工总数"));
+                      },
+                    }),
+                  ]}
+                >
                   <Input type="number" placeholder="0" />
                 </Form.Item>
-                <Form.Item name="training_count" label="参加园区培训人数">
+                <Form.Item
+                  name="training_count"
+                  label="参加园区培训人数"
+                  dependencies={["employee_count"]}
+                  rules={[
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        return value === undefined || value === "" || Number(value) <= Number(getFieldValue("employee_count"))
+                          ? Promise.resolve()
+                          : Promise.reject(new Error("参加园区培训人数不得多于员工总数"));
+                      },
+                    }),
+                  ]}
+                >
                   <Input type="number" placeholder="0" />
                 </Form.Item>
               </div>
@@ -610,53 +812,71 @@ export default function IncubationWizardPage() {
                 label={<><FileTextOutlined /> 入孵协议文件（必填）</>}
                 required
               >
-                <Upload.Dragger
-                  accept=".pdf,.doc,.docx,.jpg,.png"
-                  beforeUpload={(file) => handleFileUpload(file, 'agreement')}
-                  fileList={agreementFiles}
-                  onRemove={(file) => removeFile(file, 'agreement')}
-                  maxCount={5}
-                >
-                  <p className="ant-upload-drag-icon">
-                    <UploadOutlined />
-                  </p>
-                  <p className="ant-upload-text">点击或拖拽上传入孵协议文件</p>
-                  <p className="ant-upload-hint">支持 PDF、Word、图片格式，最多5个文件</p>
-                </Upload.Dragger>
+                <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(360px, 0.9fr)", gap: 16, alignItems: "stretch" }}>
+                  <Upload.Dragger
+                    className="file-upload-folder-dragger"
+                    accept=".pdf,.doc,.docx,.jpg,.png"
+                    beforeUpload={(file) => handleFileUpload(file, 'agreement')}
+                    fileList={agreementFiles}
+                    onRemove={(file) => removeFile(file, 'agreement')}
+                    showUploadList={false}
+                    maxCount={5}
+                  >
+                    <div className="file-upload-dropcopy">
+                      <div className="upload-folder-visual" aria-hidden="true">
+                        <Folder
+                          color="#14508c"
+                          interactive={false}
+                          size={1.08}
+                          items={[
+                            <span key="pdf" className="upload-folder-paper">PDF</span>,
+                            <span key="doc" className="upload-folder-paper">DOC</span>,
+                            <span key="img" className="upload-folder-paper">IMG</span>,
+                          ]}
+                        />
+                      </div>
+                      <p className="ant-upload-text">点击或拖拽文件到此区域上传入孵协议</p>
+                      <p className="ant-upload-hint">支持格式: .pdf, .doc, .docx, .jpg, .png | 最多5个文件</p>
+                    </div>
+                  </Upload.Dragger>
+                  <UploadedFileDetails files={agreementFiles} onRemove={(file) => removeFile(file, "agreement")} />
+                </div>
               </Form.Item>
 
               <Form.Item label={<><FileTextOutlined /> 其他入驻材料（选填）</>}>
-                <Upload.Dragger
-                  accept=".pdf,.doc,.docx,.jpg,.png,.xls,.xlsx"
-                  beforeUpload={(file) => handleFileUpload(file, 'other')}
-                  fileList={otherFiles}
-                  onRemove={(file) => removeFile(file, 'other')}
-                  maxCount={10}
-                >
-                  <p className="ant-upload-drag-icon">
-                    <UploadOutlined />
-                  </p>
-                  <p className="ant-upload-text">点击或拖拽上传其他入驻材料</p>
-                  <p className="ant-upload-hint">如：营业执照、资质证书等</p>
-                </Upload.Dragger>
+                <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(360px, 0.9fr)", gap: 16, alignItems: "stretch" }}>
+                  <Upload.Dragger
+                    className="file-upload-folder-dragger"
+                    accept=".pdf,.doc,.docx,.jpg,.png,.xls,.xlsx"
+                    beforeUpload={(file) => handleFileUpload(file, 'other')}
+                    fileList={otherFiles}
+                    onRemove={(file) => removeFile(file, 'other')}
+                    showUploadList={false}
+                    maxCount={10}
+                  >
+                    <div className="file-upload-dropcopy">
+                      <div className="upload-folder-visual" aria-hidden="true">
+                        <Folder
+                          color="#14508c"
+                          interactive={false}
+                          size={1.08}
+                          items={[
+                            <span key="pdf" className="upload-folder-paper">PDF</span>,
+                            <span key="doc" className="upload-folder-paper">DOC</span>,
+                            <span key="xls" className="upload-folder-paper">XLS</span>,
+                          ]}
+                        />
+                      </div>
+                      <p className="ant-upload-text">点击或拖拽文件到此区域上传其他入驻材料</p>
+                      <p className="ant-upload-hint">支持 PDF、Office、图片格式，如营业执照、资质证书等</p>
+                    </div>
+                  </Upload.Dragger>
+                  <UploadedFileDetails files={otherFiles} onRemove={(file) => removeFile(file, "other")} />
+                </div>
               </Form.Item>
             </Form>
           </Step>
 
-          {/* 步骤5: 完成 */}
-          <Step>
-            <div style={{ textAlign: "center", padding: "40px 0" }}>
-              <CheckCircleOutlined style={{ fontSize: 64, color: "#52c41a", marginBottom: 24 }} />
-              <Title level={3}>入驻申请已提交</Title>
-              <Text type="secondary" style={{ display: "block", marginBottom: 24 }}>
-                您的入驻申请已成功提交，请等待载体审核。审核结果将通过站内信通知您。
-              </Text>
-              <Space>
-                <Button onClick={() => navigate("/enterprise/incubation/apply")}>继续申请</Button>
-                <Button type="primary" onClick={() => navigate("/enterprise/incubation")}>查看申请记录</Button>
-              </Space>
-            </div>
-          </Step>
         </Stepper>
       </Card>
     </div>
