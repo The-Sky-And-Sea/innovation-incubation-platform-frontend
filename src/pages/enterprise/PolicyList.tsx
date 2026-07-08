@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Button, Card, Checkbox, Empty, Form, Input, Modal, Space, Table, Tabs, Tag, Typography, message } from "antd";
+import { Alert, Button, Card, Empty, Form, Input, Modal, Space, Table, Tabs, Tag, Typography, message } from "antd";
 import { FileTextOutlined, ReloadOutlined, SendOutlined, StarOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
+import FileUpload from "../../components/FileUpload";
 import {
   applyPolicy,
   followPolicy,
@@ -10,7 +11,7 @@ import {
   getMyApplications,
   unfollowPolicy,
 } from "../../api/policies";
-import type { MatchLevel, Policy, PolicyApplication, PolicyMaterial } from "../../types";
+import type { FileInfo, MatchLevel, Policy, PolicyApplication, PolicyMaterial } from "../../types";
 import { describeBusinessData } from "../../utils/businessDisplay";
 
 const { Title, Text } = Typography;
@@ -23,7 +24,6 @@ interface ApplyFormValues {
   project: string;
   contact: string;
   amount?: string;
-  material_names?: string[];
   note?: string;
 }
 
@@ -57,6 +57,7 @@ export default function EnterprisePolicyList() {
   const [myAppsLoading, setMyAppsLoading] = useState(false);
   const [followedPolicies, setFollowedPolicies] = useState<Policy[]>([]);
   const [followedLoading, setFollowedLoading] = useState(false);
+  const [materialFiles, setMaterialFiles] = useState<Record<string, FileInfo | null>>({});
 
   const fetchPolicies = useCallback(async (page = 1, pageSize = 10) => {
     setLoading(true);
@@ -108,8 +109,8 @@ export default function EnterprisePolicyList() {
     applyForm.setFieldsValue({
       project: policy.title,
       contact: "李四",
-      material_names: materials.filter((item) => item.necessity === "necessary").map((item) => item.name),
     });
+    setMaterialFiles(Object.fromEntries(materials.map((item) => [item.name, null])));
     setApplyOpen(true);
   };
 
@@ -119,7 +120,20 @@ export default function EnterprisePolicyList() {
       const values = await applyForm.validateFields();
       setApplying(true);
       const availableMaterials = getPolicyMaterials(selectedPolicy);
-      const materials = availableMaterials.filter((item) => values.material_names?.includes(item.name));
+      const missingRequired = availableMaterials.filter(
+        (item) => item.necessity === "necessary" && !materialFiles[item.name]?.file_id,
+      );
+      if (missingRequired.length > 0) {
+        message.error(`请上传必需材料：${missingRequired.map((item) => item.name).join("、")}`);
+        return;
+      }
+      const materials = availableMaterials.reduce<PolicyMaterial[]>((acc, item) => {
+          const file = materialFiles[item.name];
+          if (file?.file_id) {
+            acc.push({ ...item, file_ids: [file.file_id] });
+          }
+          return acc;
+        }, []);
       await applyPolicy(selectedPolicy.id, {
         project: values.project,
         contact: values.contact,
@@ -272,8 +286,27 @@ export default function EnterprisePolicyList() {
           <Form.Item name="amount" label="申请金额">
             <Input placeholder="例如：20 万元" />
           </Form.Item>
-          <Form.Item name="material_names" label="已准备材料" rules={[{ required: true, message: "请选择已准备材料" }]}>
-            <Checkbox.Group options={getPolicyMaterials(selectedPolicy).map((item) => ({ label: item.name, value: item.name }))} />
+          <Form.Item label="已准备材料" required>
+            <Space direction="vertical" style={{ width: "100%" }} size="middle">
+              {getPolicyMaterials(selectedPolicy).map((item) => (
+                <Card
+                  key={item.name}
+                  size="small"
+                  title={
+                    <Space>
+                      <span>{item.name}</span>
+                      {item.necessity === "necessary" && <Tag color="red">必需</Tag>}
+                    </Space>
+                  }
+                >
+                  <FileUpload
+                    currentFile={materialFiles[item.name] || null}
+                    onUploaded={(file) => setMaterialFiles((prev) => ({ ...prev, [item.name]: file }))}
+                    onRemove={() => setMaterialFiles((prev) => ({ ...prev, [item.name]: null }))}
+                  />
+                </Card>
+              ))}
+            </Space>
           </Form.Item>
           <Form.Item name="note" label="补充说明">
             <TextArea rows={3} placeholder="可补充项目情况、资金用途或材料说明" />

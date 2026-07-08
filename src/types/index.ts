@@ -204,7 +204,8 @@ export type MatchLevel = "high" | "partial" | "none" | "unknown";
 
 export interface PolicyMaterial {
   name: string;
-  file_id: number;
+  file_id?: number;
+  file_ids?: number[];
   necessity: "necessary" | "optional" | string;
 }
 

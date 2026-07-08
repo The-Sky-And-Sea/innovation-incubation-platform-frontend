@@ -85,7 +85,18 @@ export async function applyPolicy(
   formData: Record<string, unknown>,
 ): Promise<ApiResponse<PolicyApplication>> {
   const { post } = await import("../utils/request");
-  const materials = Array.isArray(formData.materials) ? formData.materials : [];
+  const rawMaterials = Array.isArray(formData.materials) ? formData.materials : [];
+  const materials = rawMaterials.map((item) => {
+    const material = item as PolicyMaterial;
+    return {
+      name: material.name,
+      file_ids: Array.isArray(material.file_ids)
+        ? material.file_ids
+        : material.file_id
+          ? [material.file_id]
+          : [],
+    };
+  });
   return post(`/enterprise/policies/${policyId}/apply`, { materials });
 }
 
@@ -102,7 +113,15 @@ export async function applyCarrierPolicy(
   materials: PolicyMaterial[],
 ): Promise<ApiResponse<PolicyApplication>> {
   const { post } = await import("../utils/request");
-  return post(`/carrier/policies/${policyId}/apply`, { materials });
+  const normalizedMaterials = materials.map((material) => ({
+    name: material.name,
+    file_ids: Array.isArray(material.file_ids)
+      ? material.file_ids
+      : material.file_id
+        ? [material.file_id]
+        : [],
+  }));
+  return post(`/carrier/policies/${policyId}/apply`, { materials: normalizedMaterials });
 }
 
 export async function getMyApplications(
