@@ -1,19 +1,18 @@
-import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type InputHTMLAttributes, type MouseEvent, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Button, Card, ConfigProvider, Form, Input, Space, Typography, message } from "antd";
+import { Button, Card, ConfigProvider, Form, Space, Typography, message } from "antd";
 import {
   ArrowLeftOutlined,
   BankOutlined,
-  LockOutlined,
   LoginOutlined,
   SafetyCertificateOutlined,
   TeamOutlined,
-  UserOutlined,
 } from "@ant-design/icons";
 import { useAuthStore } from "../../store/authStore";
 import type { LoginRequest, UserRole } from "../../types";
 import AuthRouteTransition from "../../components/AuthRouteTransition";
 import BrandLogo from "../../components/BrandLogo";
+import LoginAnimatedBackground from "../../components/LoginAnimatedBackground";
 
 const { Title, Text } = Typography;
 
@@ -58,6 +57,28 @@ const DEMO_LOGIN: Partial<Record<UserRole, Pick<LoginRequest, "credential" | "pa
     password: "111111",
   },
 };
+
+type FloatingLoginInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, "size"> & {
+  label: string;
+};
+
+function FloatingLoginInput({ label, value, onChange, type = "text", ...props }: FloatingLoginInputProps) {
+  const hasValue = value != null && String(value).length > 0;
+  const letters = Array.from(label);
+
+  return (
+    <div className={`login-wave-control${hasValue ? " is-filled" : ""}`}>
+      <input {...props} type={type} value={value ?? ""} onChange={onChange} aria-label={label} />
+      <label aria-hidden="true">
+        {letters.map((letter, index) => (
+          <span key={`${letter}-${index}`} style={{ transitionDelay: `${index * 42}ms` }}>
+            {letter === " " ? "\u00a0" : letter}
+          </span>
+        ))}
+      </label>
+    </div>
+  );
+}
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
@@ -112,6 +133,7 @@ export default function LoginPage() {
 
   return (
     <div className="gov-login-page" data-selected-role={selectedRole}>
+      <LoginAnimatedBackground />
       <div className="gov-login-floaters" aria-hidden="true">
         <span className="login-floater login-floater-panel login-floater-panel-top" />
         <span className="login-floater login-floater-disk login-floater-disk-large" />
@@ -124,6 +146,11 @@ export default function LoginPage() {
         <span>返回首页</span>
       </Link>
       <section className="gov-login-visual" aria-label="平台介绍">
+        <div className="login-hero-title">
+          <span>欢迎使用</span>
+          <h1>创新创业孵化载体管理平台</h1>
+          <p>AI赋能 · 企业成长 · 载体协同 · 政务监管</p>
+        </div>
         <div className="gov-login-brand">
           <span className="gov-login-brand-mark">
             <BrandLogo />
@@ -202,22 +229,14 @@ export default function LoginPage() {
             >
               <Form.Item
                 name="credential"
-                label={selectedRole === "enterprise" ? "统一社会信用代码" : "手机号"}
+                className="login-wave-form-item"
                 rules={[{ required: true, message: "请输入" + (selectedRole === "enterprise" ? "统一社会信用代码" : "手机号") }]}
               >
-                <Input
-                  size="large"
-                  prefix={<UserOutlined style={{ color: "#7b8da3" }} />}
-                  placeholder={selectedRole === "enterprise" ? "请输入统一社会信用代码" : "请输入手机号"}
-                />
+                <FloatingLoginInput label={selectedRole === "enterprise" ? "统一社会信用代码" : "手机号"} autoComplete="username" />
               </Form.Item>
 
-              <Form.Item name="password" label="密码" rules={[{ required: true, message: "请输入密码" }]}>
-                <Input.Password
-                  size="large"
-                  prefix={<LockOutlined style={{ color: "#7b8da3" }} />}
-                  placeholder="请输入 6 位以上密码"
-                />
+              <Form.Item name="password" className="login-wave-form-item" rules={[{ required: true, message: "请输入密码" }]}>
+                <FloatingLoginInput label="密码" type="password" autoComplete="current-password" />
               </Form.Item>
 
               {authError ? (
@@ -242,11 +261,13 @@ export default function LoginPage() {
             </Form>
           </ConfigProvider>
 
-          <div className="login-register-link">
-            <Link to="/register" onClick={goRegister} style={{ color: "#14508c", fontSize: 13 }}>
-              还没有账号？立即注册
-            </Link>
-          </div>
+          {selectedRole !== "government" ? (
+            <div className="login-register-link">
+              <Link to="/register" onClick={goRegister} style={{ color: "#14508c", fontSize: 13 }}>
+                还没有账号？立即注册
+              </Link>
+            </div>
+          ) : null}
         </Card>
       </main>
     </div>

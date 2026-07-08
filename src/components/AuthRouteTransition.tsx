@@ -1,3 +1,5 @@
+import BrandLogo from "./BrandLogo";
+
 interface AuthRouteTransitionProps {
   active: boolean;
 }
@@ -7,7 +9,9 @@ export default function AuthRouteTransition({ active }: AuthRouteTransitionProps
 
   return (
     <div className="auth-route-transition" role="status" aria-live="polite" aria-label="页面切换中">
-      <span className="auth-route-spinner" />
+      <span className="auth-route-logo-loader">
+        <BrandLogo />
+      </span>
     </div>
   );
 }

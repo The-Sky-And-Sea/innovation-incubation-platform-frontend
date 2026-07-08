@@ -1,29 +1,38 @@
-import { Fragment, useEffect, useState, type CSSProperties, type MouseEvent } from "react";
+import { Fragment, useEffect, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import {
+  AliyunOutlined,
   ApiOutlined,
   AppstoreOutlined,
   ArrowUpOutlined,
   ArrowRightOutlined,
   AuditOutlined,
   BankOutlined,
+  BellOutlined,
   BulbOutlined,
   CheckCircleOutlined,
   CloudServerOutlined,
   CodeOutlined,
   DatabaseOutlined,
+  DingdingOutlined,
+  DockerOutlined,
   FileDoneOutlined,
   FileSearchOutlined,
+  GithubFilled,
+  GitlabFilled,
   OrderedListOutlined,
   PartitionOutlined,
   LeftOutlined,
   LoginOutlined,
   MoonFilled,
+  QqCircleFilled,
   RightOutlined,
   SafetyCertificateOutlined,
   SunFilled,
   TeamOutlined,
+  WechatWorkFilled,
 } from "@ant-design/icons";
+import { siBytedance, siGitee, siHuawei, siJenkins, type SimpleIcon } from "simple-icons";
 import BrandLogo from "../components/BrandLogo";
 
 const trustLogos = ["孵化服务", "企业服务", "载体协同", "政务治理", "数据归档", "智能辅助"];
@@ -583,6 +592,308 @@ const homeCopy = {
   },
 };
 
+const footerLinkGroups = {
+  zh: [
+    {
+      title: "平台资源",
+      links: [
+        { label: "产品使用说明", href: "/docs/product-usage" },
+        { label: "功能文档", href: "/docs/feature-docs" },
+        { label: "政策规范", href: "/docs/policy-rules" },
+        { label: "模板资源", href: "/docs/templates" },
+        { label: "接口与接入说明", href: "/docs/api-access" },
+      ],
+    },
+    {
+      title: "业务场景",
+      links: [
+        { label: "企业入驻申请", href: "/enterprise/incubation" },
+        { label: "材料文件管理", href: "/enterprise/files" },
+        { label: "政策申报服务", href: "/enterprise/policies" },
+        { label: "载体审核协同", href: "/carrier/incubation" },
+        { label: "政务终审管理", href: "/gov/applications" },
+      ],
+    },
+    {
+      title: "运营支持",
+      links: [
+        { label: "通知中心", href: "/enterprise/notifications" },
+        { label: "申诉与反馈", href: "/enterprise/appeals" },
+        { label: "账号注销申请", href: "/enterprise/account-deletion" },
+        { label: "AI 政策助手", href: "/enterprise/ai-assist" },
+        { label: "平台操作指引", href: "/docs/product-usage" },
+      ],
+    },
+    {
+      title: "更多能力",
+      links: [
+        { label: "企业工作台", href: "/enterprise/dashboard" },
+        { label: "载体工作台", href: "/carrier/dashboard" },
+        { label: "政务工作台", href: "/gov/dashboard" },
+        { label: "绩效填报与评估", href: "/carrier/performances" },
+        { label: "账号与权限治理", href: "/gov/account" },
+      ],
+    },
+  ],
+  en: [
+    {
+      title: "Resources",
+      links: [
+        { label: "Product guide", href: "/docs/product-usage" },
+        { label: "Feature docs", href: "/docs/feature-docs" },
+        { label: "Policy rules", href: "/docs/policy-rules" },
+        { label: "Templates", href: "/docs/templates" },
+        { label: "API access guide", href: "/docs/api-access" },
+      ],
+    },
+    {
+      title: "Service Flows",
+      links: [
+        { label: "Enterprise onboarding", href: "/enterprise/incubation" },
+        { label: "File management", href: "/enterprise/files" },
+        { label: "Policy applications", href: "/enterprise/policies" },
+        { label: "Carrier review", href: "/carrier/incubation" },
+        { label: "Government final review", href: "/gov/applications" },
+      ],
+    },
+    {
+      title: "Support",
+      links: [
+        { label: "Notification center", href: "/enterprise/notifications" },
+        { label: "Appeals and feedback", href: "/enterprise/appeals" },
+        { label: "Account deletion", href: "/enterprise/account-deletion" },
+        { label: "AI policy assistant", href: "/enterprise/ai-assist" },
+        { label: "Operation guide", href: "/docs/product-usage" },
+      ],
+    },
+    {
+      title: "More Capabilities",
+      links: [
+        { label: "Enterprise workspace", href: "/enterprise/dashboard" },
+        { label: "Carrier workspace", href: "/carrier/dashboard" },
+        { label: "Government workspace", href: "/gov/dashboard" },
+        { label: "Performance filing", href: "/carrier/performances" },
+        { label: "Account governance", href: "/gov/account" },
+      ],
+    },
+  ],
+};
+
+function SimpleBrandIcon({ icon }: { icon: SimpleIcon }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d={icon.path} />
+    </svg>
+  );
+}
+
+function BrandImageIcon({ src, alt }: { src: string; alt: string }) {
+  return <img src={src} alt={alt} loading="lazy" decoding="async" />;
+}
+
+type FooterMarqueeItem = {
+  label: string;
+  icon: ReactNode;
+  color: string;
+};
+
+type BrandIconStyle = CSSProperties & {
+  "--brand-color": string;
+};
+
+function brandIconStyle(color: string): BrandIconStyle {
+  return { "--brand-color": color };
+}
+
+const footerMarqueeItems = {
+  zh: [
+    { label: "GitHub", icon: <GithubFilled />, color: "#181717" },
+    { label: "GitLab", icon: <GitlabFilled />, color: "#FC6D26" },
+    { label: "钉钉", icon: <DingdingOutlined />, color: "#1677FF" },
+    { label: "字节跳动", icon: <SimpleBrandIcon icon={siBytedance} />, color: `#${siBytedance.hex}` },
+    { label: "QQ", icon: <QqCircleFilled />, color: "#0052D9" },
+    { label: "飞书", icon: <BrandImageIcon src="https://www.feishu.cn/favicon.ico" alt="飞书" />, color: "#3370FF" },
+    { label: "企业微信", icon: <WechatWorkFilled />, color: "#07C160" },
+    { label: "阿里云", icon: <AliyunOutlined />, color: "#FF6A00" },
+    { label: "华为云", icon: <SimpleBrandIcon icon={siHuawei} />, color: `#${siHuawei.hex}` },
+    { label: "Gitee", icon: <SimpleBrandIcon icon={siGitee} />, color: `#${siGitee.hex}` },
+    { label: "Jenkins", icon: <SimpleBrandIcon icon={siJenkins} />, color: `#${siJenkins.hex}` },
+    { label: "Docker", icon: <DockerOutlined />, color: "#2496ED" },
+  ],
+  en: [
+    { label: "GitHub", icon: <GithubFilled />, color: "#181717" },
+    { label: "GitLab", icon: <GitlabFilled />, color: "#FC6D26" },
+    { label: "DingTalk", icon: <DingdingOutlined />, color: "#1677FF" },
+    { label: "ByteDance", icon: <SimpleBrandIcon icon={siBytedance} />, color: `#${siBytedance.hex}` },
+    { label: "QQ", icon: <QqCircleFilled />, color: "#0052D9" },
+    { label: "Feishu", icon: <BrandImageIcon src="https://www.feishu.cn/favicon.ico" alt="Feishu" />, color: "#3370FF" },
+    { label: "WeCom", icon: <WechatWorkFilled />, color: "#07C160" },
+    { label: "Alibaba Cloud", icon: <AliyunOutlined />, color: "#FF6A00" },
+    { label: "Huawei Cloud", icon: <SimpleBrandIcon icon={siHuawei} />, color: `#${siHuawei.hex}` },
+    { label: "Gitee", icon: <SimpleBrandIcon icon={siGitee} />, color: `#${siGitee.hex}` },
+    { label: "Jenkins", icon: <SimpleBrandIcon icon={siJenkins} />, color: `#${siJenkins.hex}` },
+    { label: "Docker", icon: <DockerOutlined />, color: "#2496ED" },
+  ],
+} satisfies Record<"zh" | "en", FooterMarqueeItem[]>;
+
+type UsageCard = {
+  name: string;
+  role: string;
+  text: string;
+  icon: ReactNode;
+};
+
+const usageCards = {
+  zh: [
+    {
+      name: "企业服务专员",
+      role: "申报服务",
+      text: "不用在多个入口之间切换，企业资料、载体对接和政策申报都能沿着同一条线推进。",
+      icon: <CheckCircleOutlined />,
+    },
+    {
+      name: "孵化载体运营",
+      role: "审核协同",
+      text: "待审核事项能按类型聚合，临期任务和材料缺口一眼就能看到。",
+      icon: <BellOutlined />,
+    },
+    {
+      name: "政务审核人员",
+      role: "监督治理",
+      text: "政策发布、申报终审和通知管理放在同一个工作空间，决策链路更清楚。",
+      icon: <AuditOutlined />,
+    },
+    {
+      name: "项目管理员",
+      role: "联调准备",
+      text: "前端界面已经能完整演示业务路径，后端接入时只需要逐步替换数据源。",
+      icon: <CheckCircleOutlined />,
+    },
+    {
+      name: "企业用户",
+      role: "材料办理",
+      text: "文件上传后能复用到多个申报场景，减少重复填报。",
+      icon: <BellOutlined />,
+    },
+    {
+      name: "平台维护人员",
+      role: "统一入口",
+      text: "登录、注册和三端权限清晰，演示时更容易说明平台价值。",
+      icon: <AuditOutlined />,
+    },
+    {
+      name: "载体审核专员",
+      role: "材料初审",
+      text: "企业提交后可以直接看到材料版本、缺项说明和审核意见，不再依赖线下表格来回确认。",
+      icon: <FileSearchOutlined />,
+    },
+    {
+      name: "政策运营人员",
+      role: "政策发布",
+      text: "政策、申报条件和通知可以集中维护，前台展示和三端办理口径更容易保持一致。",
+      icon: <SafetyCertificateOutlined />,
+    },
+    {
+      name: "材料管理员",
+      role: "文件归集",
+      text: "同一份证照、协议和申报附件能按企业归档，后续复核时不用重新追材料。",
+      icon: <FileDoneOutlined />,
+    },
+    {
+      name: "通知管理员",
+      role: "消息触达",
+      text: "审核退回、补充材料和终审结果都有统一通知入口，减少电话和群消息反复确认。",
+      icon: <BellOutlined />,
+    },
+    {
+      name: "数据归档人员",
+      role: "台账沉淀",
+      text: "入驻、申报、审核和绩效记录能形成完整台账，后续统计和追溯都有依据。",
+      icon: <DatabaseOutlined />,
+    },
+    {
+      name: "接口联调人员",
+      role: "系统接入",
+      text: "页面链路、角色权限和接口边界清楚，接入正式数据时可以分模块逐步替换。",
+      icon: <CloudServerOutlined />,
+    },
+  ],
+  en: [
+    {
+      name: "Enterprise Specialist",
+      role: "Application service",
+      text: "Company profiles, carrier matching, and policy applications move forward in one continuous path.",
+      icon: <CheckCircleOutlined />,
+    },
+    {
+      name: "Carrier Operator",
+      role: "Review coordination",
+      text: "Pending reviews, urgent tasks, and missing materials are grouped by type for quick follow-up.",
+      icon: <BellOutlined />,
+    },
+    {
+      name: "Government Reviewer",
+      role: "Governance oversight",
+      text: "Policy publishing, final review, and notification management sit in one clear workspace.",
+      icon: <AuditOutlined />,
+    },
+    {
+      name: "Project Admin",
+      role: "Integration readiness",
+      text: "The frontend already demonstrates the full path, so backend services can replace mock data step by step.",
+      icon: <CheckCircleOutlined />,
+    },
+    {
+      name: "Enterprise User",
+      role: "Material handling",
+      text: "Uploaded files can be reused across multiple application scenarios to reduce duplicate entry.",
+      icon: <BellOutlined />,
+    },
+    {
+      name: "Platform Operator",
+      role: "Unified access",
+      text: "Login, registration, and three-side permissions are clear, making the platform value easier to explain.",
+      icon: <AuditOutlined />,
+    },
+    {
+      name: "Carrier Reviewer",
+      role: "Material pre-check",
+      text: "Submitted materials, missing items, and review notes are visible in one place without back-and-forth spreadsheets.",
+      icon: <FileSearchOutlined />,
+    },
+    {
+      name: "Policy Operator",
+      role: "Policy publishing",
+      text: "Policies, eligibility rules, and notices can be maintained centrally so each portal keeps the same wording.",
+      icon: <SafetyCertificateOutlined />,
+    },
+    {
+      name: "Material Admin",
+      role: "File collection",
+      text: "Licenses, agreements, and application attachments can be archived by company for later review.",
+      icon: <FileDoneOutlined />,
+    },
+    {
+      name: "Notice Admin",
+      role: "Message delivery",
+      text: "Returned reviews, missing material requests, and final results all use one notification entry.",
+      icon: <BellOutlined />,
+    },
+    {
+      name: "Archive Specialist",
+      role: "Ledger records",
+      text: "Onboarding, applications, reviews, and performance records form a traceable operational ledger.",
+      icon: <DatabaseOutlined />,
+    },
+    {
+      name: "Integration Engineer",
+      role: "System access",
+      text: "Page flows, permissions, and API boundaries are clear enough to replace mock data module by module.",
+      icon: <CloudServerOutlined />,
+    },
+  ],
+} satisfies Record<"zh" | "en", UsageCard[]>;
+
 const resourceCenterItems = [
   {
     title: "产品使用说明",
@@ -658,6 +969,7 @@ export default function HomePage() {
   const [resourceCenterOpen, setResourceCenterOpen] = useState(false);
   const [dotOffset, setDotOffset] = useState({ x: 0, y: 0 });
   const [showBackHome, setShowBackHome] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
   const isEnglish = language === "en";
   const isNight = themeMode === "night";
   const copy = homeCopy[language];
@@ -666,12 +978,20 @@ export default function HomePage() {
   const currentPlatformTabs = isEnglish ? enPlatformTabs : platformTabs;
   const currentCaseSlides = isEnglish ? enCaseSlides : caseSlides;
   const currentPortalCards = isEnglish ? enPortalCards : portalCards;
+  const currentFooterGroups = footerLinkGroups[language];
+  const currentFooterMarqueeItems = footerMarqueeItems[language];
+  const currentUsageCards = usageCards[language];
+  const usageRows = [
+    currentUsageCards.filter((_, index) => index % 2 === 0),
+    currentUsageCards.filter((_, index) => index % 2 === 1),
+  ];
   const activePlatform = currentPlatformTabs[activePlatformIndex];
-  const activeCase = currentCaseSlides[activeCaseIndex];
 
   useEffect(() => {
     const updateBackHomeVisibility = () => {
       setShowBackHome(window.scrollY > 8);
+      const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+      setScrollProgress(scrollable > 0 ? Math.min(Math.max(window.scrollY / scrollable, 0), 1) : 0);
     };
 
     updateBackHomeVisibility();
@@ -727,6 +1047,87 @@ export default function HomePage() {
 
     setCaseDirection(index > activeCaseIndex ? "next" : "prev");
     setActiveCaseIndex(index);
+  };
+
+  const getCaseCardState = (index: number) => {
+    const total = currentCaseSlides.length;
+    const previousIndex = (activeCaseIndex - 1 + total) % total;
+    const nextIndex = (activeCaseIndex + 1) % total;
+
+    if (index === activeCaseIndex) return "is-active";
+    if (index === previousIndex) return "is-prev";
+    if (index === nextIndex) return "is-next";
+    return "is-hidden";
+  };
+
+  const renderCaseCard = (caseItem: (typeof currentCaseSlides)[number], index: number) => {
+    const isActive = index === activeCaseIndex;
+
+    return (
+      <div
+        className={`arco-case-card is-${caseItem.tone} ${getCaseCardState(index)}`}
+        key={caseItem.title}
+        aria-hidden={!isActive}
+      >
+        <div className="arco-case-screen">
+          <div className="case-screen-top">
+            <div>
+              <span>{caseItem.screenTitle}</span>
+              <em>{caseItem.status}</em>
+            </div>
+            <strong>{caseItem.leadMetric}</strong>
+          </div>
+          <div className="case-screen-metrics">
+            {caseItem.supporting.map(([name, value]) => (
+              <div key={name}>
+                <span>{name}</span>
+                <strong>{value}</strong>
+              </div>
+            ))}
+          </div>
+          <div className="case-screen-list">
+            {caseItem.queue.map((item, queueIndex) => (
+              <article key={item}>
+                <em>{String(queueIndex + 1).padStart(2, "0")}</em>
+                <div>
+                  <strong>{item}</strong>
+                  <span>
+                    <i style={{ width: caseItem.bars[queueIndex] }} />
+                  </span>
+                </div>
+              </article>
+            ))}
+          </div>
+          <div className="case-screen-footer">
+            <span>{caseItem.insight}</span>
+          </div>
+        </div>
+        <article className="case-detail-panel">
+          {caseItem.icon}
+          <h3>{caseItem.title}</h3>
+          <p>{caseItem.text}</p>
+          <div className="case-detail-tags">
+            {caseItem.chips.map((chip) => (
+              <span key={chip}>{chip}</span>
+            ))}
+          </div>
+          <div className="case-detail-metric">
+            <strong>{caseItem.leadMetric}</strong>
+            <span>{caseItem.leadLabel}</span>
+          </div>
+          <div className="case-detail-checklist">
+            {caseItem.checklist.map((item) => (
+              <span key={item}>{item}</span>
+            ))}
+          </div>
+          <p className="case-detail-result">{caseItem.result}</p>
+          <Link to={caseItem.link} tabIndex={isActive ? 0 : -1}>
+            {copy.viewWorkspace}
+            <ArrowRightOutlined />
+          </Link>
+        </article>
+      </div>
+    );
   };
 
   const handleHeroVisualMouseMove = (event: MouseEvent<HTMLDivElement>) => {
@@ -898,6 +1299,13 @@ export default function HomePage() {
             </Link>
           </div>
         </div>
+        <div
+          className="arco-home-scroll-progress"
+          aria-hidden="true"
+          style={{ "--home-scroll-progress": scrollProgress } as CSSProperties}
+        >
+          <span />
+        </div>
       </header>
 
       <div
@@ -958,7 +1366,7 @@ export default function HomePage() {
                 <strong>{copy.brandName}</strong>
               </span>
             </div>
-            <h1>
+            <h1 className="arco-hero-title-animated">
               <span>{copy.heroTitleA}</span>
               <span>{copy.heroTitleB}</span>
             </h1>
@@ -989,10 +1397,16 @@ export default function HomePage() {
           >
             <div className="arco-browser-card">
               <div className="arco-browser-bar">
-                <i />
-                <i />
-                <i />
-                <span>incubation.platform</span>
+                <span className="arco-window-title">
+                  <BrandLogo variant="mark" tone={isNight ? "night" : "default"} />
+                  {isEnglish ? "Incubation Platform" : "孵化平台"}
+                </span>
+                <span className="arco-window-address">incubation.platform</span>
+                <span className="arco-window-controls" aria-hidden="true">
+                  <i />
+                  <i />
+                  <i />
+                </span>
               </div>
               <div className="arco-workspace-board">
                 <div className="workspace-main-panel">
@@ -1218,68 +1632,12 @@ export default function HomePage() {
         <section className="arco-case-section arco-scroll-reveal" id="cases">
           <span className="arco-section-kicker">{copy.caseKicker}</span>
           <h2>{copy.caseTitle}</h2>
-          <div className="arco-case-carousel">
+          <div className={`arco-case-carousel is-${caseDirection}`}>
             <button type="button" aria-label={copy.prevCase} onClick={() => switchCase(-1)}>
               <LeftOutlined />
             </button>
-            <div className={`arco-case-card is-${activeCase.tone} is-${caseDirection}`} key={activeCase.title}>
-              <div className="arco-case-screen">
-                <div className="case-screen-top">
-                  <div>
-                    <span>{activeCase.screenTitle}</span>
-                    <em>{activeCase.status}</em>
-                  </div>
-                  <strong>{activeCase.leadMetric}</strong>
-                </div>
-                <div className="case-screen-metrics">
-                  {activeCase.supporting.map(([name, value]) => (
-                    <div key={name}>
-                      <span>{name}</span>
-                      <strong>{value}</strong>
-                    </div>
-                  ))}
-                </div>
-                <div className="case-screen-list">
-                  {activeCase.queue.map((item, index) => (
-                    <article key={item}>
-                      <em>{String(index + 1).padStart(2, "0")}</em>
-                      <div>
-                        <strong>{item}</strong>
-                        <span>
-                          <i style={{ width: activeCase.bars[index] }} />
-                        </span>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-                <div className="case-screen-footer">
-                  <span>{activeCase.insight}</span>
-                </div>
-              </div>
-              <article className="case-detail-panel">
-                {activeCase.icon}
-                <h3>{activeCase.title}</h3>
-                <p>{activeCase.text}</p>
-                <div className="case-detail-tags">
-                  {activeCase.chips.map((chip) => (
-                    <span key={chip}>{chip}</span>
-                  ))}
-                </div>
-                <div className="case-detail-metric">
-                  <strong>{activeCase.leadMetric}</strong>
-                  <span>{activeCase.leadLabel}</span>
-                </div>
-                <div className="case-detail-checklist">
-                  {activeCase.checklist.map((item) => (
-                    <span key={item}>{item}</span>
-                  ))}
-                </div>
-                <p className="case-detail-result">{activeCase.result}</p>
-                <Link to={activeCase.link}>
-                  {copy.viewWorkspace}
-                  <ArrowRightOutlined />
-                </Link>
-              </article>
+            <div className="arco-case-stage" aria-live="polite">
+              {currentCaseSlides.map((caseItem, index) => renderCaseCard(caseItem, index))}
             </div>
             <button type="button" aria-label={copy.nextCase} onClick={() => switchCase(1)}>
               <RightOutlined />
@@ -1316,6 +1674,45 @@ export default function HomePage() {
             ))}
           </div>
         </section>
+
+        <section className="arco-usage-section arco-scroll-reveal" aria-label={isEnglish ? "How platform users work" : "平台用户使用方式"}>
+          <h2>{isEnglish ? "How platform users work." : "平台用户会怎么使用。"}</h2>
+          <div className="arco-usage-grid">
+            {usageRows.map((row, rowIndex) => (
+              <div key={rowIndex === 0 ? "usage-row-top" : "usage-row-bottom"} className={`arco-usage-track ${rowIndex === 0 ? "is-top" : "is-bottom"}`}>
+                {[...row, ...row].map((quote, index) => (
+                  <article key={`${quote.name}-${quote.role}-${rowIndex}-${index}`}>
+                    <div className="arco-usage-person">
+                      <span className="arco-usage-avatar" aria-hidden="true">
+                        {quote.icon}
+                      </span>
+                      <strong>{quote.name}</strong>
+                      <small>{quote.role}</small>
+                    </div>
+                    <p>{quote.text}</p>
+                    <i aria-hidden="true">{quote.icon}</i>
+                  </article>
+                ))}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="arco-flow-marquee-section arco-scroll-reveal" aria-label={isEnglish ? "Partners" : "合作伙伴"}>
+          <h2>{isEnglish ? "Partners" : "合作伙伴"}</h2>
+          <div className="arco-flow-marquee" aria-hidden="true">
+            <div>
+              {[...currentFooterMarqueeItems, ...currentFooterMarqueeItems].map((item, index) => (
+                <span key={`${item.label}-${index}`}>
+                  <i aria-hidden="true" style={brandIconStyle(item.color)}>
+                    {item.icon}
+                  </i>
+                  {item.label}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
       </main>
 
       <footer className="arco-footer">
@@ -1323,22 +1720,26 @@ export default function HomePage() {
           <BrandLogo variant="mark" tone={isNight ? "night" : "default"} />
           <h2>{copy.contact}</h2>
           <p>{copy.contactText}</p>
+          <Link to="/docs/product-usage">
+            {isEnglish ? "View platform guide" : "查看平台指南"}
+            <ArrowRightOutlined />
+          </Link>
         </div>
-        <nav>
-          <div className="arco-footer-workspaces">
-            <strong>{copy.footerProducts}</strong>
-            <div className="arco-footer-workspace-grid">
-              {currentPortalCards.map((card) => (
-                <Link key={card.role} to={card.link} className={`is-${card.tone}`}>
-                  <span>{card.icon}</span>
-                  <div>
-                    <b>{card.role}</b>
-                    <small>{card.title}</small>
-                  </div>
-                  <ArrowRightOutlined />
-                </Link>
-              ))}
-            </div>
+        <nav className="arco-footer-map" aria-label={isEnglish ? "Footer resources" : "底部资源导航"}>
+          {currentFooterGroups.map((group) => (
+            <section key={group.title} className="arco-footer-column">
+              <strong>{group.title}</strong>
+              <div>
+                {group.links.map((item) => (
+                  <Link key={item.label} to={item.href}>
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            </section>
+          ))}
+        </nav>
+        <div className="arco-footer-action-row">
             <div className="arco-footer-rating" aria-label={isEnglish ? "Rate this platform" : "评价平台体验"}>
               <div>
                 <strong>{isEnglish ? "Rate the experience" : "体验反馈"}</strong>
@@ -1355,15 +1756,14 @@ export default function HomePage() {
                         />
                       </svg>
                     </label>
-                  </Fragment>
-                ))}
+                </Fragment>
+              ))}
               </div>
             </div>
-          </div>
-        </nav>
+        </div>
         <div className="arco-footer-bottom">
           <span>Powered by Incubation Platform</span>
-          <small>GIP UED & 架构前端 © 2026</small>
+          <small>{isEnglish ? "Incubation service platform © 2026" : "创新创业孵化服务平台 © 2026"}</small>
         </div>
       </footer>
       <button

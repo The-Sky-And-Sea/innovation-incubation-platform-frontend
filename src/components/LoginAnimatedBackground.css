@@ -1,0 +1,340 @@
+.login-animated-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(235, 247, 255, 0.1)),
+    url("/images/auth-tech-government-bg-clean.png") center / cover no-repeat;
+}
+
+.login-animated-bg::after {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(255, 255, 255, 0.16), transparent 38%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(218, 238, 255, 0.08));
+  content: "";
+}
+
+.login-bg-wave {
+  display: none;
+  position: absolute;
+  left: -8%;
+  right: -8%;
+  height: 210px;
+  border-top: 2px solid rgba(255, 255, 255, 0.42);
+  border-radius: 50%;
+  filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.34));
+  opacity: 0;
+}
+
+.login-bg-wave-primary {
+  top: 92px;
+  transform: rotate(-5deg);
+}
+
+.login-bg-wave-secondary {
+  top: 132px;
+  border-top-color: rgba(86, 161, 232, 0.28);
+  transform: rotate(4deg);
+}
+
+.login-bg-glow {
+  position: absolute;
+  width: 360px;
+  height: 360px;
+  border-radius: 999px;
+  filter: blur(40px);
+  opacity: 0.28;
+  animation: loginGlowBreath 9s ease-in-out infinite;
+}
+
+.login-bg-glow-left {
+  left: -120px;
+  top: 160px;
+  background: rgba(96, 165, 250, 0.55);
+}
+
+.login-bg-glow-right {
+  right: -120px;
+  bottom: 120px;
+  background: rgba(56, 189, 248, 0.45);
+  animation-delay: -3s;
+}
+
+.login-bg-stars,
+.login-bg-stars::before,
+.login-bg-stars::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+}
+
+.login-bg-stars {
+  z-index: 1;
+  opacity: 0.78;
+  mix-blend-mode: screen;
+}
+
+.login-bg-stars::before {
+  background:
+    radial-gradient(circle at 8% 8%, rgba(255, 255, 255, 0.95) 0 2px, transparent 3.5px),
+    radial-gradient(circle at 16% 19%, rgba(255, 255, 255, 0.75) 0 1.5px, transparent 3px),
+    radial-gradient(circle at 22% 12%, rgba(255, 255, 255, 0.82) 0 2px, transparent 3.5px),
+    radial-gradient(circle at 31% 18%, rgba(255, 255, 255, 0.9) 0 2.4px, transparent 4px),
+    radial-gradient(circle at 75% 10%, rgba(255, 255, 255, 0.82) 0 1.8px, transparent 3.4px),
+    radial-gradient(circle at 81% 15%, rgba(255, 255, 255, 0.92) 0 2.4px, transparent 4px),
+    radial-gradient(circle at 91% 8%, rgba(255, 255, 255, 0.84) 0 2px, transparent 3.5px),
+    radial-gradient(circle at 97% 25%, rgba(255, 255, 255, 0.88) 0 2.2px, transparent 3.8px);
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.58));
+  animation: loginStarsTwinkle 5.8s ease-in-out infinite;
+}
+
+.login-bg-stars::after {
+  background:
+    radial-gradient(circle at 12% 28%, rgba(255, 255, 255, 0.62) 0 1.4px, transparent 3px),
+    radial-gradient(circle at 25% 24%, rgba(255, 255, 255, 0.7) 0 1.7px, transparent 3.2px),
+    radial-gradient(circle at 70% 22%, rgba(255, 255, 255, 0.65) 0 1.5px, transparent 3px),
+    radial-gradient(circle at 84% 28%, rgba(255, 255, 255, 0.76) 0 1.8px, transparent 3.4px),
+    radial-gradient(circle at 96% 16%, rgba(255, 255, 255, 0.7) 0 1.5px, transparent 3px);
+  filter: drop-shadow(0 0 7px rgba(255, 255, 255, 0.5));
+  animation: loginStarsTwinkleAlt 7.2s ease-in-out infinite;
+}
+
+.login-bg-panel {
+  display: none;
+  position: absolute;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 24px 60px rgba(37, 99, 235, 0.08);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  animation: loginFloatPanel 12s ease-in-out infinite;
+}
+
+.login-bg-panel-1 {
+  width: 190px;
+  height: 110px;
+  left: 46px;
+  top: 64px;
+  transform: rotate(-18deg);
+}
+
+.login-bg-panel-2 {
+  width: 230px;
+  height: 120px;
+  right: 72px;
+  top: 150px;
+  transform: rotate(-8deg);
+  animation-delay: -4s;
+}
+
+.login-bg-panel-3 {
+  width: 160px;
+  height: 96px;
+  right: 160px;
+  bottom: 92px;
+  transform: rotate(12deg);
+  animation-delay: -7s;
+}
+
+.login-bg-network {
+  display: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 62%;
+  opacity: 0;
+}
+
+.login-network-line {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.52);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.42));
+}
+
+.login-network-line-soft {
+  stroke: rgba(65, 139, 217, 0.32);
+}
+
+.login-network-node {
+  fill: rgba(255, 255, 255, 0.96);
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.82));
+  animation: loginNodePulse 4.8s ease-in-out infinite;
+}
+
+.login-network-node-large {
+  animation-delay: -1.6s;
+}
+
+.login-bg-lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.92;
+}
+
+.login-flow-line {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.86);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-dasharray: 10 17;
+  animation: loginFlowMove 16s linear infinite;
+}
+
+.login-flow-line-2 {
+  stroke: rgba(59, 130, 246, 0.52);
+  stroke-width: 1.45;
+  animation-duration: 20s;
+}
+
+.login-flow-line-3 {
+  stroke: rgba(255, 255, 255, 0.56);
+  stroke-width: 1.2;
+  animation-duration: 24s;
+}
+
+.login-node {
+  fill: rgba(255, 255, 255, 0.95);
+  filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.55));
+  animation: loginNodePulse 4s ease-in-out infinite;
+}
+
+.login-node-2 {
+  animation-delay: -1.2s;
+}
+
+.login-node-3 {
+  animation-delay: -2.1s;
+}
+
+.login-node-4 {
+  animation-delay: -3s;
+}
+
+.login-bg-sweep {
+  position: absolute;
+  left: -30%;
+  top: 0;
+  width: 28%;
+  height: 100%;
+  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+  transform: skewX(-16deg);
+  animation: loginSweep 13s ease-in-out infinite;
+}
+
+@keyframes loginFloatPanel {
+  0%,
+  100% {
+    translate: 0 0;
+    opacity: 0.5;
+  }
+
+  50% {
+    translate: 0 -16px;
+    opacity: 0.82;
+  }
+}
+
+@keyframes loginGlowBreath {
+  0%,
+  100% {
+    opacity: 0.22;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.36;
+    transform: scale(1.12);
+  }
+}
+
+@keyframes loginStarsTwinkle {
+  0%,
+  100% {
+    opacity: 0.42;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  46% {
+    opacity: 0.95;
+    transform: translate3d(0, -2px, 0) scale(1.015);
+  }
+}
+
+@keyframes loginStarsTwinkleAlt {
+  0%,
+  100% {
+    opacity: 0.34;
+    transform: translate3d(0, 1px, 0);
+  }
+
+  58% {
+    opacity: 0.82;
+    transform: translate3d(0, -1px, 0);
+  }
+}
+
+@keyframes loginFlowMove {
+  from {
+    stroke-dashoffset: 0;
+  }
+
+  to {
+    stroke-dashoffset: -260;
+  }
+}
+
+@keyframes loginNodePulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.5);
+  }
+}
+
+@keyframes loginSweep {
+  0% {
+    opacity: 0;
+    transform: translateX(0) skewX(-16deg);
+  }
+
+  18% {
+    opacity: 0.45;
+  }
+
+  42% {
+    opacity: 0.18;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(520%) skewX(-16deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-bg-glow,
+  .login-bg-stars::before,
+  .login-bg-stars::after,
+  .login-bg-panel,
+  .login-network-node,
+  .login-flow-line,
+  .login-node,
+  .login-bg-sweep {
+    animation: none !important;
+  }
+}
