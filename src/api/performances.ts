@@ -14,6 +14,11 @@ export async function createPerformanceTemplate(
   return post("/gov/performances/templates", { name, year, form_schema: formSchema });
 }
 
+export async function getPerformanceTemplates(): Promise<ApiResponse<PerformanceTemplate[]>> {
+  const { get } = await import("../utils/request");
+  return get("/gov/performances/templates");
+}
+
 export async function launchPerformanceCampaign(data: {
   template_id: number;
   name: string;
@@ -62,5 +67,6 @@ export async function scorePerformance(
   comment: string,
 ): Promise<ApiResponse<null>> {
   const { post } = await import("../utils/request");
-  return post(`/gov/performances/${id}/score`, { score, status, comment });
+  const action = status === "approved" ? "approve" : "reject";
+  return post(`/gov/performances/${id}/score`, { score, status: action, comment });
 }

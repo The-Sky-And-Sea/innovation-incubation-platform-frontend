@@ -85,6 +85,31 @@ export interface EnterpriseInfo {
   legal_person: string;
   contact_name: string;
   contact_phone: string;
+  office_phone?: string;
+  mobile_phone?: string;
+  operating_unit_name?: string;
+  bank_name?: string;
+  bank_account?: string;
+  fixed_asset_investment?: number;
+  nature?: string;
+  type?: string;
+  level?: string;
+  certification_date?: string;
+  establishment_date?: string;
+  total_area?: number;
+  functional_area?: number;
+  incubation_area?: number;
+  rent_area?: number;
+  rent_price?: number;
+  workstation_count?: number;
+  workstation_standard?: string;
+  managers_count?: number;
+  technical_staff_count?: number;
+  bachelor_above_count?: number;
+  trained_staff_count?: number;
+  seed_fund_amount?: number;
+  site_proof_material?: string;
+  seed_fund_material?: string;
 }
 
 export interface CarrierInfo {

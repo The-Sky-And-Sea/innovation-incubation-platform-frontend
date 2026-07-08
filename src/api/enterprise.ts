@@ -20,6 +20,13 @@ export async function getMyEnterpriseInfo(): Promise<
   return get<EnterpriseInfo>("/enterprise/profile");
 }
 
+export async function updateMyEnterpriseInfo(
+  data: Partial<EnterpriseInfo>,
+): Promise<ApiResponse<EnterpriseInfo>> {
+  const { put } = await import("../utils/request");
+  return put<EnterpriseInfo>("/enterprise/profile", data);
+}
+
 /**
  * 获取当前企业的入驻记录列表
  */

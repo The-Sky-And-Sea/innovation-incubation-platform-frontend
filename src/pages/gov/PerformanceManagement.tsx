@@ -21,6 +21,7 @@ import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import {
   createPerformanceTemplate,
+  getPerformanceTemplates,
   getPerformanceSubmissions,
   launchPerformanceCampaign,
   scorePerformance,
@@ -31,18 +32,11 @@ import { describeBusinessData } from "../../utils/businessDisplay";
 const { Title } = Typography;
 const { TextArea } = Input;
 
-const initialTemplates: PerformanceTemplate[] = [
-  {
-    id: 801,
-    name: "年度孵化服务绩效模板",
-    year: 2026,
-    form_schema: {
-      service_enterprises: "服务企业数量",
-      incubation_results: "孵化成果说明",
-      events: "创业活动数量",
-    },
-  },
-];
+const defaultTemplateSchema = {
+  service_enterprises: "服务企业数量",
+  incubation_results: "孵化成果说明",
+  events: "创业活动数量",
+};
 
 interface TemplateFormValues {
   name: string;
@@ -54,7 +48,7 @@ interface TemplateFormValues {
 }
 
 export default function GovPerformanceManagement() {
-  const [templates, setTemplates] = useState<PerformanceTemplate[]>(initialTemplates);
+  const [templates, setTemplates] = useState<PerformanceTemplate[]>([]);
   const [submissions, setSubmissions] = useState<PerformanceSubmission[]>([]);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
@@ -90,9 +84,27 @@ export default function GovPerformanceManagement() {
     }
   }, []);
 
+  const fetchTemplates = useCallback(async () => {
+    try {
+      const res = await getPerformanceTemplates();
+      setTemplates(res.data);
+    } catch {
+      message.error("加载考核模板失败");
+    }
+  }, []);
+
+  const ensureDefaultTemplate = async () => {
+    if (templates.length > 0) return templates[0];
+    const year = dayjs().year();
+    const res = await createPerformanceTemplate(`年度孵化服务绩效模板 ${year}`, year, defaultTemplateSchema);
+    setTemplates([res.data]);
+    return res.data;
+  };
+
   useEffect(() => {
     fetchSubmissions(1, 10);
-  }, [fetchSubmissions]);
+    fetchTemplates();
+  }, [fetchSubmissions, fetchTemplates]);
 
   const handleCreateTemplate = async () => {
     try {
@@ -227,8 +239,8 @@ export default function GovPerformanceManagement() {
             <Button
               type="primary"
               icon={<PlusOutlined />}
-              onClick={() => {
-                const template = templates[0];
+              onClick={async () => {
+                const template = await ensureDefaultTemplate();
                 launchForm.setFieldsValue({
                   template_id: template?.id,
                   name: `${dayjs().year()} 年度孵化载体绩效考核`,
