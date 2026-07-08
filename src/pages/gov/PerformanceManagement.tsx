@@ -33,17 +33,31 @@ const { Title } = Typography;
 const { TextArea } = Input;
 
 const defaultTemplateSchema = {
-  service_enterprises: "服务企业数量",
-  incubation_results: "孵化成果说明",
-  events: "创业活动数量",
+  total_area: "可自主支配场地总面积",
+  incubation_area: "孵化面积",
+  public_service_platforms: "公共服务场地/平台数量",
+  service_team_average: "专业孵化人员配备",
+  seed_fund_amount: "自有孵化种子基金金额",
+  invested_enterprises: "已投资企业数",
+  financing_enterprises: "获得融资企业数",
+  hefei_events: "主题活动数量",
+  incubating_enterprises: "年末在孵企业数",
+  graduated_enterprises: "年度培育毕业企业数",
+  ip_total: "知识产权授权总数",
+  new_high_tech_enterprises: "新增高新技术企业数",
+  tech_sme_ratio: "科技型中小企业占比",
+  safety_production_summary: "安全生产年度总结",
+  high_level_platforms: "省级以上研发平台",
 };
 
 interface TemplateFormValues {
   name: string;
   year: number;
-  include_service_enterprises?: boolean;
-  include_incubation_results?: boolean;
-  include_events?: boolean;
+  include_basic_service?: boolean;
+  include_incubation_service?: boolean;
+  include_service_results?: boolean;
+  include_public_service?: boolean;
+  include_bonus?: boolean;
   custom_metric?: string;
 }
 
@@ -111,9 +125,38 @@ export default function GovPerformanceManagement() {
       const values = await templateForm.validateFields();
       setSubmitting(true);
       const formSchema: Record<string, unknown> = {};
-      if (values.include_service_enterprises) formSchema.service_enterprises = "服务企业数量";
-      if (values.include_incubation_results) formSchema.incubation_results = "孵化成果说明";
-      if (values.include_events) formSchema.events = "创业活动数量";
+      if (values.include_basic_service) {
+        Object.assign(formSchema, {
+          total_area: "可自主支配场地总面积",
+          incubation_area: "孵化面积",
+          service_team_average: "专业孵化人员配备",
+        });
+      }
+      if (values.include_incubation_service) {
+        Object.assign(formSchema, {
+          seed_fund_amount: "自有孵化种子基金金额",
+          invested_enterprises: "已投资企业数",
+          financing_enterprises: "获得融资企业数",
+          hefei_events: "主题活动数量",
+        });
+      }
+      if (values.include_service_results) {
+        Object.assign(formSchema, {
+          incubating_enterprises: "年末在孵企业数",
+          graduated_enterprises: "年度培育毕业企业数",
+          ip_total: "知识产权授权总数",
+          new_high_tech_enterprises: "新增高新技术企业数",
+          tech_sme_ratio: "科技型中小企业占比",
+        });
+      }
+      if (values.include_public_service) {
+        Object.assign(formSchema, {
+          safety_production_summary: "安全生产年度总结",
+          annual_service_report: "年度服务报告",
+          annual_work_summary: "年度工作总结",
+        });
+      }
+      if (values.include_bonus) formSchema.high_level_platforms = "省级以上研发平台";
       if (values.custom_metric?.trim()) formSchema.custom_metric = values.custom_metric.trim();
 
       const res = await createPerformanceTemplate(values.name, values.year, formSchema);
@@ -225,11 +268,13 @@ export default function GovPerformanceManagement() {
               icon={<SettingOutlined />}
               onClick={() => {
                 templateForm.setFieldsValue({
-                  name: `孵化服务绩效模板 ${dayjs().year()}`,
+                  name: `孵化载体综合绩效模板 ${dayjs().year()}`,
                   year: dayjs().year(),
-                  include_service_enterprises: true,
-                  include_incubation_results: true,
-                  include_events: true,
+                  include_basic_service: true,
+                  include_incubation_service: true,
+                  include_service_results: true,
+                  include_public_service: true,
+                  include_bonus: true,
                 });
                 setTemplateOpen(true);
               }}
@@ -291,14 +336,20 @@ export default function GovPerformanceManagement() {
           <Form.Item name="year" label="适用年度" rules={[{ required: true, type: "number" }]}>
             <InputNumber min={2020} max={2035} style={{ width: "100%" }} />
           </Form.Item>
-          <Form.Item name="include_service_enterprises" valuePropName="checked">
-            <Checkbox>服务企业数量</Checkbox>
+          <Form.Item name="include_basic_service" valuePropName="checked">
+            <Checkbox>基础服务能力：场地面积、孵化面积、服务团队</Checkbox>
           </Form.Item>
-          <Form.Item name="include_incubation_results" valuePropName="checked">
-            <Checkbox>孵化成果说明</Checkbox>
+          <Form.Item name="include_incubation_service" valuePropName="checked">
+            <Checkbox>孵化服务能力：基金投资、融资服务、活动组织</Checkbox>
           </Form.Item>
-          <Form.Item name="include_events" valuePropName="checked">
-            <Checkbox>创业活动数量</Checkbox>
+          <Form.Item name="include_service_results" valuePropName="checked">
+            <Checkbox>孵化服务成效：在孵毕业企业、知识产权、高企与科小</Checkbox>
+          </Form.Item>
+          <Form.Item name="include_public_service" valuePropName="checked">
+            <Checkbox>公共服务成效：安全生产、服务报告、年度总结</Checkbox>
+          </Form.Item>
+          <Form.Item name="include_bonus" valuePropName="checked">
+            <Checkbox>加分项：省级以上研发平台</Checkbox>
           </Form.Item>
           <Form.Item name="custom_metric" label="补充指标">
             <Input placeholder="例如：投融资服务成效" />
