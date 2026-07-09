@@ -80,6 +80,7 @@ export interface EnterpriseInfo {
   name: string;
   credit_code: string;
   industry: string;
+  description?: string;
   scale: string;
   address: string;
   legal_person: string;
@@ -197,6 +198,7 @@ export interface Policy {
   target_role: UserRole | "both";
   file_id?: number;
   match_level?: MatchLevel;
+  match_reason?: string;
   followed?: boolean;
 }
 

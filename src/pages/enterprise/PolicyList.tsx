@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Button, Card, Empty, Form, Input, Modal, Space, Table, Tabs, Tag, Typography, message } from "antd";
-import { FileTextOutlined, ReloadOutlined, SendOutlined, StarOutlined } from "@ant-design/icons";
+import { Alert, Button, Card, Descriptions, Empty, Form, Input, Modal, Space, Table, Tabs, Tag, Typography, message } from "antd";
+import { DeleteOutlined, EyeOutlined, FileTextOutlined, PlusOutlined, ReloadOutlined, SendOutlined, StarFilled, StarOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import FileUpload from "../../components/FileUpload";
 import {
@@ -14,11 +14,10 @@ import {
 import type { FileInfo, MatchLevel, Policy, PolicyApplication, PolicyMaterial } from "../../types";
 import { describeBusinessData } from "../../utils/businessDisplay";
 
-const { Title, Text } = Typography;
-const { TextArea } = Input;
-
+const { Paragraph, Title, Text } = Typography;
 const matchColors: Record<MatchLevel, string> = { high: "green", partial: "blue", none: "default", unknown: "orange" };
 const matchLabels: Record<MatchLevel, string> = { high: "高匹配", partial: "部分匹配", none: "不匹配", unknown: "未知" };
+const resubmittableStatuses = new Set(["rejected", "returned"]);
 
 interface ApplyFormValues {
   project: string;
@@ -33,6 +32,39 @@ function getPolicyMaterials(policy?: Policy | null): PolicyMaterial[] {
   return [{ name: "营业执照", file_id: 12, necessity: "necessary" }];
 }
 
+function getPolicyRequirements(policy?: Policy | null): Record<string, unknown> {
+  return (policy?.requirements || policy?.conditions || {}) as Record<string, unknown>;
+}
+
+function valueText(value: unknown): string {
+  if (value === null || value === undefined || value === "") return "-";
+  if (Array.isArray(value)) {
+    if (value.length === 0) return "-";
+    return value
+      .map((item) => {
+        if (item && typeof item === "object") {
+          const record = item as Record<string, unknown>;
+          return String(record.name || record.title || record.value || Object.values(record).filter(Boolean).join(" "));
+        }
+        return String(item);
+      })
+      .filter(Boolean)
+      .join(" / ") || "-";
+  }
+  if (typeof value === "object") {
+    return Object.entries(value as Record<string, unknown>)
+      .filter(([, item]) => item !== undefined && item !== null && item !== "")
+      .map(([key, item]) => `${key}: ${valueText(item)}`)
+      .join("; ") || "-";
+  }
+  return String(value);
+}
+
+function materialsText(policy?: Policy | null) {
+  const materials = getPolicyMaterials(policy);
+  if (!materials.length) return "-";
+  return materials.map((item) => `${item.name}${item.necessity === "necessary" ? " (required)" : ""}`).join(" / ");
+}
 function statusLabel(status: string) {
   const labels: Record<string, string> = {
     pending: "待载体审核",
@@ -50,14 +82,18 @@ export default function EnterprisePolicyList() {
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
   const [applyOpen, setApplyOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null);
+  const [detailPolicy, setDetailPolicy] = useState<Policy | null>(null);
   const [applyForm] = Form.useForm<ApplyFormValues>();
   const [applying, setApplying] = useState(false);
   const [myApps, setMyApps] = useState<PolicyApplication[]>([]);
   const [myAppsLoading, setMyAppsLoading] = useState(false);
   const [followedPolicies, setFollowedPolicies] = useState<Policy[]>([]);
   const [followedLoading, setFollowedLoading] = useState(false);
+  const [updatingFollowIDs, setUpdatingFollowIDs] = useState<Set<number>>(new Set());
   const [materialFiles, setMaterialFiles] = useState<Record<string, FileInfo | null>>({});
+  const [supplementFiles, setSupplementFiles] = useState<(FileInfo | null)[]>([]);
 
   const fetchPolicies = useCallback(async (page = 1, pageSize = 10) => {
     setLoading(true);
@@ -103,6 +139,10 @@ export default function EnterprisePolicyList() {
   }, [fetchPolicies, fetchMyApps, fetchFollowed]);
 
   const openApply = (policy: Policy) => {
+    if (hasBlockingApplication(policy.id)) {
+      message.warning("该政策已提交或已通过申报，不能重复申报");
+      return;
+    }
     const materials = getPolicyMaterials(policy);
     setSelectedPolicy(policy);
     applyForm.resetFields();
@@ -111,7 +151,27 @@ export default function EnterprisePolicyList() {
       contact: "李四",
     });
     setMaterialFiles(Object.fromEntries(materials.map((item) => [item.name, null])));
+    setSupplementFiles([]);
     setApplyOpen(true);
+  };
+
+  const openDetail = (policy: Policy) => {
+    setDetailPolicy(policy);
+    setDetailOpen(true);
+  };
+
+  const hasBlockingApplication = (policyID: number) =>
+    myApps.some((app) => app.policy_id === policyID && !resubmittableStatuses.has(app.status));
+
+  const setPolicyFollowed = (policy: Policy, followed: boolean) => {
+    const nextPolicy = { ...policy, followed };
+    setPolicies((prev) => prev.map((item) => (item.id === policy.id ? { ...item, followed } : item)));
+    setFollowedPolicies((prev) => {
+      if (followed) {
+        return prev.some((item) => item.id === policy.id) ? prev.map((item) => (item.id === policy.id ? nextPolicy : item)) : [nextPolicy, ...prev];
+      }
+      return prev.filter((item) => item.id !== policy.id);
+    });
   };
 
   const handleApply = async () => {
@@ -134,11 +194,20 @@ export default function EnterprisePolicyList() {
           }
           return acc;
         }, []);
+      const supplementFileIds = supplementFiles
+        .map((file) => file?.file_id)
+        .filter((fileID): fileID is number => Boolean(fileID));
+      if (supplementFileIds.length > 0) {
+        materials.push({
+          name: "补充材料",
+          necessity: "optional",
+          file_ids: supplementFileIds,
+        });
+      }
       await applyPolicy(selectedPolicy.id, {
         project: values.project,
         contact: values.contact,
         amount: values.amount,
-        note: values.note,
         materials,
       });
       message.success("申报已提交");
@@ -153,18 +222,27 @@ export default function EnterprisePolicyList() {
   };
 
   const handleToggleFollow = async (policy: Policy) => {
+    if (updatingFollowIDs.has(policy.id)) return;
+    const nextFollowed = !policy.followed;
+    setUpdatingFollowIDs((prev) => new Set(prev).add(policy.id));
+    setPolicyFollowed(policy, nextFollowed);
     try {
-      if (policy.followed) {
+      if (!nextFollowed) {
         await unfollowPolicy(policy.id);
         message.success("已取消关注");
       } else {
         await followPolicy(policy.id);
         message.success("已关注政策");
       }
-      fetchPolicies(pagination.current, pagination.pageSize);
-      fetchFollowed();
     } catch (err) {
+      setPolicyFollowed(policy, Boolean(policy.followed));
       message.error((err as Error).message || "关注操作失败");
+    } finally {
+      setUpdatingFollowIDs((prev) => {
+        const next = new Set(prev);
+        next.delete(policy.id);
+        return next;
+      });
     }
   };
 
@@ -182,13 +260,28 @@ export default function EnterprisePolicyList() {
     {
       title: "操作",
       key: "action",
-      width: 170,
+      width: 240,
       render: (_, record) => (
         <Space>
-          <Button type="primary" size="small" icon={<SendOutlined />} onClick={() => openApply(record)}>
+          <Button size="small" icon={<EyeOutlined />} onClick={() => openDetail(record)}>
+            详情
+          </Button>
+          <Button
+            type="primary"
+            size="small"
+            icon={<SendOutlined />}
+            disabled={hasBlockingApplication(record.id)}
+            onClick={() => openApply(record)}
+          >
             申报
           </Button>
-          <Button size="small" icon={<StarOutlined />} onClick={() => handleToggleFollow(record)}>
+          <Button
+            size="small"
+            type={record.followed ? "primary" : "default"}
+            icon={record.followed ? <StarFilled /> : <StarOutlined />}
+            loading={updatingFollowIDs.has(record.id)}
+            onClick={() => handleToggleFollow(record)}
+          >
             {record.followed ? "取消关注" : "关注"}
           </Button>
         </Space>
@@ -308,10 +401,76 @@ export default function EnterprisePolicyList() {
               ))}
             </Space>
           </Form.Item>
-          <Form.Item name="note" label="补充说明">
-            <TextArea rows={3} placeholder="可补充项目情况、资金用途或材料说明" />
+          <Form.Item label="补充材料">
+            <Space direction="vertical" style={{ width: "100%" }} size="middle">
+              {supplementFiles.map((file, index) => (
+                <Card
+                  key={index}
+                  size="small"
+                  title={`补充材料 ${index + 1}`}
+                  extra={
+                    <Button
+                      size="small"
+                      danger
+                      type="text"
+                      icon={<DeleteOutlined />}
+                      onClick={() => setSupplementFiles((prev) => prev.filter((_, fileIndex) => fileIndex !== index))}
+                    />
+                  }
+                >
+                  <FileUpload
+                    currentFile={file}
+                    onUploaded={(uploadedFile) =>
+                      setSupplementFiles((prev) => prev.map((item, fileIndex) => (fileIndex === index ? uploadedFile : item)))
+                    }
+                    onRemove={() => setSupplementFiles((prev) => prev.map((item, fileIndex) => (fileIndex === index ? null : item)))}
+                  />
+                </Card>
+              ))}
+              <Button icon={<PlusOutlined />} onClick={() => setSupplementFiles((prev) => [...prev, null])}>
+                添加补充材料
+              </Button>
+            </Space>
           </Form.Item>
         </Form>
+      </Modal>
+
+      <Modal
+        title={`政策详情 - ${detailPolicy?.title || ""}`}
+        open={detailOpen}
+        onCancel={() => setDetailOpen(false)}
+        footer={<Button onClick={() => setDetailOpen(false)}>关闭</Button>}
+        width={760}
+        destroyOnClose
+      >
+        {detailPolicy && (
+          <Space direction="vertical" size="middle" style={{ width: "100%", marginTop: 8 }}>
+            <Descriptions column={2} bordered size="middle">
+              <Descriptions.Item label="政策标题" span={2}>{detailPolicy.title}</Descriptions.Item>
+              <Descriptions.Item label="发布部门">{valueText(detailPolicy.department)}</Descriptions.Item>
+              <Descriptions.Item label="适用对象">{valueText(detailPolicy.target_role)}</Descriptions.Item>
+              <Descriptions.Item label="开始时间">{valueText(detailPolicy.start_date)}</Descriptions.Item>
+              <Descriptions.Item label="结束时间">{valueText(detailPolicy.end_date)}</Descriptions.Item>
+              <Descriptions.Item label="AI匹配度">{detailPolicy.match_level ? matchLabels[detailPolicy.match_level] : "-"}</Descriptions.Item>
+              <Descriptions.Item label="匹配说明">{valueText(detailPolicy.match_reason)}</Descriptions.Item>
+            </Descriptions>
+            <Card size="small" title="申报条件">
+              <Paragraph style={{ marginBottom: 0 }}>{valueText(getPolicyRequirements(detailPolicy).application_condition)}</Paragraph>
+            </Card>
+            <Card size="small" title="兑现标准">
+              <Paragraph style={{ marginBottom: 0 }}>{valueText(getPolicyRequirements(detailPolicy).fulfillment_criteria)}</Paragraph>
+            </Card>
+            <Card size="small" title="申报材料">
+              <Paragraph style={{ marginBottom: 0 }}>{materialsText(detailPolicy)}</Paragraph>
+            </Card>
+            <Card size="small" title="办理流程">
+              <Paragraph style={{ marginBottom: 0 }}>{valueText(getPolicyRequirements(detailPolicy).process)}</Paragraph>
+            </Card>
+            <Card size="small" title="联系方式">
+              <Paragraph style={{ marginBottom: 0 }}>{valueText(getPolicyRequirements(detailPolicy).contact_methods)}</Paragraph>
+            </Card>
+          </Space>
+        )}
       </Modal>
     </div>
   );

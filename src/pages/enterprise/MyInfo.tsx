@@ -32,6 +32,7 @@ import { getMyEnterpriseInfo, getMyIncubation, updateMyEnterpriseInfo } from "..
 import type { EnterpriseInfo } from "../../types";
 
 const { Title, Text } = Typography;
+const { TextArea } = Input;
 
 const ENTERPRISE_SCALES = ["微型", "小型", "中型", "大型"];
 const ENTERPRISE_NATURES = ["国有企业", "集体企业", "有限责任公司", "股份有限公司", "私营企业", "港澳台投资企业", "外商投资企业", "其他"];
@@ -226,6 +227,7 @@ export default function EnterpriseMyInfo() {
           <Descriptions.Item label="成立时间">{valueText(enterprise.establishment_date)}</Descriptions.Item>
           <Descriptions.Item label="认定备案时间">{valueText(enterprise.certification_date)}</Descriptions.Item>
           <Descriptions.Item label={<><EnvironmentOutlined /> 企业地址</>} span={3}>{valueText(enterprise.address)}</Descriptions.Item>
+          <Descriptions.Item label="企业简介" span={3}>{valueText(enterprise.description)}</Descriptions.Item>
         </Descriptions>
       </Card>
 
@@ -290,6 +292,7 @@ export default function EnterpriseMyInfo() {
             <Col xs={24} md={12}><Form.Item name="establishment_date" label="成立时间"><Input placeholder="YYYY-MM-DD" /></Form.Item></Col>
             <Col xs={24} md={12}><Form.Item name="certification_date" label="认定备案时间"><Input placeholder="YYYY-MM-DD" /></Form.Item></Col>
             <Col span={24}><Form.Item name="address" label="企业地址"><Input /></Form.Item></Col>
+            <Col span={24}><Form.Item name="description" label="企业简介"><TextArea rows={3} placeholder="请填写主营业务、核心产品、技术方向或服务领域" /></Form.Item></Col>
           </Row>
 
           <Title level={5}>联系与银行信息</Title>
