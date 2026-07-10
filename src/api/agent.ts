@@ -16,7 +16,8 @@ export type AgentToolName =
   | "query_pending_changes"
   | "query_enterprise_applications"
   | "query_applications_by_status"
-  | "query_performance_campaigns";
+  | "query_performance_campaigns"
+  | "generate_report";
 
 export interface AgentToolDefinition {
   name: AgentToolName;
@@ -42,7 +43,16 @@ export interface AgentChatMessage {
 }
 
 export interface AgentSSEEvent {
-  type: "thinking" | "reply" | "tool_call" | "tool_result" | "error" | "done";
+  type:
+    | "thinking"
+    | "reply"
+    | "tool_call"
+    | "tool_result"
+    | "report_start"
+    | "report_progress"
+    | "report_done"
+    | "error"
+    | "done";
   data: unknown;
 }
 
@@ -157,6 +167,12 @@ const TOOL_CATALOG: AgentToolDefinition[] = [
     roles: ["carrier"],
     path: "/carrier/performances",
   },
+  {
+    name: "generate_report",
+    label: "生成分析报告",
+    description: "根据政务数据分析需求生成含图表的 PDF/DOCX 报告。",
+    roles: ["government"],
+  },
 ];
 
 function authHeaders(): HeadersInit {
@@ -184,7 +200,7 @@ export function getAgentQuickPrompts(role: UserRole): string[] {
     return ["今天有哪些待审核事项", "帮我整理企业申报材料", "查看绩效考核任务"];
   }
   if (role === "government") {
-    return ["汇总今天的终审待办", "检查近期政策发布", "查看诉求处理进展"];
+    return ["生成高新区企业行业分布PDF报告", "汇总今天的终审待办", "检查近期政策发布"];
   }
   return ["帮我找适合申报的政策", "我的材料还缺什么", "查看申报进度"];
 }

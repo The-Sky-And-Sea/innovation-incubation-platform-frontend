@@ -329,7 +329,8 @@ export type NotificationType =
   | "deletion_rejected"
   | "account_deleted"
   | "appeal_submitted"
-  | "appeal_processed";
+  | "appeal_processed"
+  | "report_generated";
 
 export interface Notification {
   id: number;

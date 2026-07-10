@@ -3711,6 +3711,98 @@ select {
   color: #9f2d28;
 }
 
+.enterprise-ai-report-card {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  border: 1px solid #d7e2ee;
+  border-radius: 8px;
+  padding: 10px;
+  background: #f7fbff;
+}
+
+.enterprise-ai-report-icon {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 8px;
+  background: #e8f3ff;
+  color: #14508c;
+}
+
+.enterprise-ai-report-body {
+  min-width: 0;
+  display: grid;
+  flex: 1 1 auto;
+  gap: 6px;
+}
+
+.enterprise-ai-report-body strong,
+.enterprise-ai-report-body span {
+  display: block;
+}
+
+.enterprise-ai-report-body strong {
+  color: #18263a;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.enterprise-ai-report-body span {
+  color: #52647a;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.enterprise-ai-report-body button {
+  width: fit-content;
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #14508c;
+  border-radius: 8px;
+  padding: 5px 10px;
+  background: #14508c;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.enterprise-ai-report-body button:hover,
+.enterprise-ai-report-body button:focus-visible {
+  border-color: #0f3f70;
+  background: #0f3f70;
+}
+
+.enterprise-ai-report-progress {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #dbeafe;
+}
+
+.enterprise-ai-report-progress i {
+  height: 100%;
+  display: block;
+  border-radius: inherit;
+  background: #2563eb;
+  transition: width 180ms ease;
+}
+
+.enterprise-ai-prefill-value {
+  max-width: 100%;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
 .enterprise-ai-message-meta {
   position: absolute;
   bottom: -21px;
@@ -5071,6 +5163,23 @@ select {
   border-radius: 10px;
   color: #14508c;
   background: #e6f0fa;
+}
+
+.notification-description {
+  max-width: 68ch;
+}
+
+.notification-meta-line {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 3px 8px;
+  border: 1px solid #d9e5f1;
+  border-radius: 999px;
+  color: #456177;
+  background: #f8fbfe;
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .gov-login-page,

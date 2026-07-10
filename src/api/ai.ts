@@ -9,8 +9,12 @@ export interface PolicySearchResult {
 }
 
 export async function searchEnterprisePolicies(query: string): Promise<ApiResponse<PolicySearchResult>> {
-  const { post } = await import("../utils/request");
-  return post("/enterprise/policies/search", { query });
+  const { request } = await import("../utils/request");
+  return request("/enterprise/policies/search", {
+    method: "POST",
+    body: { query },
+    timeout: 45000,
+  });
 }
 
 export async function searchCarrierPolicies(query: string): Promise<ApiResponse<PolicySearchResult>> {
@@ -29,14 +33,20 @@ export async function getAiPolicyMatch(
     subsidy_amount: string;
   }>
 > {
-  const { get } = await import("../utils/request");
-  return get(`/enterprise/policies/${policyId}/recommend`);
+  const { request } = await import("../utils/request");
+  return request(`/enterprise/policies/${policyId}/recommend`, {
+    method: "GET",
+    timeout: 45000,
+  });
 }
 
 export async function getAiPrefill(
   policyId: number,
   _formSchema?: Record<string, unknown>,
-): Promise<ApiResponse<Record<string, unknown>>> {
-  const { post } = await import("../utils/request");
-  return post(`/enterprise/policies/${policyId}/prefill`);
+): Promise<ApiResponse<unknown>> {
+  const { request } = await import("../utils/request");
+  return request(`/enterprise/policies/${policyId}/prefill`, {
+    method: "POST",
+    timeout: 45000,
+  });
 }

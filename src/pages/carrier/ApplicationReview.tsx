@@ -104,7 +104,11 @@ export default function CarrierApplicationReview() {
           rowKey="id"
           loading={loading}
           size="middle"
-          locale={{ emptyText: <Empty description="暂无待审核申报" /> }}
+          locale={{
+            emptyText: (
+              <Empty description="暂无待审核申报：仅显示已入驻本载体企业提交的待审核政策申报" />
+            ),
+          }}
           pagination={{
             current: pagination.current,
             pageSize: pagination.pageSize,

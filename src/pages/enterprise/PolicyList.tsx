@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Button, Card, Descriptions, Empty, Form, Input, Modal, Space, Table, Tabs, Tag, Typography, message } from "antd";
+import { Alert, Button, Card, Descriptions, Empty, Form, Input, Modal, Space, Table, Tabs, Tag, Tooltip, Typography, message } from "antd";
 import { DeleteOutlined, EyeOutlined, FileTextOutlined, PlusOutlined, ReloadOutlined, SendOutlined, StarFilled, StarOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
+import { useSearchParams } from "react-router-dom";
 import FileUpload from "../../components/FileUpload";
+import { getAiPrefill } from "../../api/ai";
+import { getFileList } from "../../api/files";
 import {
   applyPolicy,
   followPolicy,
@@ -13,11 +16,26 @@ import {
 } from "../../api/policies";
 import type { FileInfo, MatchLevel, Policy, PolicyApplication, PolicyMaterial } from "../../types";
 import { describeBusinessData } from "../../utils/businessDisplay";
+import { findPrefillMaterial, loadPolicyPrefill, savePolicyPrefill, type StoredPolicyPrefill } from "../../utils/policyPrefill";
 
 const { Paragraph, Title, Text } = Typography;
 const matchColors: Record<MatchLevel, string> = { high: "green", partial: "blue", none: "default", unknown: "orange" };
 const matchLabels: Record<MatchLevel, string> = { high: "高匹配", partial: "部分匹配", none: "不匹配", unknown: "未知" };
 const resubmittableStatuses = new Set(["rejected", "returned"]);
+const subsidyTagStyle = {
+  maxWidth: 180,
+  whiteSpace: "normal",
+  lineHeight: 1.45,
+  marginInlineEnd: 0,
+  padding: "3px 8px",
+} as const;
+const subsidyTextStyle = {
+  display: "-webkit-box",
+  overflow: "hidden",
+  WebkitBoxOrient: "vertical",
+  WebkitLineClamp: 2,
+  wordBreak: "break-word",
+} as const;
 
 interface ApplyFormValues {
   project: string;
@@ -34,6 +52,42 @@ function getPolicyMaterials(policy?: Policy | null): PolicyMaterial[] {
 
 function getPolicyRequirements(policy?: Policy | null): Record<string, unknown> {
   return (policy?.requirements || policy?.conditions || {}) as Record<string, unknown>;
+}
+
+function getPolicySubsidyAmount(policy?: Policy | null): string {
+  if (!policy) return "-";
+  if (policy.subsidy_amount) return policy.subsidy_amount;
+
+  const extractedFields = (policy as Policy & {
+    extracted_fields?: { subsidies?: Array<{ amount?: string }> };
+  }).extracted_fields;
+  const extractedAmount = extractedFields?.subsidies
+    ?.map((item) => item.amount)
+    .filter(Boolean)
+    .join(" / ");
+  if (extractedAmount) return extractedAmount;
+
+  const fulfillment = getPolicyRequirements(policy).fulfillment_criteria;
+  return typeof fulfillment === "string" && fulfillment.trim() ? fulfillment : "-";
+}
+
+function renderSubsidyAmount(policy: Policy) {
+  const amount = getPolicySubsidyAmount(policy);
+  const tag = (
+    <Tag color={amount === "-" ? "default" : "green"} style={subsidyTagStyle}>
+      <span style={subsidyTextStyle}>{amount}</span>
+    </Tag>
+  );
+  return amount === "-" ? tag : <Tooltip title={amount}>{tag}</Tooltip>;
+}
+
+function createPrefillFile(fileId: number, materialName: string): FileInfo {
+  return {
+    file_id: fileId,
+    filename: `${materialName}（AI预填充文件 ID ${fileId}）`,
+    mime_type: "",
+    size: 0,
+  };
 }
 
 function valueText(value: unknown): string {
@@ -78,6 +132,8 @@ function statusLabel(status: string) {
 }
 
 export default function EnterprisePolicyList() {
+  const [searchParams] = useSearchParams();
+  const prefillPolicyId = Number(searchParams.get("prefillPolicyId")) || undefined;
   const [policies, setPolicies] = useState<Policy[]>([]);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
@@ -133,10 +189,10 @@ export default function EnterprisePolicyList() {
   }, []);
 
   useEffect(() => {
-    fetchPolicies(1, 10);
+    fetchPolicies(1, prefillPolicyId ? 100 : 10);
     fetchMyApps();
     fetchFollowed();
-  }, [fetchPolicies, fetchMyApps, fetchFollowed]);
+  }, [fetchPolicies, fetchMyApps, fetchFollowed, prefillPolicyId]);
 
   const openApply = (policy: Policy) => {
     if (hasBlockingApplication(policy.id)) {
@@ -144,15 +200,60 @@ export default function EnterprisePolicyList() {
       return;
     }
     const materials = getPolicyMaterials(policy);
+    const initialMaterialFiles = Object.fromEntries(materials.map((item) => [item.name, null])) as Record<string, FileInfo | null>;
     setSelectedPolicy(policy);
     applyForm.resetFields();
     applyForm.setFieldsValue({
       project: policy.title,
       contact: "李四",
     });
-    setMaterialFiles(Object.fromEntries(materials.map((item) => [item.name, null])));
+    setMaterialFiles(initialMaterialFiles);
     setSupplementFiles([]);
     setApplyOpen(true);
+
+    applyPrefillMaterials(policy, materials, initialMaterialFiles);
+  };
+
+  const applyPrefillMaterials = async (
+    policy: Policy,
+    materials: PolicyMaterial[],
+    initialMaterialFiles: Record<string, FileInfo | null>,
+  ) => {
+    let prefill: StoredPolicyPrefill | null = loadPolicyPrefill(policy.id);
+    if (!prefill && prefillPolicyId === policy.id) {
+      try {
+        const res = await getAiPrefill(policy.id);
+        savePolicyPrefill(policy.id, res.data);
+        prefill = loadPolicyPrefill(policy.id);
+      } catch {
+        message.warning("AI 预填充结果加载失败，请手动选择材料");
+        return;
+      }
+    }
+    if (!prefill) return;
+
+    const fillFromFiles = (filesById: Map<number, FileInfo>) => {
+      const nextMaterialFiles = { ...initialMaterialFiles };
+      let matchedCount = 0;
+      for (const material of materials) {
+        const matched = findPrefillMaterial(prefill, material.name);
+        const fileId = matched?.file_ids[0];
+        if (!fileId) continue;
+        nextMaterialFiles[material.name] = filesById.get(fileId) || createPrefillFile(fileId, material.name);
+        matchedCount += 1;
+      }
+      if (matchedCount > 0) {
+        setMaterialFiles(nextMaterialFiles);
+        message.success(`已自动带入 ${matchedCount} 项 AI 预填充材料`);
+      }
+    };
+
+    try {
+      const res = await getFileList(1, 1000);
+      fillFromFiles(new Map(res.data.list.map((file) => [file.file_id, file])));
+    } catch {
+      fillFromFiles(new Map());
+    }
   };
 
   const openDetail = (policy: Policy) => {
@@ -220,7 +321,6 @@ export default function EnterprisePolicyList() {
       setApplying(false);
     }
   };
-
   const handleToggleFollow = async (policy: Policy) => {
     if (updatingFollowIDs.has(policy.id)) return;
     const nextFollowed = !policy.followed;
@@ -247,14 +347,14 @@ export default function EnterprisePolicyList() {
   };
 
   const policyColumns: ColumnsType<Policy> = [
-    { title: "政策标题", dataIndex: "title", key: "title", width: 220, render: (title: string) => <Text strong>{title}</Text> },
-    { title: "补贴额度", dataIndex: "subsidy_amount", key: "amount", width: 120, render: (amount: string) => <Tag color="green">{amount || "-"}</Tag> },
-    { title: "有效期", key: "period", width: 190, render: (_, record) => `${record.start_date} ~ ${record.end_date}` },
+    { title: "政策标题", dataIndex: "title", key: "title", width: 360, render: (title: string) => <Text strong>{title}</Text> },
+    { title: "补贴额度", key: "amount", width: 240, render: (_, record) => renderSubsidyAmount(record) },
+    { title: "有效期", key: "period", width: 230, render: (_, record) => `${record.start_date} ~ ${record.end_date}` },
     {
       title: "AI匹配度",
       dataIndex: "match_level",
       key: "match",
-      width: 120,
+      width: 150,
       render: (match: MatchLevel) => (match ? <Tag color={matchColors[match]} icon={<StarOutlined />}>{matchLabels[match]}</Tag> : <Tag>-</Tag>),
     },
     {
@@ -309,6 +409,15 @@ export default function EnterprisePolicyList() {
         showIcon
         style={{ marginBottom: 16 }}
       />
+      {prefillPolicyId ? (
+        <Alert
+          message="AI 预填充已准备好"
+          description="请在下方找到对应政策并点击“申报”，系统会把已匹配的文件自动带入申报材料。"
+          type="success"
+          showIcon
+          style={{ marginBottom: 16 }}
+        />
+      ) : null}
 
       <Tabs
         defaultActiveKey="policies"
@@ -323,6 +432,7 @@ export default function EnterprisePolicyList() {
                   dataSource={policies}
                   rowKey="id"
                   loading={loading}
+                  tableLayout="fixed"
                   pagination={{
                     current: pagination.current,
                     pageSize: pagination.pageSize,

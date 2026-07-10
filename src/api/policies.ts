@@ -58,8 +58,12 @@ export async function getEnterprisePolicies(
   page = 1,
   page_size = 20,
 ): Promise<ApiResponse<{ list: Policy[]; total: number; page: number; page_size: number }>> {
-  const { get } = await import("../utils/request");
-  return get("/enterprise/policies", { page: String(page), page_size: String(page_size) });
+  const { request } = await import("../utils/request");
+  return request("/enterprise/policies", {
+    method: "GET",
+    params: { page: String(page), page_size: String(page_size) },
+    timeout: 45000,
+  });
 }
 
 export async function followPolicy(policyId: number): Promise<ApiResponse<null>> {

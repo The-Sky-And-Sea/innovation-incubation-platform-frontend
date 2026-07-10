@@ -6,7 +6,9 @@ import {
   CopyOutlined,
   DatabaseOutlined,
   DeleteOutlined,
+  DownloadOutlined,
   EditOutlined,
+  FileTextOutlined,
   HistoryOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
@@ -20,8 +22,11 @@ import {
   listAgentSessions,
   sendAgentMessageStream,
   type AgentChatSession,
+  type AgentSSEEvent,
 } from "../api/agent";
+import { downloadFile } from "../api/files";
 import { useAuthStore } from "../store/authStore";
+import { triggerBrowserDownload } from "../utils/download";
 import type { UserRole } from "../types";
 
 type AssistantTab = "chat" | "workbench";
@@ -31,6 +36,18 @@ type ChatMessage = {
   text: string;
   createdAt?: string;
   status?: "error";
+  report?: ReportState;
+};
+
+type ReportState = {
+  status: "running" | "done";
+  phase?: string;
+  current?: number;
+  total?: number;
+  title?: string;
+  fileUrl?: string;
+  fileId?: number;
+  format?: string;
 };
 
 const roleAssistantMeta: Record<
@@ -180,6 +197,44 @@ function formatMessageTime(value?: string): string {
   });
 }
 
+function getReportPhaseLabel(phase?: string): string {
+  const labels: Record<string, string> = {
+    analyst: "规划报告结构",
+    executor: "查询并整理数据",
+    summarizer: "撰写分析结论",
+    converter: "转换报告格式",
+  };
+  return phase ? labels[phase] || phase : "生成报告";
+}
+
+function readReportData(data: unknown): ReportState {
+  if (!data || typeof data !== "object") return { status: "running" };
+  const record = data as Record<string, unknown>;
+  const fileUrl = typeof record.file_url === "string" ? record.file_url : undefined;
+  const fileIdFromUrl = fileUrl?.match(/\/files\/(\d+)\/download/)?.[1];
+  const explicitFileId = Number(record.file_id ?? record.fileId ?? fileIdFromUrl);
+  return {
+    status: "running",
+    phase: typeof record.phase === "string" ? record.phase : undefined,
+    current: typeof record.current === "number" ? record.current : undefined,
+    total: typeof record.total === "number" ? record.total : undefined,
+    title: typeof record.title === "string" ? record.title : undefined,
+    fileUrl,
+    fileId: Number.isFinite(explicitFileId) ? explicitFileId : undefined,
+    format: typeof record.format === "string" ? record.format.toUpperCase() : undefined,
+  };
+}
+
+function formatReportStreamingText(report: ReportState): string {
+  if (report.status === "done") {
+    return `报告已生成${report.format ? `（${report.format}）` : ""}，可以下载查看。`;
+  }
+  const phase = getReportPhaseLabel(report.phase);
+  const progress = report.current && report.total ? ` ${report.current}/${report.total}` : "";
+  const title = report.title ? `：${report.title}` : "";
+  return `正在${phase}${progress}${title}`;
+}
+
 export default function GlobalAiAssistant() {
   const role = (useAuthStore((state) => state.user?.role) || "enterprise") as UserRole;
   const meta = roleAssistantMeta[role] || roleAssistantMeta.enterprise;
@@ -199,6 +254,7 @@ export default function GlobalAiAssistant() {
   const [sessionsLoading, setSessionsLoading] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [streamingText, setStreamingText] = useState("");
+  const [streamingReport, setStreamingReport] = useState<ReportState | null>(null);
   const [editingMessageId, setEditingMessageId] = useState<number | string | null>(null);
   const [editingText, setEditingText] = useState("");
   const assistantElementRef = useRef<HTMLElement | null>(null);
@@ -227,6 +283,44 @@ export default function GlobalAiAssistant() {
     setNotice(text);
     window.setTimeout(() => setNotice(""), 1800);
   }, []);
+
+  const downloadReport = useCallback(async (report: ReportState) => {
+    const fileId = report.fileId || Number(report.fileUrl?.match(/\/files\/(\d+)\/download/)?.[1]);
+    if (!Number.isFinite(fileId)) {
+      showNotice("报告下载地址缺少文件 ID");
+      return;
+    }
+    try {
+      const blobUrl = await downloadFile(fileId);
+      const ext = (report.format || "pdf").toLowerCase();
+      triggerBrowserDownload(blobUrl, `政务数据分析报告.${ext}`);
+      showNotice("已开始下载报告");
+    } catch (err) {
+      showNotice((err as Error).message || "报告下载失败");
+    }
+  }, [showNotice]);
+
+  const renderReportCard = (report: ReportState) => (
+    <div className={`enterprise-ai-report-card is-${report.status}`}>
+      <div className="enterprise-ai-report-icon" aria-hidden="true">
+        <FileTextOutlined />
+      </div>
+      <div className="enterprise-ai-report-body">
+        <strong>{report.status === "done" ? "报告已生成" : "报告生成中"}</strong>
+        <span>{formatReportStreamingText(report)}</span>
+        {report.status === "done" ? (
+          <button type="button" onClick={() => downloadReport(report)}>
+            <DownloadOutlined />
+            下载{report.format || "报告"}
+          </button>
+        ) : (
+          <div className="enterprise-ai-report-progress" aria-hidden="true">
+            <i style={{ width: `${report.current && report.total ? Math.min(100, (report.current / report.total) * 100) : 32}%` }} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
   const loadSessions = useCallback(async (preserveSession?: AgentChatSession) => {
     setSessionsLoading(true);
@@ -308,6 +402,7 @@ export default function GlobalAiAssistant() {
     setCurrentSessionId(null);
     setMessages([]);
     setStreamingText("");
+    setStreamingReport(null);
     setInputValue("");
     setEditingMessageId(null);
     setEditingText("");
@@ -322,6 +417,7 @@ export default function GlobalAiAssistant() {
     setHistoryOpen(false);
     setLoading(true);
     setStreamingText("");
+    setStreamingReport(null);
     try {
       const detail = await getAgentSession(sessionId);
       setCurrentSessionId(detail.session.id);
@@ -352,6 +448,7 @@ export default function GlobalAiAssistant() {
       setCurrentSessionId(null);
       setMessages([]);
       setStreamingText("");
+      setStreamingReport(null);
       setInputValue("");
       setEditingMessageId(null);
       setEditingText("");
@@ -441,10 +538,12 @@ export default function GlobalAiAssistant() {
     setHistoryOpen(false);
     setLoading(true);
     setStreamingText("");
+    setStreamingReport(null);
 
     let accumulatedThinking = "";
     let finalReply = "";
     let streamError = "";
+    let reportDraft: ReportState | null = null;
 
     try {
       const streamCallbacks = {
@@ -459,6 +558,19 @@ export default function GlobalAiAssistant() {
         onError: (message: string) => {
           streamError = message;
           setStreamingText(message);
+        },
+        onEvent: (event: AgentSSEEvent) => {
+          if (event.type === "report_start" || event.type === "report_progress") {
+            reportDraft = { ...(reportDraft || { status: "running" as const }), ...readReportData(event.data), status: "running" };
+            setStreamingReport(reportDraft);
+            setStreamingText(formatReportStreamingText(reportDraft));
+          }
+          if (event.type === "report_done") {
+            reportDraft = { ...(reportDraft || { status: "done" as const }), ...readReportData(event.data), status: "done" };
+            finalReply = formatReportStreamingText(reportDraft);
+            setStreamingReport(reportDraft);
+            setStreamingText(finalReply);
+          }
         },
       };
 
@@ -492,9 +604,10 @@ export default function GlobalAiAssistant() {
           text: assistantText,
           createdAt: new Date().toISOString(),
           status: streamError ? "error" : undefined,
+          report: reportDraft || undefined,
         },
       ]);
-      if (!streamError) {
+      if (!streamError && !reportDraft) {
         void getAgentSession(currentSessionId)
           .then((detail) => {
             setCurrentSessionId(detail.session.id);
@@ -518,6 +631,7 @@ export default function GlobalAiAssistant() {
       ]);
     } finally {
       setStreamingText("");
+      setStreamingReport(null);
       setLoading(false);
     }
   };
@@ -550,10 +664,12 @@ export default function GlobalAiAssistant() {
     setHistoryOpen(false);
     setLoading(true);
     setStreamingText("");
+    setStreamingReport(null);
 
     let accumulatedThinking = "";
     let finalReply = "";
     let streamError = "";
+    let reportDraft: ReportState | null = null;
 
     try {
       const sessionId = await ensureSession(text);
@@ -576,6 +692,19 @@ export default function GlobalAiAssistant() {
             streamError = message;
             setStreamingText(message);
           },
+          onEvent: (event: AgentSSEEvent) => {
+            if (event.type === "report_start" || event.type === "report_progress") {
+              reportDraft = { ...(reportDraft || { status: "running" as const }), ...readReportData(event.data), status: "running" };
+              setStreamingReport(reportDraft);
+              setStreamingText(formatReportStreamingText(reportDraft));
+            }
+            if (event.type === "report_done") {
+              reportDraft = { ...(reportDraft || { status: "done" as const }), ...readReportData(event.data), status: "done" };
+              finalReply = formatReportStreamingText(reportDraft);
+              setStreamingReport(reportDraft);
+              setStreamingText(finalReply);
+            }
+          },
         },
       );
 
@@ -588,9 +717,10 @@ export default function GlobalAiAssistant() {
           text: assistantText,
           createdAt: new Date().toISOString(),
           status: streamError ? "error" : undefined,
+          report: reportDraft || undefined,
         },
       ]);
-      if (!streamError) {
+      if (!streamError && !reportDraft) {
         void getAgentSession(sessionId)
           .then((detail) => {
             setCurrentSessionId(detail.session.id);
@@ -614,6 +744,7 @@ export default function GlobalAiAssistant() {
       ]);
     } finally {
       setStreamingText("");
+      setStreamingReport(null);
       setLoading(false);
     }
   };
@@ -847,6 +978,7 @@ export default function GlobalAiAssistant() {
                           ) : (
                             <>
                               <p>{message.text}</p>
+                              {message.report ? renderReportCard(message.report) : null}
                               <div className="enterprise-ai-message-meta">
                                 <time dateTime={message.createdAt}>{formatMessageTime(message.createdAt)}</time>
                                 <button
@@ -886,6 +1018,7 @@ export default function GlobalAiAssistant() {
                     {streamingText && (
                       <article className="enterprise-ai-bubble is-assistant is-streaming">
                         <p>{streamingText}</p>
+                        {streamingReport ? renderReportCard(streamingReport) : null}
                       </article>
                     )}
                   </div>
