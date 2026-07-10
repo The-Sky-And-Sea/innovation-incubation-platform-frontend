@@ -5,37 +5,36 @@
  * - POST  /enterprise/incubations       企业提交入驻申请
  * - GET   /enterprise/incubations  我的入驻记录（分页）
  * - GET   /enterprise/incubations/:id   入驻详情
+ * - GET   /enterprise/dicts             获取入驻表单字典数据
  */
 
-import { mockApi, mockApiFail } from "./mock";
-import { isMockEnabled } from "./config";
 import type {
   ApiResponse,
   IncubationRecord,
   IncubationApplyRequest,
 } from "../types";
 
+/** 字典数据响应结构 */
+export interface DictItem {
+  value: string;
+  label: string;
+}
 
+export interface DictResponse {
+  enterprise_natures: DictItem[];
+  founding_categories: DictItem[];
+  industry_categories: DictItem[];
+  high_tech_fields: DictItem[];
+  incubate_statuses: DictItem[];
+}
 
-// ============ Mock 数据 ============
-
-let mockIncubationIdCounter = 200;
-const mockIncubations: Map<number, IncubationRecord> = new Map();
-
-/** 预置一条待审核的入驻记录，方便演示 */
-const now = new Date().toISOString().slice(0, 10);
-mockIncubations.set(201, {
-  id: 201,
-  enterprise_id: 1,
-  carrier_id: 1,
-  status: "pending",
-  incubate_start: now,
-  incubate_end: "2028-12-31",
-  agreement_file_id: 101,
-  created_at: now + "T10:00:00Z",
-  updated_at: now + "T10:00:00Z",
-});
-mockIncubationIdCounter = 202;
+/**
+ * 获取入驻申请表单所需的字典数据
+ */
+export async function getIncubationDicts(): Promise<ApiResponse<DictResponse>> {
+  const { get } = await import("../utils/request");
+  return get("/enterprise/dicts");
+}
 
 /**
  * 企业提交入驻申请
@@ -45,33 +44,6 @@ mockIncubationIdCounter = 202;
 export async function submitIncubation(
   data: IncubationApplyRequest,
 ): Promise<ApiResponse<IncubationRecord>> {
-  if (isMockEnabled()) {
-    // 校验必填字段
-    if (!data.carrier_id) {
-      await mockApiFail(10001, "请选择入驻载体");
-      throw new Error("unreachable");
-    }
-    if (!data.agreement_file_id) {
-      await mockApiFail(10001, "请先上传入孵协议文件");
-      throw new Error("unreachable");
-    }
-
-    const id = ++mockIncubationIdCounter;
-    const record: IncubationRecord = {
-      id,
-      enterprise_id: 1,
-      carrier_id: data.carrier_id,
-      status: "pending",
-      incubate_start: data.incubate_start,
-      incubate_end: data.incubate_end,
-      agreement_file_id: data.agreement_file_id,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    mockIncubations.set(id, record);
-    return mockApi(record);
-  }
-
   const { post } = await import("../utils/request");
   return post<IncubationRecord>("/enterprise/incubations", data);
 }
@@ -85,12 +57,6 @@ export async function getIncubationList(
 ): Promise<
   ApiResponse<{ list: IncubationRecord[]; total: number; page: number; page_size: number }>
 > {
-  if (isMockEnabled()) {
-    const all = Array.from(mockIncubations.values());
-    const list = all.slice((page - 1) * page_size, page * page_size);
-    return mockApi({ list, total: all.length, page, page_size });
-  }
-
   const { get } = await import("../utils/request");
   return get("/enterprise/incubations", {
     page: String(page),
@@ -104,15 +70,6 @@ export async function getIncubationList(
 export async function getIncubationDetail(
   id: number,
 ): Promise<ApiResponse<IncubationRecord>> {
-  if (isMockEnabled()) {
-    const record = mockIncubations.get(id);
-    if (!record) {
-      await mockApiFail(10002, "入驻记录不存在");
-      throw new Error("unreachable");
-    }
-    return mockApi(record);
-  }
-
   const { get } = await import("../utils/request");
   return get(`/enterprise/incubations/${id}`);
 }

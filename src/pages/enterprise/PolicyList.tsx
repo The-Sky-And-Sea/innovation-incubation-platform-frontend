@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Button, Card, Checkbox, Empty, Form, Input, Modal, Space, Table, Tabs, Tag, Typography, message } from "antd";
-import { FileTextOutlined, ReloadOutlined, SendOutlined, StarOutlined } from "@ant-design/icons";
+import { Alert, Button, Card, Descriptions, Empty, Form, Input, Modal, Space, Table, Tabs, Tag, Tooltip, Typography, message } from "antd";
+import { DeleteOutlined, EyeOutlined, FileTextOutlined, PlusOutlined, ReloadOutlined, SendOutlined, StarFilled, StarOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
+import { useSearchParams } from "react-router-dom";
+import FileUpload from "../../components/FileUpload";
+import { getAiPrefill } from "../../api/ai";
+import { getFileList } from "../../api/files";
 import {
   applyPolicy,
   followPolicy,
@@ -10,20 +14,33 @@ import {
   getMyApplications,
   unfollowPolicy,
 } from "../../api/policies";
-import type { MatchLevel, Policy, PolicyApplication, PolicyMaterial } from "../../types";
+import type { FileInfo, MatchLevel, Policy, PolicyApplication, PolicyMaterial } from "../../types";
 import { describeBusinessData } from "../../utils/businessDisplay";
+import { findPrefillMaterial, loadPolicyPrefill, savePolicyPrefill, type StoredPolicyPrefill } from "../../utils/policyPrefill";
 
-const { Title, Text } = Typography;
-const { TextArea } = Input;
-
+const { Paragraph, Title, Text } = Typography;
 const matchColors: Record<MatchLevel, string> = { high: "green", partial: "blue", none: "default", unknown: "orange" };
 const matchLabels: Record<MatchLevel, string> = { high: "高匹配", partial: "部分匹配", none: "不匹配", unknown: "未知" };
+const resubmittableStatuses = new Set(["rejected", "returned"]);
+const subsidyTagStyle = {
+  maxWidth: 180,
+  whiteSpace: "normal",
+  lineHeight: 1.45,
+  marginInlineEnd: 0,
+  padding: "3px 8px",
+} as const;
+const subsidyTextStyle = {
+  display: "-webkit-box",
+  overflow: "hidden",
+  WebkitBoxOrient: "vertical",
+  WebkitLineClamp: 2,
+  wordBreak: "break-word",
+} as const;
 
 interface ApplyFormValues {
   project: string;
   contact: string;
   amount?: string;
-  material_names?: string[];
   note?: string;
 }
 
@@ -33,6 +50,75 @@ function getPolicyMaterials(policy?: Policy | null): PolicyMaterial[] {
   return [{ name: "营业执照", file_id: 12, necessity: "necessary" }];
 }
 
+function getPolicyRequirements(policy?: Policy | null): Record<string, unknown> {
+  return (policy?.requirements || policy?.conditions || {}) as Record<string, unknown>;
+}
+
+function getPolicySubsidyAmount(policy?: Policy | null): string {
+  if (!policy) return "-";
+  if (policy.subsidy_amount) return policy.subsidy_amount;
+
+  const extractedFields = (policy as Policy & {
+    extracted_fields?: { subsidies?: Array<{ amount?: string }> };
+  }).extracted_fields;
+  const extractedAmount = extractedFields?.subsidies
+    ?.map((item) => item.amount)
+    .filter(Boolean)
+    .join(" / ");
+  if (extractedAmount) return extractedAmount;
+
+  const fulfillment = getPolicyRequirements(policy).fulfillment_criteria;
+  return typeof fulfillment === "string" && fulfillment.trim() ? fulfillment : "-";
+}
+
+function renderSubsidyAmount(policy: Policy) {
+  const amount = getPolicySubsidyAmount(policy);
+  const tag = (
+    <Tag color={amount === "-" ? "default" : "green"} style={subsidyTagStyle}>
+      <span style={subsidyTextStyle}>{amount}</span>
+    </Tag>
+  );
+  return amount === "-" ? tag : <Tooltip title={amount}>{tag}</Tooltip>;
+}
+
+function createPrefillFile(fileId: number, materialName: string): FileInfo {
+  return {
+    file_id: fileId,
+    filename: `${materialName}（AI预填充文件 ID ${fileId}）`,
+    mime_type: "",
+    size: 0,
+  };
+}
+
+function valueText(value: unknown): string {
+  if (value === null || value === undefined || value === "") return "-";
+  if (Array.isArray(value)) {
+    if (value.length === 0) return "-";
+    return value
+      .map((item) => {
+        if (item && typeof item === "object") {
+          const record = item as Record<string, unknown>;
+          return String(record.name || record.title || record.value || Object.values(record).filter(Boolean).join(" "));
+        }
+        return String(item);
+      })
+      .filter(Boolean)
+      .join(" / ") || "-";
+  }
+  if (typeof value === "object") {
+    return Object.entries(value as Record<string, unknown>)
+      .filter(([, item]) => item !== undefined && item !== null && item !== "")
+      .map(([key, item]) => `${key}: ${valueText(item)}`)
+      .join("; ") || "-";
+  }
+  return String(value);
+}
+
+function materialsText(policy?: Policy | null) {
+  const materials = getPolicyMaterials(policy);
+  if (!materials.length) return "-";
+  return materials.map((item) => `${item.name}${item.necessity === "necessary" ? " (required)" : ""}`).join(" / ");
+}
 function statusLabel(status: string) {
   const labels: Record<string, string> = {
     pending: "待载体审核",
@@ -46,17 +132,24 @@ function statusLabel(status: string) {
 }
 
 export default function EnterprisePolicyList() {
+  const [searchParams] = useSearchParams();
+  const prefillPolicyId = Number(searchParams.get("prefillPolicyId")) || undefined;
   const [policies, setPolicies] = useState<Policy[]>([]);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
   const [applyOpen, setApplyOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null);
+  const [detailPolicy, setDetailPolicy] = useState<Policy | null>(null);
   const [applyForm] = Form.useForm<ApplyFormValues>();
   const [applying, setApplying] = useState(false);
   const [myApps, setMyApps] = useState<PolicyApplication[]>([]);
   const [myAppsLoading, setMyAppsLoading] = useState(false);
   const [followedPolicies, setFollowedPolicies] = useState<Policy[]>([]);
   const [followedLoading, setFollowedLoading] = useState(false);
+  const [updatingFollowIDs, setUpdatingFollowIDs] = useState<Set<number>>(new Set());
+  const [materialFiles, setMaterialFiles] = useState<Record<string, FileInfo | null>>({});
+  const [supplementFiles, setSupplementFiles] = useState<(FileInfo | null)[]>([]);
 
   const fetchPolicies = useCallback(async (page = 1, pageSize = 10) => {
     setLoading(true);
@@ -96,21 +189,90 @@ export default function EnterprisePolicyList() {
   }, []);
 
   useEffect(() => {
-    fetchPolicies(1, 10);
+    fetchPolicies(1, prefillPolicyId ? 100 : 10);
     fetchMyApps();
     fetchFollowed();
-  }, [fetchPolicies, fetchMyApps, fetchFollowed]);
+  }, [fetchPolicies, fetchMyApps, fetchFollowed, prefillPolicyId]);
 
   const openApply = (policy: Policy) => {
+    if (hasBlockingApplication(policy.id)) {
+      message.warning("该政策已提交或已通过申报，不能重复申报");
+      return;
+    }
     const materials = getPolicyMaterials(policy);
+    const initialMaterialFiles = Object.fromEntries(materials.map((item) => [item.name, null])) as Record<string, FileInfo | null>;
     setSelectedPolicy(policy);
     applyForm.resetFields();
     applyForm.setFieldsValue({
       project: policy.title,
       contact: "李四",
-      material_names: materials.filter((item) => item.necessity === "necessary").map((item) => item.name),
     });
+    setMaterialFiles(initialMaterialFiles);
+    setSupplementFiles([]);
     setApplyOpen(true);
+
+    applyPrefillMaterials(policy, materials, initialMaterialFiles);
+  };
+
+  const applyPrefillMaterials = async (
+    policy: Policy,
+    materials: PolicyMaterial[],
+    initialMaterialFiles: Record<string, FileInfo | null>,
+  ) => {
+    let prefill: StoredPolicyPrefill | null = loadPolicyPrefill(policy.id);
+    if (!prefill && prefillPolicyId === policy.id) {
+      try {
+        const res = await getAiPrefill(policy.id);
+        savePolicyPrefill(policy.id, res.data);
+        prefill = loadPolicyPrefill(policy.id);
+      } catch {
+        message.warning("AI 预填充结果加载失败，请手动选择材料");
+        return;
+      }
+    }
+    if (!prefill) return;
+
+    const fillFromFiles = (filesById: Map<number, FileInfo>) => {
+      const nextMaterialFiles = { ...initialMaterialFiles };
+      let matchedCount = 0;
+      for (const material of materials) {
+        const matched = findPrefillMaterial(prefill, material.name);
+        const fileId = matched?.file_ids[0];
+        if (!fileId) continue;
+        nextMaterialFiles[material.name] = filesById.get(fileId) || createPrefillFile(fileId, material.name);
+        matchedCount += 1;
+      }
+      if (matchedCount > 0) {
+        setMaterialFiles(nextMaterialFiles);
+        message.success(`已自动带入 ${matchedCount} 项 AI 预填充材料`);
+      }
+    };
+
+    try {
+      const res = await getFileList(1, 1000);
+      fillFromFiles(new Map(res.data.list.map((file) => [file.file_id, file])));
+    } catch {
+      fillFromFiles(new Map());
+    }
+  };
+
+  const openDetail = (policy: Policy) => {
+    setDetailPolicy(policy);
+    setDetailOpen(true);
+  };
+
+  const hasBlockingApplication = (policyID: number) =>
+    myApps.some((app) => app.policy_id === policyID && !resubmittableStatuses.has(app.status));
+
+  const setPolicyFollowed = (policy: Policy, followed: boolean) => {
+    const nextPolicy = { ...policy, followed };
+    setPolicies((prev) => prev.map((item) => (item.id === policy.id ? { ...item, followed } : item)));
+    setFollowedPolicies((prev) => {
+      if (followed) {
+        return prev.some((item) => item.id === policy.id) ? prev.map((item) => (item.id === policy.id ? nextPolicy : item)) : [nextPolicy, ...prev];
+      }
+      return prev.filter((item) => item.id !== policy.id);
+    });
   };
 
   const handleApply = async () => {
@@ -119,12 +281,34 @@ export default function EnterprisePolicyList() {
       const values = await applyForm.validateFields();
       setApplying(true);
       const availableMaterials = getPolicyMaterials(selectedPolicy);
-      const materials = availableMaterials.filter((item) => values.material_names?.includes(item.name));
+      const missingRequired = availableMaterials.filter(
+        (item) => item.necessity === "necessary" && !materialFiles[item.name]?.file_id,
+      );
+      if (missingRequired.length > 0) {
+        message.error(`请上传必需材料：${missingRequired.map((item) => item.name).join("、")}`);
+        return;
+      }
+      const materials = availableMaterials.reduce<PolicyMaterial[]>((acc, item) => {
+          const file = materialFiles[item.name];
+          if (file?.file_id) {
+            acc.push({ ...item, file_ids: [file.file_id] });
+          }
+          return acc;
+        }, []);
+      const supplementFileIds = supplementFiles
+        .map((file) => file?.file_id)
+        .filter((fileID): fileID is number => Boolean(fileID));
+      if (supplementFileIds.length > 0) {
+        materials.push({
+          name: "补充材料",
+          necessity: "optional",
+          file_ids: supplementFileIds,
+        });
+      }
       await applyPolicy(selectedPolicy.id, {
         project: values.project,
         contact: values.contact,
         amount: values.amount,
-        note: values.note,
         materials,
       });
       message.success("申报已提交");
@@ -137,44 +321,67 @@ export default function EnterprisePolicyList() {
       setApplying(false);
     }
   };
-
   const handleToggleFollow = async (policy: Policy) => {
+    if (updatingFollowIDs.has(policy.id)) return;
+    const nextFollowed = !policy.followed;
+    setUpdatingFollowIDs((prev) => new Set(prev).add(policy.id));
+    setPolicyFollowed(policy, nextFollowed);
     try {
-      if (policy.followed) {
+      if (!nextFollowed) {
         await unfollowPolicy(policy.id);
         message.success("已取消关注");
       } else {
         await followPolicy(policy.id);
         message.success("已关注政策");
       }
-      fetchPolicies(pagination.current, pagination.pageSize);
-      fetchFollowed();
     } catch (err) {
+      setPolicyFollowed(policy, Boolean(policy.followed));
       message.error((err as Error).message || "关注操作失败");
+    } finally {
+      setUpdatingFollowIDs((prev) => {
+        const next = new Set(prev);
+        next.delete(policy.id);
+        return next;
+      });
     }
   };
 
   const policyColumns: ColumnsType<Policy> = [
-    { title: "政策标题", dataIndex: "title", key: "title", width: 220, render: (title: string) => <Text strong>{title}</Text> },
-    { title: "补贴额度", dataIndex: "subsidy_amount", key: "amount", width: 120, render: (amount: string) => <Tag color="green">{amount || "-"}</Tag> },
-    { title: "有效期", key: "period", width: 190, render: (_, record) => `${record.start_date} ~ ${record.end_date}` },
+    { title: "政策标题", dataIndex: "title", key: "title", width: 360, render: (title: string) => <Text strong>{title}</Text> },
+    { title: "补贴额度", key: "amount", width: 240, render: (_, record) => renderSubsidyAmount(record) },
+    { title: "有效期", key: "period", width: 230, render: (_, record) => `${record.start_date} ~ ${record.end_date}` },
     {
       title: "AI匹配度",
       dataIndex: "match_level",
       key: "match",
-      width: 120,
+      width: 150,
       render: (match: MatchLevel) => (match ? <Tag color={matchColors[match]} icon={<StarOutlined />}>{matchLabels[match]}</Tag> : <Tag>-</Tag>),
     },
     {
       title: "操作",
       key: "action",
-      width: 170,
+      width: 240,
       render: (_, record) => (
         <Space>
-          <Button type="primary" size="small" icon={<SendOutlined />} onClick={() => openApply(record)}>
+          <Button size="small" icon={<EyeOutlined />} onClick={() => openDetail(record)}>
+            详情
+          </Button>
+          <Button
+            type="primary"
+            size="small"
+            icon={<SendOutlined />}
+            disabled={hasBlockingApplication(record.id)}
+            onClick={() => openApply(record)}
+          >
             申报
           </Button>
-          <Button size="small" icon={<StarOutlined />} onClick={() => handleToggleFollow(record)}>
+          <Button
+            size="small"
+            type={record.followed ? "primary" : "default"}
+            icon={record.followed ? <StarFilled /> : <StarOutlined />}
+            loading={updatingFollowIDs.has(record.id)}
+            onClick={() => handleToggleFollow(record)}
+          >
             {record.followed ? "取消关注" : "关注"}
           </Button>
         </Space>
@@ -202,6 +409,15 @@ export default function EnterprisePolicyList() {
         showIcon
         style={{ marginBottom: 16 }}
       />
+      {prefillPolicyId ? (
+        <Alert
+          message="AI 预填充已准备好"
+          description="请在下方找到对应政策并点击“申报”，系统会把已匹配的文件自动带入申报材料。"
+          type="success"
+          showIcon
+          style={{ marginBottom: 16 }}
+        />
+      ) : null}
 
       <Tabs
         defaultActiveKey="policies"
@@ -216,6 +432,7 @@ export default function EnterprisePolicyList() {
                   dataSource={policies}
                   rowKey="id"
                   loading={loading}
+                  tableLayout="fixed"
                   pagination={{
                     current: pagination.current,
                     pageSize: pagination.pageSize,
@@ -272,13 +489,98 @@ export default function EnterprisePolicyList() {
           <Form.Item name="amount" label="申请金额">
             <Input placeholder="例如：20 万元" />
           </Form.Item>
-          <Form.Item name="material_names" label="已准备材料" rules={[{ required: true, message: "请选择已准备材料" }]}>
-            <Checkbox.Group options={getPolicyMaterials(selectedPolicy).map((item) => ({ label: item.name, value: item.name }))} />
+          <Form.Item label="已准备材料" required>
+            <Space direction="vertical" style={{ width: "100%" }} size="middle">
+              {getPolicyMaterials(selectedPolicy).map((item) => (
+                <Card
+                  key={item.name}
+                  size="small"
+                  title={
+                    <Space>
+                      <span>{item.name}</span>
+                      {item.necessity === "necessary" && <Tag color="red">必需</Tag>}
+                    </Space>
+                  }
+                >
+                  <FileUpload
+                    currentFile={materialFiles[item.name] || null}
+                    onUploaded={(file) => setMaterialFiles((prev) => ({ ...prev, [item.name]: file }))}
+                    onRemove={() => setMaterialFiles((prev) => ({ ...prev, [item.name]: null }))}
+                  />
+                </Card>
+              ))}
+            </Space>
           </Form.Item>
-          <Form.Item name="note" label="补充说明">
-            <TextArea rows={3} placeholder="可补充项目情况、资金用途或材料说明" />
+          <Form.Item label="补充材料">
+            <Space direction="vertical" style={{ width: "100%" }} size="middle">
+              {supplementFiles.map((file, index) => (
+                <Card
+                  key={index}
+                  size="small"
+                  title={`补充材料 ${index + 1}`}
+                  extra={
+                    <Button
+                      size="small"
+                      danger
+                      type="text"
+                      icon={<DeleteOutlined />}
+                      onClick={() => setSupplementFiles((prev) => prev.filter((_, fileIndex) => fileIndex !== index))}
+                    />
+                  }
+                >
+                  <FileUpload
+                    currentFile={file}
+                    onUploaded={(uploadedFile) =>
+                      setSupplementFiles((prev) => prev.map((item, fileIndex) => (fileIndex === index ? uploadedFile : item)))
+                    }
+                    onRemove={() => setSupplementFiles((prev) => prev.map((item, fileIndex) => (fileIndex === index ? null : item)))}
+                  />
+                </Card>
+              ))}
+              <Button icon={<PlusOutlined />} onClick={() => setSupplementFiles((prev) => [...prev, null])}>
+                添加补充材料
+              </Button>
+            </Space>
           </Form.Item>
         </Form>
+      </Modal>
+
+      <Modal
+        title={`政策详情 - ${detailPolicy?.title || ""}`}
+        open={detailOpen}
+        onCancel={() => setDetailOpen(false)}
+        footer={<Button onClick={() => setDetailOpen(false)}>关闭</Button>}
+        width={760}
+        destroyOnClose
+      >
+        {detailPolicy && (
+          <Space direction="vertical" size="middle" style={{ width: "100%", marginTop: 8 }}>
+            <Descriptions column={2} bordered size="middle">
+              <Descriptions.Item label="政策标题" span={2}>{detailPolicy.title}</Descriptions.Item>
+              <Descriptions.Item label="发布部门">{valueText(detailPolicy.department)}</Descriptions.Item>
+              <Descriptions.Item label="适用对象">{valueText(detailPolicy.target_role)}</Descriptions.Item>
+              <Descriptions.Item label="开始时间">{valueText(detailPolicy.start_date)}</Descriptions.Item>
+              <Descriptions.Item label="结束时间">{valueText(detailPolicy.end_date)}</Descriptions.Item>
+              <Descriptions.Item label="AI匹配度">{detailPolicy.match_level ? matchLabels[detailPolicy.match_level] : "-"}</Descriptions.Item>
+              <Descriptions.Item label="匹配说明">{valueText(detailPolicy.match_reason)}</Descriptions.Item>
+            </Descriptions>
+            <Card size="small" title="申报条件">
+              <Paragraph style={{ marginBottom: 0 }}>{valueText(getPolicyRequirements(detailPolicy).application_condition)}</Paragraph>
+            </Card>
+            <Card size="small" title="兑现标准">
+              <Paragraph style={{ marginBottom: 0 }}>{valueText(getPolicyRequirements(detailPolicy).fulfillment_criteria)}</Paragraph>
+            </Card>
+            <Card size="small" title="申报材料">
+              <Paragraph style={{ marginBottom: 0 }}>{materialsText(detailPolicy)}</Paragraph>
+            </Card>
+            <Card size="small" title="办理流程">
+              <Paragraph style={{ marginBottom: 0 }}>{valueText(getPolicyRequirements(detailPolicy).process)}</Paragraph>
+            </Card>
+            <Card size="small" title="联系方式">
+              <Paragraph style={{ marginBottom: 0 }}>{valueText(getPolicyRequirements(detailPolicy).contact_methods)}</Paragraph>
+            </Card>
+          </Space>
+        )}
       </Modal>
     </div>
   );

@@ -99,7 +99,7 @@ export async function request<T = unknown>(
     // 业务错误码处理
     if (json.code !== 0) {
       const errorMsg =
-        ERROR_CODE_MAP[json.code] || json.message || "未知错误";
+        json.message || ERROR_CODE_MAP[json.code] || "未知错误";
       const error = new Error(errorMsg) as Error & {
         code: number;
         response: ApiResponse<T>;

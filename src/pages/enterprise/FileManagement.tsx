@@ -194,12 +194,7 @@ export default function EnterpriseFileManagement() {
           className="enterprise-file-guide-card"
           title={<><InfoCircleOutlined /> 文件使用说明</>}
         >
-          <div className="enterprise-file-guide-copy">
-            <Text strong>上传后系统会生成可复用的 <Tag>file_id</Tag></Text>
-            <Text type="secondary">
-              后续在入驻申请、政策申报、材料补充等场景中，可通过 file_id 关联已上传文件。
-            </Text>
-          </div>
+          {/* 上传后系统会生成可复用的 file_id，可在业务表单中关联已上传文件。 */}
 
           <div className="enterprise-file-metrics" aria-label="文件统计">
             <div className="enterprise-file-metric">

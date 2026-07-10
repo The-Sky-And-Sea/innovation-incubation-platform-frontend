@@ -14,8 +14,11 @@ import {
   message,
   Alert,
   Empty,
+  Space,
 } from "antd";
 import {
+  ArrowRightOutlined,
+  FileOutlined,
   FormOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
@@ -23,7 +26,7 @@ import type { ColumnsType } from "antd/es/table";
 import AuditReview from "../../components/AuditReview";
 import { getPendingChangeList, reviewChange } from "../../api/changes";
 import type { ChangeRecord, ChangeType, AuditStatus } from "../../types";
-import { describeBusinessData } from "../../utils/businessDisplay";
+import { downloadFile } from "../../api/files";
 
 const { Title } = Typography;
 
@@ -57,42 +60,87 @@ export default function CarrierChangeReview() {
     fetchList(1, pagination.pageSize);
   };
 
+  const openFile = async (fileId: number) => {
+    try {
+      const url = await downloadFile(fileId);
+      window.open(url, "_blank", "noopener,noreferrer");
+      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (error) {
+      message.error((error as Error).message || "文件打开失败");
+    }
+  };
+
+  const renderFileButton = (value: Record<string, unknown>, isNew: boolean) => {
+    const id = Number(value[isNew ? "new_file_id" : "file_id"] || 0);
+    const filename = String(value[isNew ? "new_filename" : "filename"] || (isNew ? "新文件" : "旧文件"));
+    return id > 0 ? (
+      <Button type="link" size="small" icon={<FileOutlined />} onClick={() => openFile(id)}>
+        {filename}
+      </Button>
+    ) : <span>-</span>;
+  };
+
+  const renderValueChange = (_: unknown, record: ChangeRecord) => {
+    if (record.change_type === "入孵协议文件") {
+      return (
+        <Space size={4}>
+          {renderFileButton(record.old_value || {}, false)}
+          <ArrowRightOutlined />
+          {renderFileButton(record.new_value || {}, true)}
+        </Space>
+      );
+    }
+    const oldValue = record.old_value?.value;
+    const newValue = record.new_value?.value;
+    return (
+      <Space size={8}>
+        <span>{oldValue == null || oldValue === "" ? "-" : String(oldValue)}</span>
+        <ArrowRightOutlined style={{ color: "#1677ff" }} />
+        <strong>{newValue == null || newValue === "" ? "-" : String(newValue)}</strong>
+      </Space>
+    );
+  };
+
   const columns: ColumnsType<ChangeRecord> = [
-    { title: "编号", dataIndex: "id", key: "id", width: 70 },
-    { title: "企业ID", dataIndex: "enterprise_id", key: "enterprise_id", width: 80 },
+    { title: "编号", dataIndex: "id", key: "id", width: 60 },
+    {
+      title: "企业名称",
+      key: "enterprise_name",
+      width: 150,
+      ellipsis: true,
+      render: (_, record) => (record as ChangeRecord & { enterprise?: { name?: string } }).enterprise?.name || "-",
+    },
     {
       title: "变更类型",
       dataIndex: "change_type",
       key: "change_type",
-      width: 140,
+      width: 100,
       render: (t: ChangeType) => <Tag color="purple">{t}</Tag>,
     },
     {
       title: "变更说明",
-      dataIndex: "change_content",
-      key: "change_content",
-      width: 250,
+      key: "change_description",
+      width: 200,
       ellipsis: true,
+      render: (_, record) => record.change_type,
     },
     {
-      title: "新值",
-      dataIndex: "new_value",
-      key: "new_value",
-      width: 150,
-      ellipsis: true,
-      render: (v: Record<string, unknown>) => describeBusinessData(v),
+      title: "变更内容",
+      key: "value_change",
+      width: 320,
+      render: renderValueChange,
     },
     {
       title: "提交时间",
       dataIndex: "created_at",
       key: "created_at",
-      width: 150,
+      width: 140,
       render: (d: string) => (d ? new Date(d).toLocaleString("zh-CN") : "-"),
     },
     {
       title: "操作",
       key: "action",
-      width: 260,
+      width: 240,
       render: (_, record) => (
         <AuditReview
           targetName={`变更 #${record.id}`}
@@ -136,6 +184,7 @@ export default function CarrierChangeReview() {
           dataSource={records}
           rowKey="id"
           loading={loading}
+          scroll={{ x: "max-content" }}
           pagination={{
             current: pagination.current,
             pageSize: pagination.pageSize,

@@ -80,7 +80,7 @@ export default function AuditReview({
 
   return (
     <>
-      <Space>
+      <Space wrap size={[4, 4]}>
         {REVIEW_ACTIONS.map((cfg) => (
           <Button
             key={cfg.action}

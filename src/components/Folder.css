@@ -150,6 +150,7 @@
 .upload-folder-visual {
   display: flex;
   justify-content: center;
+  max-width: 100%;
   margin-bottom: 14px;
 }
 
@@ -170,8 +171,16 @@
   gap: 6px;
 }
 
+.file-upload-dropcopy .ant-upload-text,
+.file-upload-dropcopy .ant-upload-hint {
+  text-align: center;
+  max-width: 100%;
+  word-break: break-word;
+}
+
 .file-upload-folder-dragger .ant-upload-drag {
   min-height: 224px;
+  overflow: hidden;
   border-color: color-mix(in srgb, var(--role-primary, #14508c) 18%, #d8e2ec) !important;
   background:
     radial-gradient(circle at 50% 16%, color-mix(in srgb, var(--role-primary, #14508c) 8%, transparent), transparent 38%),
@@ -189,20 +198,32 @@
 }
 
 .file-upload-folder-dragger .ant-upload.ant-upload-drag .ant-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
   padding: 34px 24px 28px;
+  box-sizing: border-box;
 }
 
 .file-upload-folder-dragger .ant-upload-text {
+  max-width: 280px;
   margin: 0;
   color: #18263a;
   font-size: 16px;
   font-weight: 700;
+  text-align: center;
 }
 
 .file-upload-folder-dragger .ant-upload-hint {
+  display: block;
+  max-width: 240px;
   margin: 0;
   color: #708099;
   font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
 }
 
 @media (prefers-reduced-motion: reduce) {

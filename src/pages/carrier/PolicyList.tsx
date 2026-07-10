@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, Button, Card, Checkbox, Empty, Form, Input, Modal, Space, Table, Tag, Typography, message } from "antd";
+import { Alert, Button, Card, Empty, Form, Input, Modal, Space, Table, Tag, Typography, message } from "antd";
 import { FileTextOutlined, ReloadOutlined, SearchOutlined, SendOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
+import FileUpload from "../../components/FileUpload";
 import { searchCarrierPolicies } from "../../api/ai";
 import { applyCarrierPolicy, getCarrierPolicies } from "../../api/policies";
-import type { Policy, PolicyMaterial } from "../../types";
+import type { FileInfo, Policy, PolicyMaterial } from "../../types";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 interface CarrierPolicyApplyValues {
-  material_names: string[];
   service_summary?: string;
   contact?: string;
 }
@@ -30,6 +30,7 @@ export default function CarrierPolicyList() {
   const [applyOpen, setApplyOpen] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null);
   const [applying, setApplying] = useState(false);
+  const [materialFiles, setMaterialFiles] = useState<Record<string, FileInfo | null>>({});
   const [form] = Form.useForm<CarrierPolicyApplyValues>();
 
   const fetchPolicies = useCallback(async (page = 1, pageSize = 10) => {
@@ -73,18 +74,32 @@ export default function CarrierPolicyList() {
     setSelectedPolicy(policy);
     form.resetFields();
     form.setFieldsValue({
-      material_names: materials.filter((item) => item.necessity === "necessary").map((item) => item.name),
       contact: "载体管理员",
     });
+    setMaterialFiles(Object.fromEntries(materials.map((item) => [item.name, null])));
     setApplyOpen(true);
   };
 
   const handleApply = async () => {
     if (!selectedPolicy) return;
     try {
-      const values = await form.validateFields();
+      await form.validateFields();
       setApplying(true);
-      const materials = getPolicyMaterials(selectedPolicy).filter((item) => values.material_names?.includes(item.name));
+      const availableMaterials = getPolicyMaterials(selectedPolicy);
+      const missingRequired = availableMaterials.filter(
+        (item) => item.necessity === "necessary" && !materialFiles[item.name]?.file_id,
+      );
+      if (missingRequired.length > 0) {
+        message.error(`请上传必需材料：${missingRequired.map((item) => item.name).join("、")}`);
+        return;
+      }
+      const materials = availableMaterials.reduce<PolicyMaterial[]>((acc, item) => {
+          const file = materialFiles[item.name];
+          if (file?.file_id) {
+            acc.push({ ...item, file_ids: [file.file_id] });
+          }
+          return acc;
+        }, []);
       await applyCarrierPolicy(selectedPolicy.id, materials);
       message.success("载体政策申报已提交政务端审核");
       setApplyOpen(false);
@@ -207,8 +222,27 @@ export default function CarrierPolicyList() {
           <Form.Item name="contact" label="联系人">
             <Input placeholder="请输入联系人" />
           </Form.Item>
-          <Form.Item name="material_names" label="已准备材料" rules={[{ required: true, message: "请选择已准备材料" }]}>
-            <Checkbox.Group options={getPolicyMaterials(selectedPolicy).map((item) => ({ label: item.name, value: item.name }))} />
+          <Form.Item label="已准备材料" required>
+            <Space direction="vertical" style={{ width: "100%" }} size="middle">
+              {getPolicyMaterials(selectedPolicy).map((item) => (
+                <Card
+                  key={item.name}
+                  size="small"
+                  title={
+                    <Space>
+                      <span>{item.name}</span>
+                      {item.necessity === "necessary" && <Tag color="red">必需</Tag>}
+                    </Space>
+                  }
+                >
+                  <FileUpload
+                    currentFile={materialFiles[item.name] || null}
+                    onUploaded={(file) => setMaterialFiles((prev) => ({ ...prev, [item.name]: file }))}
+                    onRemove={() => setMaterialFiles((prev) => ({ ...prev, [item.name]: null }))}
+                  />
+                </Card>
+              ))}
+            </Space>
           </Form.Item>
           <Form.Item name="service_summary" label="服务情况说明">
             <TextArea rows={3} placeholder="可说明服务企业数量、孵化成果、活动组织等情况" />

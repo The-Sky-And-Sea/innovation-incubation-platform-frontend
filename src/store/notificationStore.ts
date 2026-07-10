@@ -27,6 +27,10 @@ function mergeNotification(list: Notification[], item: Notification) {
   return [item, ...list];
 }
 
+function mergeNotifications(list: Notification[], items: Notification[]) {
+  return items.reduce((nextList, item) => mergeNotification(nextList, item), list);
+}
+
 export const useNotificationStore = create<NotificationState>((set, get) => ({
   list: [],
   unreadCount: 0,
@@ -39,10 +43,12 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     get().refresh(userId);
 
     const unsubscribe = subscribeNotificationStream(
-      (notification) => {
-        if (notification.user_id !== userId) return;
+      (payload) => {
+        const notifications = Array.isArray(payload) ? payload : [payload];
+        const userNotifications = notifications.filter((notification) => notification.user_id === userId);
+        if (userNotifications.length === 0) return;
         set((state) => {
-          const nextList = mergeNotification(state.list, notification);
+          const nextList = mergeNotifications(state.list, userNotifications);
           return {
             list: nextList,
             unreadCount: nextList.filter((item) => !item.is_read).length,
@@ -83,19 +89,21 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   },
 
   markAsRead: async (ids) => {
+    // 乐观更新本地状态（先让 UI 立即反馈）
+    set((state) => {
+      const nextList = state.list.map((item) =>
+        ids.includes(item.id) ? { ...item, is_read: true } : item,
+      );
+      return {
+        list: nextList,
+        unreadCount: nextList.filter((item) => !item.is_read).length,
+      };
+    });
+    // 异步同步到后端；失败仅记录日志，不回滚（避免频繁刷新导致状态闪烁）
     try {
       await markNotificationsRead(ids);
-      set((state) => {
-        const nextList = state.list.map((item) =>
-          ids.includes(item.id) ? { ...item, is_read: true } : item,
-        );
-        return {
-          list: nextList,
-          unreadCount: nextList.filter((item) => !item.is_read).length,
-        };
-      });
-    } catch {
-      // 页面保留当前状态，下一次刷新会恢复真实数据。
+    } catch (err) {
+      console.error("[notification] 标为已读失败（本地状态已更新，请检查后端服务）", err);
     }
   },
 

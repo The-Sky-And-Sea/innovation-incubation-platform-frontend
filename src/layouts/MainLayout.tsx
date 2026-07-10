@@ -29,7 +29,6 @@ import {
   LogoutOutlined,
   SafetyCertificateOutlined,
   SearchOutlined,
-  SettingOutlined,
   TeamOutlined,
   ThunderboltOutlined,
   TrophyOutlined,
@@ -41,6 +40,7 @@ import { useAuthStore } from "../store/authStore";
 import { useNotificationStore } from "../store/notificationStore";
 import type { UserRole } from "../types";
 import Menu from "../components/StaggeredMenu";
+import GlobalAiAssistant from "../components/GlobalAiAssistant";
 
 const { Header, Content } = Layout;
 const { Text } = Typography;
@@ -63,7 +63,6 @@ interface CommandAction {
 const roleMenuMap: Record<UserRole, MenuItem[]> = {
   enterprise: [
     { key: "/enterprise/dashboard", icon: <DashboardOutlined />, label: "企业工作台" },
-    { key: "/enterprise/info", icon: <IdcardOutlined />, label: "企业信息" },
     { key: "/enterprise/files", icon: <UploadOutlined />, label: "文件管理" },
     { key: "/enterprise/carriers", icon: <BankOutlined />, label: "载体浏览" },
     { key: "/enterprise/incubation", icon: <HomeOutlined />, label: "企业入驻" },
@@ -77,7 +76,7 @@ const roleMenuMap: Record<UserRole, MenuItem[]> = {
   carrier: [
     { key: "/carrier/dashboard", icon: <DashboardOutlined />, label: "载体工作台" },
     { key: "/carrier/incubation", icon: <AuditOutlined />, label: "入驻审核" },
-    { key: "/carrier/info", icon: <SettingOutlined />, label: "基础信息" },
+    { key: "/carrier/enterprises", icon: <TeamOutlined />, label: "入驻企业" },
     { key: "/carrier/changes", icon: <FormOutlined />, label: "变更审核" },
     { key: "/carrier/policies", icon: <FileTextOutlined />, label: "政策申报" },
     { key: "/carrier/applications", icon: <InboxOutlined />, label: "企业申报审核" },
@@ -101,26 +100,26 @@ const roleMenuMap: Record<UserRole, MenuItem[]> = {
 };
 
 const ROLE_META: Record<UserRole, { label: string; scope: string; primary: string }> = {
-  enterprise: { label: "企业端", scope: "申报服务", primary: "#14508c" },
-  carrier: { label: "载体端", scope: "审核协同", primary: "#0b7568" },
-  government: { label: "政务端", scope: "监督治理", primary: "#9a5b12" },
+  enterprise: { label: "企业端", scope: "申报服务", primary: "#1f78d8" },
+  carrier: { label: "载体端", scope: "审核协同", primary: "#11a992" },
+  government: { label: "政务端", scope: "监督治理", primary: "#d63b5c" },
 };
 
 const ROLE_MENU_THEME: Record<UserRole, { accent: string; colors: string[]; spark: string }> = {
   enterprise: {
-    accent: "#14508c",
-    colors: ["#d7eafa", "#8bbbe8", "#14508c"],
-    spark: "#64a8ef",
+    accent: "#1f78d8",
+    colors: ["#dceeff", "#8fc8ff", "#1f78d8"],
+    spark: "#78bdff",
   },
   carrier: {
-    accent: "#0b7568",
-    colors: ["#d9f3ee", "#77d8c7", "#0b7568"],
-    spark: "#47d8c2",
+    accent: "#11a992",
+    colors: ["#dcfaf5", "#7ee4d2", "#11a992"],
+    spark: "#58dccb",
   },
   government: {
-    accent: "#b83246",
-    colors: ["#fde7eb", "#ee8c9b", "#b83246"],
-    spark: "#ff8fa3",
+    accent: "#d63b5c",
+    colors: ["#ffe4ea", "#ff93a8", "#d63b5c"],
+    spark: "#ff8da4",
   },
 };
 
@@ -194,13 +193,18 @@ export default function MainLayout() {
   const location = useLocation();
   const { user, logout } = useAuthStore();
   const unreadCount = useNotificationStore((state) => state.unreadCount);
+  const startNotificationPolling = useNotificationStore((state) => state.startPolling);
+  const stopNotificationPolling = useNotificationStore((state) => state.stopPolling);
 
   const role = (user?.role || "enterprise") as UserRole;
   const roleMeta = ROLE_META[role];
   const menus = roleMenuMap[role];
   const roleTheme = ROLE_MENU_THEME[role];
   const selectedKey = location.pathname;
-  const activeMenu = menus.find((item) => item.key === selectedKey);
+  const activeMenu = menus.find(
+    (item) => item.key === selectedKey || selectedKey.startsWith(item.key + "/")
+  );
+  const computedSelectedKey = activeMenu ? activeMenu.key : selectedKey;
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -212,6 +216,16 @@ export default function MainLayout() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  useEffect(() => {
+    const userId = user?.user_id || user?.id;
+    if (!userId) {
+      stopNotificationPolling();
+      return;
+    }
+    startNotificationPolling(userId);
+    return () => stopNotificationPolling();
+  }, [startNotificationPolling, stopNotificationPolling, user?.id, user?.user_id]);
 
   const commandActions = useMemo<CommandAction[]>(() => {
     if (role === "government") return GOV_COMMANDS;
@@ -242,6 +256,18 @@ export default function MainLayout() {
       : role === "carrier"
         ? "/carrier/notifications"
         : "/gov/notifications";
+  const profilePath =
+    role === "enterprise"
+      ? "/enterprise/info"
+      : role === "carrier"
+        ? "/carrier/info"
+        : "/gov/info";
+  const profileLabel =
+    role === "enterprise"
+      ? "企业信息"
+      : role === "carrier"
+        ? "载体信息"
+        : "政务信息";
 
   return (
     <Layout
@@ -266,14 +292,14 @@ export default function MainLayout() {
             <div className="header-menu-slot">
               <Menu
                 className="top-staggered-menu"
-                selectedKeys={[selectedKey]}
+                selectedKeys={[computedSelectedKey]}
                 aria-label="role navigation"
                 accentColor={roleTheme.accent}
                 closeOnClickAway={false}
                 closeOnItemClick={false}
                 colors={roleTheme.colors}
                 defaultOpen
-                displayItemNumbering
+                displayItemNumbering={false}
                 displaySocials={false}
                 logoText={roleMeta.scope}
                 menuButtonColor={roleTheme.accent}
@@ -301,7 +327,7 @@ export default function MainLayout() {
               <kbd>Ctrl K</kbd>
             </Button>
             <Tag className="sync-tag" icon={<ClockCircleOutlined />}>
-              今日 20:30 已同步
+              今日 00:00 已同步
             </Tag>
             <Badge count={unreadCount} size="small" offset={[-2, 2]}>
               <Button
@@ -317,9 +343,13 @@ export default function MainLayout() {
                 items: [
                   { key: "role", label: `当前角色：${roleMeta.label}`, disabled: true },
                   { type: "divider" as const },
+                  { key: "profile", icon: <IdcardOutlined />, label: profileLabel },
                   { key: "logout", icon: <LogoutOutlined />, label: "退出登录", danger: true },
                 ],
                 onClick: ({ key }) => {
+                  if (key === "profile") {
+                    navigate(profilePath);
+                  }
                   if (key === "logout") {
                     logout();
                     navigate("/login");
@@ -341,6 +371,8 @@ export default function MainLayout() {
           </div>
         </Content>
       </Layout>
+
+      <GlobalAiAssistant />
 
       <Modal
         open={commandOpen}

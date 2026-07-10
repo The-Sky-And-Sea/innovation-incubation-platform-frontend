@@ -47,6 +47,8 @@ interface FileUploadProps {
   onRemove?: () => void;
   /** 文件夹视觉的主题色 */
   folderColor?: string;
+  /** 允许的文件类型（覆盖服务端配置，如 [".pdf", ".doc", ".docx"]） */
+  allowedTypes?: string[];
 }
 
 export default function FileUpload({
@@ -55,6 +57,7 @@ export default function FileUpload({
   currentFile,
   onRemove,
   folderColor = "#14508c",
+  allowedTypes,
 }: FileUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [fileLimit, setFileLimit] = useState<FileLimit | null>(null);
@@ -112,22 +115,23 @@ export default function FileUpload({
 
   /** 上传前校验 */
   const beforeUpload = (file: File): boolean => {
-    if (!fileLimit) return false;
+    if (!fileLimit && !allowedTypes) return false;
 
     // 校验文件大小
-    const maxBytes = fileLimit.max_size_mb * 1024 * 1024;
+    const maxBytes = (fileLimit?.max_size_mb ?? 20) * 1024 * 1024;
     if (file.size > maxBytes) {
       message.error(
-        `文件 "${file.name}" 超过大小限制（最大 ${fileLimit.max_size_mb}MB）`,
+        `文件 "${file.name}" 超过大小限制（最大 ${fileLimit?.max_size_mb ?? 20}MB）`,
       );
       return false;
     }
 
-    // 校验扩展名
+    // 校验扩展名（优先使用 allowedTypes，否则使用服务端配置）
     const ext = "." + file.name.split(".").pop()?.toLowerCase();
-    if (!fileLimit.allowed_extensions.includes(ext)) {
+    const allowed = allowedTypes ?? fileLimit?.allowed_extensions ?? [];
+    if (!allowed.includes(ext)) {
       message.error(
-        `不支持的文件类型: ${ext}。支持的格式: ${fileLimit.allowed_extensions.join(", ")}`,
+        `不支持的文件类型: ${ext}。支持的格式: ${allowed.join(", ")}`,
       );
       return false;
     }
@@ -202,11 +206,11 @@ export default function FileUpload({
           <p className="ant-upload-text">
             {uploading ? "上传中..." : "点击或拖拽文件到此区域上传"}
           </p>
-          {fileLimit && (
+          {(fileLimit || allowedTypes) && (
             <p className="ant-upload-hint">
-              支持格式: {fileLimit.allowed_extensions.join(", ")}
+              支持格式: {(allowedTypes ?? fileLimit?.allowed_extensions ?? []).join(", ")}
               {" | "}
-              最大 {fileLimit.max_size_mb}MB
+              最大 {fileLimit?.max_size_mb ?? 20}MB
             </p>
           )}
         </div>
